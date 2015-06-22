@@ -50,7 +50,7 @@ public class AI_Enemy : Battle_Unit {
 
 		if (gameMaster != null) target = TargetSelection (gameMaster.captainList);
 		// give my Weapon its target
-//		myWeapon.targetDead = false;
+		myWeapon.targetDead = false;
 		myWeapon.AssignTarget(target); 
 
 		canMove = true;
