@@ -42,18 +42,23 @@ public class Captain : Battle_Unit {
 	void TargetAssign(){
 		if (gameMaster != null) target = TargetSelection (gameMaster.monsterList);
 		// give my Weapon its target
-//		myWeapon.targetDead = false;
+		myWeapon.targetDead = false;
 		myWeapon.AssignTarget(target); 
 		
 	}
 
 	void CheckIfDead(){
-		bool gameOver = gameMaster != null ? gameMaster.battleOver : false;
-		if (myWeapon.targetDead && !gameOver) {
-			TargetAssign ();
-		} else {
-			print (this.name + " is done.");
+		//		bool gameOver = gameMaster != null ? gameMaster.battleOver : false;
+		bool gameOver = gameMaster.battleOver;
+		if (myWeapon.targetDead || target == null ) {
+			if (!gameOver ) {
+				TargetAssign ();
+			} else {
+				print (this.name + " is done.");
+				
+			}
 		}
+		
 	}
 
 	//TODO: Ability to override target selection and replace it with Player's selection;
