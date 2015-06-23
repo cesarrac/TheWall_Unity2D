@@ -68,6 +68,7 @@ public class Captain : Battle_Unit {
 		// give my Weapon its target
 		myWeapon.targetDead = false;
 		myWeapon.AssignTarget(target);
+		// I want to add here a way to shut off the selection box of this unit, once a target is selected
 	}
 
 }
