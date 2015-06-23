@@ -6,8 +6,6 @@ using System.Collections.Generic;
 public class Captain : Battle_Unit {
 	int[] myStats = new int[3];
 
-
-
 	GameMaster gameMaster;
 
 	void Start () {
@@ -34,12 +32,13 @@ public class Captain : Battle_Unit {
 
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
 		CheckIfDead ();
 	}
 
 	void TargetAssign(){
+			
 		if (gameMaster != null) target = TargetSelection (gameMaster.monsterList);
 		// give my Weapon its target
 		myWeapon.targetDead = false;
@@ -48,10 +47,9 @@ public class Captain : Battle_Unit {
 	}
 
 	void CheckIfDead(){
-		//		bool gameOver = gameMaster != null ? gameMaster.battleOver : false;
 		bool gameOver = gameMaster.battleOver;
 		if (myWeapon.targetDead || target == null ) {
-			if (!gameOver ) {
+			if (!gameOver ) {  	
 				TargetAssign ();
 			} else {
 				print (this.name + " is done.");
@@ -61,7 +59,16 @@ public class Captain : Battle_Unit {
 		
 	}
 
-	//TODO: Ability to override target selection and replace it with Player's selection;
-
+	//This next function is called from MouseControls
+		// When this Unit is selected Mouse_Controls will give a target
+		// and this Unit will assign it to its Weapon
+	public void PlayerTargetAssign(GameObject playerTarget){
+		target = playerTarget;
+		print ("Player selected a new target: " + playerTarget.name);
+		// give my Weapon its target
+		myWeapon.targetDead = false;
+		myWeapon.AssignTarget(target);
+		// I want to add here a way to shut off the selection box of this unit, once a target is selected
+	}
 
 }
