@@ -10,6 +10,8 @@ public class Mouse_Controls : MonoBehaviour {
 
 	GameObject selectedUnit;
 	GameObject selectedTarget;
+	public GameObject selectionBox;
+	GameObject mySBox;
 
 	void Start () {
 	
@@ -31,6 +33,18 @@ public class Mouse_Controls : MonoBehaviour {
 				if (Input.GetMouseButtonDown(0)){
 					print ("You clicked on Captain.");
 					selectedUnit = hit.collider.gameObject; // this stores the selected unit as a GameObject
+					// Instantiate a Selection Box at that Unit's position
+					if (mySBox == null){
+						mySBox = Instantiate(selectionBox, selectedUnit.transform.position, Quaternion.identity) as GameObject;
+						mySBox.transform.parent = selectedUnit.transform; 
+						// sets the Selection box parent to be the Unit so it can follow it around if Moved
+
+					}else{
+						Destroy(mySBox); // Destroy the old one, bring in the new selection
+						mySBox = Instantiate(selectionBox, selectedUnit.transform.position, Quaternion.identity) as GameObject;
+						mySBox.transform.parent = selectedUnit.transform; 
+
+					}
 				}
 			}
 		}
@@ -46,6 +60,8 @@ public class Mouse_Controls : MonoBehaviour {
 					selectedTarget = hit.collider.gameObject;
 					selectCaptain.PlayerTargetAssign(selectedTarget);
 					print ("You clicked a Monster");
+					// Once target is selected we need to DESTROY the selection box
+					Destroy(mySBox);
 				}
 			}
 		} 
