@@ -45,8 +45,8 @@ public class Battle_Unit : Unit {
 	//TODO: Create a method that determines INITIAL STATS
 	// Stats should be determined by QUALITY of Unit
 	// Low , Medium, High, Elite
+	// this would change the min and max of their stats (eg. Quality = elite; stats[0] = Random.Range(18, 32);
 
-	// For now I'm going to initialize stats with Random ints out of 10 (eg. hp: 4/10);
 	public int[] initStats(){
 		// need to fill up HP, Attack Rating, and Defense Rating
 		int[] stats = new int[3];

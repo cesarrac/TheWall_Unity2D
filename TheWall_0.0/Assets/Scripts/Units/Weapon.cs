@@ -15,6 +15,10 @@ public class Weapon : Unit {
 	bool stopShooting;
 
 	GameMaster gameMaster;
+
+	// for distance meter
+	public Transform distanceMeter;
+
 	// Use this for initialization
 	void Awake () {
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
@@ -61,8 +65,9 @@ public class Weapon : Unit {
 	}
 
 	void ActualShoot(Battle_Unit target){
-		// calls on the GameMaster
-		// GameMaster.HitCheck(int attackRating, int defenseRatingOfTarget)
+		// calls on the GameMaster through a bool
+		//TODO: Add distance variable. The distance will add a penalty to the hit while also affecting dmg
+		// The lower the Unit's attack rating, the harder it is to hit at long range
 		bool hit = gameMaster.HitCheck(myAttackRating, target.defenseRating);
 		if (hit) {
 			DoDamage(target);
@@ -77,6 +82,8 @@ public class Weapon : Unit {
 
 
 	void DoDamage(Battle_Unit target){
+		//TODO: also Add distance variable. The distance will determine what type of attack it was, therefore dmg.
+		damage = GetTypeOfDamage ();
 		target.hitPoints = target.hitPoints - damage;
 		if (target.hitPoints <= 0) {
 			targetDead = true;
@@ -86,6 +93,25 @@ public class Weapon : Unit {
 		}
 
 			
+	}
+
+	int GetTypeOfDamage(){
+		int longDistanceDmg = 6;
+		int medDistanceDmg = 3;
+		int shortDistanceDmg = 2;
+
+		float distance = distanceMeter.localPosition.y - targetAsGameObj.transform.position.y;
+		if (distance < 0) {
+			// it's long distance
+			return longDistanceDmg;
+		} else if (distance < 1) {
+			//its med distance
+			return medDistanceDmg;
+		} else if (distance < 2) {
+			// short distance
+			return shortDistanceDmg;
+		}
+		return damage;
 	}
 
 
