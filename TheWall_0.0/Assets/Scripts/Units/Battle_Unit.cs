@@ -33,7 +33,7 @@ public class Battle_Unit : Unit {
 		this.pAttackRating = attackRating;
 		this.pDefenseRating = defenseRating;
 
-		myWeapon = GetComponentInChildren<Weapon> ();
+		myWeapon = GetComponentInChildren<Weapon> (); // this works only if this is instantiated as a prefab with wpn as child
 
 	}
 	
@@ -48,9 +48,9 @@ public class Battle_Unit : Unit {
 
 	// For now I'm going to initialize stats with Random ints out of 10 (eg. hp: 4/10);
 	public int[] initStats(){
-		// need to fill up HP, Attack Rating, and Defense Rating (derived from Battle_Unit class)
+		// need to fill up HP, Attack Rating, and Defense Rating
 		int[] stats = new int[3];
-		stats [0] = Random.Range (9, 22);
+		stats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
 		for (int x =1; x< stats.Length; x++) {
 			int randomStat = Random.Range(2, 11);
 			stats[x] = randomStat;

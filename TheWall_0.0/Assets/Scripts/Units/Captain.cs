@@ -8,6 +8,16 @@ public class Captain : Battle_Unit {
 
 	GameMaster gameMaster;
 
+//	public Captain(){
+//		name = GetName (false);
+//		description = "Default captain guy";
+//		// Random stat init, ** This is for now
+//		myStats = initStats ();
+//		hitPoints = myStats [0];
+//		attackRating = myStats [1];
+//		defenseRating = myStats [2];
+//	}
+
 	void Start () {
 		// get a name, false for human
 		name = GetName (false);
@@ -21,9 +31,11 @@ public class Captain : Battle_Unit {
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
 //		targets = gameMaster != null ? gameMaster.monsterArray : null;
 
-		if (gameMaster != null) TargetAssign ();
-		//the weapon needs to know my attack rating
+		// *v Commented this to make sure this unit waits for battle to start
+//		if (gameMaster != null) TargetAssign ();
 
+
+		//the weapon needs to know my attack rating
 		myWeapon.myAttackRating = attackRating;
 
 		allegiance = "captain";
@@ -34,6 +46,9 @@ public class Captain : Battle_Unit {
 	
 
 	void Update () {
+		// we need to check if battle has started
+		// once it has we need to quickly assign a target and start shooting
+
 		CheckIfDead ();
 	}
 
@@ -48,11 +63,12 @@ public class Captain : Battle_Unit {
 
 	void CheckIfDead(){
 		bool gameOver = gameMaster.battleOver;
+		bool battleHasStarted = gameMaster.battleStarted;
 		if (myWeapon.targetDead || target == null ) {
-			if (!gameOver ) {  	
+			if (!gameOver && battleHasStarted) {  	
 				TargetAssign ();
 			} else {
-				print (this.name + " is done.");
+				print (this.name + " is waiting.");
 				
 			}
 		}

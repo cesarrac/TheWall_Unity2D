@@ -14,6 +14,8 @@ public class AI_Enemy : Battle_Unit {
 	void Start () {
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
 
+		// *** v For now I'm leaving this as the initializers for the monster since they will already be on the field
+
 		// get a name, true for monster
 		name = GetName (true);
 		description = "Default monster thing.";
@@ -23,9 +25,8 @@ public class AI_Enemy : Battle_Unit {
 		attackRating = myStats [1];
 		defenseRating = myStats [2];
 
-//		targets = gameMaster != null ? gameMaster.captainArray : null;
-		 
-		if (gameMaster != null) TargetAssign ();
+		// *v Commented this to make sure this unit waits for battle to start
+//		if (gameMaster != null) TargetAssign ();
 		
 		//the weapon needs to know my attack rating
 		myWeapon.myAttackRating = attackRating;
@@ -34,7 +35,7 @@ public class AI_Enemy : Battle_Unit {
 
 		myTransform = transform;
 		speed = 0.2f;
-		canMove = true;
+
 	}
 	
 
@@ -47,7 +48,7 @@ public class AI_Enemy : Battle_Unit {
 	}
 
 	void TargetAssign(){
-
+		// now that you have a target, you can move
 		if (gameMaster != null) target = TargetSelection (gameMaster.captainList);
 		// give my Weapon its target
 		myWeapon.targetDead = false;
@@ -59,13 +60,13 @@ public class AI_Enemy : Battle_Unit {
 
 
 	void CheckIfDead(){
-//		bool gameOver = gameMaster != null ? gameMaster.battleOver : false;
 		bool gameOver = gameMaster.battleOver;
+		bool battleStarted = gameMaster.battleStarted;
 		if (myWeapon.targetDead || target == null ) {
-			if (!gameOver ) {
+			if (!gameOver && battleStarted) {
 				TargetAssign ();
 			} else {
-				print (this.name + " is done.");
+				print (this.name + " is waiting.");
 				
 			}
 		}
