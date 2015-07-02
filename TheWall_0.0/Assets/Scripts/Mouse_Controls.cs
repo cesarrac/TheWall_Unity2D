@@ -13,8 +13,10 @@ public class Mouse_Controls : MonoBehaviour {
 	public GameObject selectionBox;
 	GameObject mySBox;
 
+	GameMaster gmScript;
+
 	void Start () {
-	
+		gmScript = GetComponent<GameMaster> ();
 	}
 	
 	void Update () {
@@ -27,12 +29,14 @@ public class Mouse_Controls : MonoBehaviour {
 
 
 	void SelectUnit (){
-		RaycastHit2D hit = Physics2D.Raycast(new Vector2(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, Camera.main.ScreenToWorldPoint(Input.mousePosition).y), -Vector2.up);  
+		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
+		RaycastHit2D hit = Physics2D.Raycast(new Vector2(m.x, m.y), -Vector2.up);  
 		if (hit.collider != null) {
 			if (hit.collider.CompareTag ("Captain")) {
 				if (Input.GetMouseButtonDown(0)){
 					print ("You clicked on Captain.");
 					selectedUnit = hit.collider.gameObject; // this stores the selected unit as a GameObject
+
 					// Instantiate a Selection Box at that Unit's position
 					if (mySBox == null){
 						mySBox = Instantiate(selectionBox, selectedUnit.transform.position, Quaternion.identity) as GameObject;
@@ -45,6 +49,11 @@ public class Mouse_Controls : MonoBehaviour {
 						mySBox.transform.parent = selectedUnit.transform; 
 
 					}
+				}
+				if (Input.GetMouseButton(0) && !gmScript.battleStarted){
+					selectedUnit = hit.collider.gameObject;
+					Vector3 followMousePosition = new Vector3 (m.x, m.y, 0);
+					selectedUnit.transform.position = followMousePosition;
 				}
 			}
 		}
@@ -68,11 +77,7 @@ public class Mouse_Controls : MonoBehaviour {
 
 	}
 
-	// TODO: A way to activate the Selection Box on the current captain, then deactivate when deselected
-	void ActivateSelectionBox(GameObject selected){
-		SpriteRenderer sr = selected.GetComponentInChildren<SpriteRenderer> ();
-		sr.enabled = true;
-	}
+
 
 
 }
