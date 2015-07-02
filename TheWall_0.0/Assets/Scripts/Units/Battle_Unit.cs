@@ -8,6 +8,7 @@ public class Battle_Unit : Unit {
 	public int hitPoints;
 	public int attackRating;
 	public int defenseRating;
+	public string quality;
 
 	int pHitPoints;
 	int pAttackRating;
@@ -27,8 +28,10 @@ public class Battle_Unit : Unit {
 
 	public float speed;
 
-	void Start () {
-		initStats ();
+	void Awake () {
+		// first Time a Unit is created we determine its Quality
+		quality = initQuality ();
+//		initStats ();
 		this.pHitPoints = hitPoints;
 		this.pAttackRating = attackRating;
 		this.pDefenseRating = defenseRating;
@@ -40,21 +43,68 @@ public class Battle_Unit : Unit {
 	void Update () {
 		this.pTarget = target;
 	}
-
-
-	//TODO: Create a method that determines INITIAL STATS
-	// Stats should be determined by QUALITY of Unit
-	// Low , Medium, High, Elite
-	// this would change the min and max of their stats (eg. Quality = elite; stats[0] = Random.Range(18, 32);
-
-	public int[] initStats(){
+		
+	string initQuality (){
+		// for now I'm going to use a random int out of 50. <15 = low, <35 = medium, <45 = high, > 45 = elite
+		int randomQuality = Random.Range (0, 50);
+		string quality;
+		if (randomQuality > 45) {
+			quality = "elite";
+		} else if (randomQuality <= 45 && randomQuality > 35) {
+			quality = "high";
+		} else if (randomQuality <= 35 && randomQuality > 15) {
+			quality = "medium";
+		} else {
+			quality = "low";
+		}
+		return quality;
+	}
+	public int[] initStats(string quality){
+		// Stats should be determined by QUALITY of Unit
+		// Low , Medium, High, Elite
+		// this would change the min and max of their stats (eg. Quality = elite; stats[0] = Random.Range(18, 32);
 		// need to fill up HP, Attack Rating, and Defense Rating
 		int[] stats = new int[3];
-		stats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
-		for (int x =1; x< stats.Length; x++) {
-			int randomStat = Random.Range(2, 11);
-			stats[x] = randomStat;
+		switch (quality) 
+		{
+			case "elite":
+				stats [0] = Random.Range (18, 42); 
+				for (int x =1; x< stats.Length; x++) {
+					int randomStat = Random.Range(10, 20);
+					stats[x] = randomStat;
+				}
+				break;
+			case "high":
+				stats [0] = Random.Range (18, 25); 
+				for (int x =1; x< stats.Length; x++) {
+					int randomStat = Random.Range(10, 20);
+					stats[x] = randomStat;
+				}
+				break;
+			case "medium":
+				stats [0] = Random.Range (10, 22); 
+				for (int x =1; x< stats.Length; x++) {
+					int randomStat = Random.Range(10, 20);
+					stats[x] = randomStat;
+				}
+				break;
+			case "low":
+				stats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
+				for (int x =1; x< stats.Length; x++) {
+					int randomStat = Random.Range(2, 11);
+					stats[x] = randomStat;
+				}
+				break;
+			default:
+				stats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
+				for (int x =1; x< stats.Length; x++) {
+					int randomStat = Random.Range(2, 11);
+					stats[x] = randomStat;
+				}
+				break;
 		}
+
+	
 		
 		return stats;
 	}

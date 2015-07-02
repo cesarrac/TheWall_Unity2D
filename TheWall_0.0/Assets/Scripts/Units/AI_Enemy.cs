@@ -20,7 +20,7 @@ public class AI_Enemy : Battle_Unit {
 		name = GetName (true);
 		description = "Default monster thing.";
 		// Random stat init, ** This is for now
-		myStats = initStats ();
+		myStats = initStats (quality);
 		hitPoints = myStats [0];
 		attackRating = myStats [1];
 		defenseRating = myStats [2];

@@ -23,7 +23,7 @@ public class Captain : Battle_Unit {
 		name = GetName (false);
 		description = "Default captain guy";
 		// Random stat init, ** This is for now
-		myStats = initStats ();
+		myStats = initStats (quality);
 		hitPoints = myStats [0];
 		attackRating = myStats [1];
 		defenseRating = myStats [2];

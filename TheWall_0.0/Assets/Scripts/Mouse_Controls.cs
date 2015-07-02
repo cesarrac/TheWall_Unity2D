@@ -50,11 +50,16 @@ public class Mouse_Controls : MonoBehaviour {
 
 					}
 				}
-				if (Input.GetMouseButton(0) && !gmScript.battleStarted){
-					selectedUnit = hit.collider.gameObject;
-					Vector3 followMousePosition = new Vector3 (m.x, m.y, 0);
-					selectedUnit.transform.position = followMousePosition;
-				}
+			
+			}
+		}
+		// for dragging the unit with mouse
+		if (selectedUnit != null) { // once you click on a unit this will be true
+			if (Input.GetMouseButton(0) && !gmScript.battleStarted){
+				Vector3 followMousePosition = new Vector3 (m.x, m.y, 0);
+				selectedUnit.transform.position = followMousePosition;
+			} else{
+				selectedUnit = null;
 			}
 		}
 	} 
