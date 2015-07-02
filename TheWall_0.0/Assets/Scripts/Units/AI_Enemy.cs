@@ -52,7 +52,7 @@ public class AI_Enemy : Battle_Unit {
 		if (gameMaster != null) target = TargetSelection (gameMaster.captainList);
 		// give my Weapon its target
 		myWeapon.targetDead = false;
-		myWeapon.AssignTarget(target); 
+		myWeapon.AssignTarget(target, false); // must specify target and TRUE if Captain, FALSE for monster
 
 		canMove = true;
 

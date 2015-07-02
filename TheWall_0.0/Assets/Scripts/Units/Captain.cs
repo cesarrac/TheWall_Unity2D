@@ -57,7 +57,8 @@ public class Captain : Battle_Unit {
 		if (gameMaster != null) target = TargetSelection (gameMaster.monsterList);
 		// give my Weapon its target
 		myWeapon.targetDead = false;
-		myWeapon.AssignTarget(target); 
+		myWeapon.AssignTarget(target, true); // must specify target and TRUE if Captain, FALSE for monster
+
 		
 	}
 
@@ -83,7 +84,7 @@ public class Captain : Battle_Unit {
 		print ("Player selected a new target: " + playerTarget.name);
 		// give my Weapon its target
 		myWeapon.targetDead = false;
-		myWeapon.AssignTarget(target);
+		myWeapon.AssignTarget(target, true);
 		// I want to add here a way to shut off the selection box of this unit, once a target is selected
 	}
 

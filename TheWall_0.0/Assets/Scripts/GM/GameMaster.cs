@@ -17,7 +17,9 @@ public class GameMaster : MonoBehaviour {
 	public GameObject captainOne;
 	public GameObject captainTwo;
 
-
+	// penalties/bonuses for Hit Check based on Distance
+	public int longDistancePenalty, shortDistanceBonus;
+	public int longDistance_is, midDistance_is, shortDistance_is;
 
 	void Awake () {
 		StartGame ();
@@ -76,14 +78,38 @@ public class GameMaster : MonoBehaviour {
 
 	// ******** BATTLE TOOLS ( HitCheck, KillTarget, BattleOverCheck) ****************
 
-	public bool HitCheck(int attackRating, int defenseRating){
+	public bool HitCheck(int attackRating, int defenseRating, int distance){
+		// multiply attack and defense ratings by 10 to make a percentile die throw
 		int attack100 = attackRating * 10;
 		int defense100 = defenseRating * 10;
-		int attackRoll = Random.Range (0, attack100);
-		int defenseRoll = Random.Range (0, defense100);
-		bool hit = (attackRoll > defenseRoll) ? true : false;
-		if (hit) print ("Attack: " + attack100 + " vs Defense: "+ defense100 + " HITS!!!");
-		print ("Monsters left: " + monsterList.Count + " Captains left: " + captainList.Count);		
+		// percentile die roll
+		int attackRoll = Random.Range (attackRating, attack100);
+		int defenseRoll = Random.Range (defenseRating, defense100);
+
+		print ("Attack Roll before distance: " + attackRoll);
+
+		// now Distance steps in to the equation, long distance has a penalty while short distance has a bonus
+		// im using public int vars named exactly like the ones in Weapon (longDistance_is, midDistance_is)
+		if (distance <= longDistance_is && distance > midDistance_is) {
+			attackRoll = attackRoll - longDistancePenalty; // apply penalty
+			if (attackRoll < 0) attackRoll = 0; // no negative numbers
+
+		} else if (distance <= shortDistance_is) {
+			attackRoll = attackRoll + shortDistanceBonus; // apply bonus
+		}
+
+		print ("Attack Roll after distance: " + attackRoll);
+
+		bool hit = (attackRoll > defenseRoll) ? true : false; // now check to see if it HITS
+		if (hit) {
+			// prints out console messages for debugging
+			print ("Attack: " + attackRoll + " vs Defense: "+ defenseRoll + " HITS!!!");
+			print ("Monsters left: " + monsterList.Count + " Captains left: " + captainList.Count);
+		} else {
+//			print ("I missed. Attack: " + attackRoll + "defense: " + defenseRoll);
+
+		}
+				
 		return hit;
 	}
 
