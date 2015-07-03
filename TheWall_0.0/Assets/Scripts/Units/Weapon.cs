@@ -7,9 +7,7 @@ public class Weapon : Unit {
 	GameObject targetAsGameObj;
 	public int myAttackRating;
 	public int rateOfFire;
-	public int shortDamage, midDamage, longDamage;
-
-
+	public float shortDamage, midDamage, longDamage;
 
 	bool rdyToFire;
 	public bool targetDead;
@@ -25,10 +23,13 @@ public class Weapon : Unit {
 	bool trueIfCaptain;
 	public int longDistance_is, midDistance_is, shortDistance_is;
 	int distanceToTarget;
-	// for distance meter
-//	public Transform distanceMeter;
 
-	// Use this for initialization
+	// for damage boosts from wall or other powers
+	bool damageIsBoosted;
+	// damage Bonus can be applied when using a power (like the Wall power Energize), favorable weather conditions,
+	// and the morale of that unit
+	public float longDamageBonus = 0, midDamageBonus = 0, shortDamageBonus = 0;
+
 	void Awake () {
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
 		rdyToFire = true;
@@ -42,7 +43,7 @@ public class Weapon : Unit {
 
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
 		if (myTarget != null) {
 			Shoot ();
@@ -92,35 +93,37 @@ public class Weapon : Unit {
 	}
 	//this actually DOES the damage
 	void DoDamage (Battle_Unit target){
-		int damage = CalcDamage ();
+		float damage = CalcDamage ();
+		// apply damage to target
 		target.hitPoints = target.hitPoints - damage;
 		print ("I hit " + target.name + " for " + damage);
+		// check if they died
 		if (target.hitPoints <= 0) {
 			targetDead = true;
-			print (target.name + " is dead?");
+			print (target.name + " is dead");
 			//tell GM to kill target object
 			gameMaster.KillTarget (targetAsGameObj, target.allegiance);
 		}
 	}
 
 	// this calculates the damage according to distance
-	int CalcDamage(){
+	float CalcDamage(){
 		//The distance will determine what type of attack it was, therefore dmg.
-		int damageCalc = new int();
+		float damageCalc = new float();
 		int distance = distanceToTarget; // grabs the distance calculated when the shot was fired in ActualShoot
 
 		if (distance <= longDistance_is && distance > midDistance_is) {
 			// long distance dmg
-			damageCalc = longDamage;
+			damageCalc = longDamage + longDamageBonus;
 
 		} else if (distance <= midDistance_is && distance > shortDistance_is) {
 			// mid distance dmg
-			damageCalc = midDamage;
+			damageCalc = midDamage + midDamageBonus;
 				} else {
 			// short dmg
-			damageCalc = shortDamage;
+			damageCalc = shortDamage + shortDamageBonus;
 		}
-		int theDamage = damageCalc;
+		float theDamage = damageCalc;
 		return theDamage;
 	}
 
@@ -144,5 +147,12 @@ public class Weapon : Unit {
 		return distance;
 	}
 
-
+	public void DamageBoost(float boostAmmount){
+		// the boostAmmount is actually a percentage, so we need figure out what % of damage boostAmmount is
+		// we need this for all 3 distances
+		float onePercentLongDmg = longDamage / 100f;
+		// now we just multiply the boost ammount by how much 1% is
+		longDamageBonus = boostAmmount * onePercentLongDmg;
+		print ("Long Dmg Bonus is now: " + longDamageBonus);
+	}
 }

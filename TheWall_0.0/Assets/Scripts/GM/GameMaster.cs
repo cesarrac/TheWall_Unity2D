@@ -21,6 +21,11 @@ public class GameMaster : MonoBehaviour {
 	public int longDistancePenalty, shortDistanceBonus;
 	public int longDistance_is, midDistance_is, shortDistance_is;
 
+	// floats to keep track of Wall stats
+	public float maxWallEnergy;	// this gets affected by upgrades and new buildings during Town View
+
+
+
 	void Awake () {
 		StartGame ();
 	}
@@ -34,7 +39,8 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	void StartGame(){
-		// this creates the first five captains and puts them in a list
+		// ***************** TEMPORARY CAPTAINS SPAWN / REPLACE WITH ADD UNITS UI **************
+		// this creates the first 5 captains
 		float xOffset = -4;
 		for (int x = 0; x < 5; x++) {
 			int randomUnit = Random.Range(0, 2);
@@ -47,6 +53,7 @@ public class GameMaster : MonoBehaviour {
 			}
 
 		}
+		// ***************** TEMPORARY CAPTAINS SPAWN / REPLACE WITH ADD UNITS UI **************
 	}
 
 	public void AddUnit(){
@@ -86,7 +93,7 @@ public class GameMaster : MonoBehaviour {
 		int attackRoll = Random.Range (attackRating, attack100);
 		int defenseRoll = Random.Range (defenseRating, defense100);
 
-		print ("Attack Roll before distance: " + attackRoll);
+//		print ("Attack Roll before distance: " + attackRoll);
 
 		// now Distance steps in to the equation, long distance has a penalty while short distance has a bonus
 		// im using public int vars named exactly like the ones in Weapon (longDistance_is, midDistance_is)
@@ -98,13 +105,13 @@ public class GameMaster : MonoBehaviour {
 			attackRoll = attackRoll + shortDistanceBonus; // apply bonus
 		}
 
-		print ("Attack Roll after distance: " + attackRoll);
+//		print ("Attack Roll after distance: " + attackRoll);
 
 		bool hit = (attackRoll > defenseRoll) ? true : false; // now check to see if it HITS
 		if (hit) {
 			// prints out console messages for debugging
-			print ("Attack: " + attackRoll + " vs Defense: "+ defenseRoll + " HITS!!!");
-			print ("Monsters left: " + monsterList.Count + " Captains left: " + captainList.Count);
+//			print ("Attack: " + attackRoll + " vs Defense: "+ defenseRoll + " HITS!!!");
+//			print ("Monsters left: " + monsterList.Count + " Captains left: " + captainList.Count);
 		} else {
 //			print ("I missed. Attack: " + attackRoll + "defense: " + defenseRoll);
 
@@ -144,9 +151,17 @@ public class GameMaster : MonoBehaviour {
 	}
 
 	void BattleOverCheck(){
-		print ("Monsters left: " + monsterList.Count + " Captains left: " + captainList.Count);
+//		print ("Monsters left: " + monsterList.Count + " Captains left: " + captainList.Count);
 		if (monsterList.Count < 1 || captainList.Count < 1 )
 			battleOver = true;
+	}
+
+	// damage boost called by weather conditions,  wall powers, and other upgrades
+	public void WeaponDamageBoost(float damageBoostPercent){
+		foreach (GameObject obj in captainList) {
+			Captain captain = obj.GetComponent<Captain>();
+			captain.myWeapon.DamageBoost(damageBoostPercent); // this calls the Weapon script to figure out the bonus
+		}
 	}
 
 	// ***********************************************************************************

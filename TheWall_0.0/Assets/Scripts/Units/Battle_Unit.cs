@@ -5,12 +5,12 @@ using System.Collections.Generic;
 
 
 public class Battle_Unit : Unit {
-	public int hitPoints;
+	public float hitPoints;
 	public int attackRating;
 	public int defenseRating;
 	public string quality;
 
-	int pHitPoints;
+	float pHitPoints;
 	int pAttackRating;
 	int pDefenseRating;
 
