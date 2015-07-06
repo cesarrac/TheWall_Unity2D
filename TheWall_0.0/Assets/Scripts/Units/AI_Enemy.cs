@@ -19,6 +19,8 @@ public class AI_Enemy : Battle_Unit {
 		// get a name, true for monster
 		name = GetName (true);
 		description = "Default monster thing.";
+		// first Time a Unit is created we determine its Quality
+		quality = initQuality ();
 		// Random stat init, ** This is for now
 		myStats = initStats (quality);
 		hitPoints = (float)myStats [0];

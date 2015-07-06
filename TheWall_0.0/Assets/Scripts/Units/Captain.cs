@@ -22,6 +22,8 @@ public class Captain : Battle_Unit {
 		// get a name, false for human
 		name = GetName (false);
 		description = "Default captain guy";
+		// first Time a Unit is created we determine its Quality
+		quality = initQuality ();
 		// Random stat init, ** This is for now
 		myStats = initStats (quality);
 		hitPoints = (float)myStats [0];

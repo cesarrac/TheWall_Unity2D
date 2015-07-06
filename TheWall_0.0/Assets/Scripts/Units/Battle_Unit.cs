@@ -29,8 +29,7 @@ public class Battle_Unit : Unit {
 	public float speed;
 
 	void Awake () {
-		// first Time a Unit is created we determine its Quality
-		quality = initQuality ();
+	
 //		initStats ();
 		this.pHitPoints = hitPoints;
 		this.pAttackRating = attackRating;
@@ -39,12 +38,12 @@ public class Battle_Unit : Unit {
 		myWeapon = GetComponentInChildren<Weapon> (); // this works only if this is instantiated as a prefab with wpn as child
 
 	}
-	
+
 	void Update () {
 		this.pTarget = target;
 	}
 		
-	string initQuality (){
+	public string initQuality (){
 		// for now I'm going to use a random int out of 50. <15 = low, <35 = medium, <45 = high, > 45 = elite
 		int randomQuality = Random.Range (0, 50);
 		string quality;
