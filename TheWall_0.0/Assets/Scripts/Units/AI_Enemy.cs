@@ -10,22 +10,36 @@ public class AI_Enemy : Battle_Unit {
 	GameMaster gameMaster;
 	public bool canMove;
 
+	public void ForceInit(Quality forcedQuality, string myName, int[] stats){
+		quality = forcedQuality;
+		myStats = stats;
+		name = myName;
+		description = "Default monster thing.";
+	}
+	public AI_Enemy(){
+	
+	}
 
 	void Start () {
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
+		myWeapon = GetComponentInChildren<Weapon> (); // this works only if this is instantiated as a prefab with wpn as child
 
-		// *** v For now I'm leaving this as the initializers for the monster since they will already be on the field
+		// THIS ONLY HAPPENS IF FOR SOME REASON THIS UNIT DOESN'T ALREADY HAVE QUALITY AND STATS
+		if (myStats [0] <= 0) { // easiest check is for HP since it HAS to be more than ONE if this unit has already initialized
+			// first Time a Unit is created we determine its Quality
+			quality = initQuality ();
+			myStats = initStats (quality);
+			// get a name, true for monster
+			name = GetName (true);
+			description = "Default monster thing.";
+			hitPoints = (float)myStats [0];
+			attackRating = myStats [1];
+			defenseRating = myStats [2];
+			allegiance = Allegiance.monster;
+		}
+	
 
-		// get a name, true for monster
-		name = GetName (true);
-		description = "Default monster thing.";
-		// first Time a Unit is created we determine its Quality
-		quality = initQuality ();
-		// Random stat init, ** This is for now
-		myStats = initStats (quality);
-		hitPoints = (float)myStats [0];
-		attackRating = myStats [1];
-		defenseRating = myStats [2];
+	
 
 		// *v Commented this to make sure this unit waits for battle to start
 //		if (gameMaster != null) TargetAssign ();
@@ -33,7 +47,7 @@ public class AI_Enemy : Battle_Unit {
 		//the weapon needs to know my attack rating
 		myWeapon.myAttackRating = attackRating;
 
-		allegiance = "monster";
+	
 
 		myTransform = transform;
 		speed = 0.2f;

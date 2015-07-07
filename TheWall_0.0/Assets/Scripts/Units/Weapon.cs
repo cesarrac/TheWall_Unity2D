@@ -102,7 +102,7 @@ public class Weapon : Unit {
 			targetDead = true;
 			print (target.name + " is dead");
 			//tell GM to kill target object
-			gameMaster.KillTarget (targetAsGameObj, target.allegiance);
+			gameMaster.KillTarget (targetAsGameObj, target.allegiance.ToString());
 		}
 	}
 

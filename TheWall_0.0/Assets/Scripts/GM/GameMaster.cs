@@ -27,7 +27,7 @@ public class GameMaster : MonoBehaviour {
 
 
 	void Awake () {
-		StartGame ();
+//		StartGame ();
 	}
 	
 	// Update is called once per frame

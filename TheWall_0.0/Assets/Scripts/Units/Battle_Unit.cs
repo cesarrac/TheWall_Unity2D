@@ -8,7 +8,7 @@ public class Battle_Unit : Unit {
 	public float hitPoints;
 	public int attackRating;
 	public int defenseRating;
-	public string quality;
+	public Quality quality;
 
 	float pHitPoints;
 	int pAttackRating;
@@ -23,10 +23,23 @@ public class Battle_Unit : Unit {
 
 	public Weapon myWeapon;
 
-	public string allegiance;
+	public Allegiance allegiance;
+
 	public Transform myTransform;
 
 	public float speed;
+
+	public enum Quality{
+		elite,
+		high,
+		medium,
+		low
+	}
+
+	public enum Allegiance{
+		monster,
+		captain
+	}
 
 	void Awake () {
 	
@@ -35,30 +48,28 @@ public class Battle_Unit : Unit {
 		this.pAttackRating = attackRating;
 		this.pDefenseRating = defenseRating;
 
-		myWeapon = GetComponentInChildren<Weapon> (); // this works only if this is instantiated as a prefab with wpn as child
-
 	}
 
 	void Update () {
 		this.pTarget = target;
 	}
 		
-	public string initQuality (){
+	public Quality initQuality (){
 		// for now I'm going to use a random int out of 50. <15 = low, <35 = medium, <45 = high, > 45 = elite
 		int randomQuality = Random.Range (0, 50);
-		string quality;
+		Quality quality;
 		if (randomQuality > 45) {
-			quality = "elite";
+			quality = Quality.elite;
 		} else if (randomQuality <= 45 && randomQuality > 35) {
-			quality = "high";
+			quality = Quality.high;
 		} else if (randomQuality <= 35 && randomQuality > 15) {
-			quality = "medium";
+			quality = Quality.medium;
 		} else {
-			quality = "low";
+			quality = Quality.low;
 		}
 		return quality;
 	}
-	public int[] initStats(string quality){
+	public int[] initStats(Quality quality){
 		// Stats should be determined by QUALITY of Unit
 		// Low , Medium, High, Elite
 		// this would change the min and max of their stats (eg. Quality = elite; stats[0] = Random.Range(18, 32);
@@ -66,28 +77,28 @@ public class Battle_Unit : Unit {
 		int[] stats = new int[3];
 		switch (quality) 
 		{
-			case "elite":
+			case Quality.elite:
 				stats [0] = Random.Range (18, 42); 
 				for (int x =1; x< stats.Length; x++) {
 					int randomStat = Random.Range(10, 20);
 					stats[x] = randomStat;
 				}
 				break;
-			case "high":
+			case Quality.high:
 				stats [0] = Random.Range (18, 25); 
 				for (int x =1; x< stats.Length; x++) {
 					int randomStat = Random.Range(10, 20);
 					stats[x] = randomStat;
 				}
 				break;
-			case "medium":
+			case Quality.medium:
 				stats [0] = Random.Range (10, 22); 
 				for (int x =1; x< stats.Length; x++) {
 					int randomStat = Random.Range(10, 20);
 					stats[x] = randomStat;
 				}
 				break;
-			case "low":
+			case Quality.low:
 				stats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
 				for (int x =1; x< stats.Length; x++) {
 					int randomStat = Random.Range(2, 11);

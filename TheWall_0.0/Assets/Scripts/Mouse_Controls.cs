@@ -17,13 +17,15 @@ public class Mouse_Controls : MonoBehaviour {
 
 	Transform myTransform;
 
+	Horde selectedHorde;
+
 	void Start () {
 		gmScript = GetComponent<GameMaster> ();
 		myTransform = transform;
 	}
 	
 	void Update () {
-		SelectUnit ();
+		Select ();
 		if (selectedUnit != null) {
 			Captain cpn = selectedUnit.GetComponent<Captain> ();
 			SelectTargetWithMouse(cpn);
@@ -31,7 +33,7 @@ public class Mouse_Controls : MonoBehaviour {
 	}
 
 
-	void SelectUnit (){
+	void Select (){
 		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 //		Vector3 camPos = Camera.main.transform.position;
 		RaycastHit2D hit = Physics2D.Raycast(new Vector2(m.x, m.y), -Vector2.up);  
@@ -55,19 +57,29 @@ public class Mouse_Controls : MonoBehaviour {
 					}
 				}
 			
-			} else if (hit.collider.CompareTag("Tile")){
-				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
+			} 
+//				else if (hit.collider.CompareTag("Tile")){
+//				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
+//				if (Input.GetMouseButtonUp(0)){
+//					print ("You clicked on a tile");
+//					if (m.x < myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // left
+//						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
+//					} else if(m.x > myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // right
+//						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
+//					} else if (m.y > myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
+//					} else if (m.y < myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
+//					}
+//				}
+//			} 
+				else if (hit.collider.CompareTag("Badge")){
 				if (Input.GetMouseButtonUp(0)){
-					print ("You clicked on a tile");
-					if (m.x < myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // left
-						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
-					} else if(m.x > myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // right
-						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
-					} else if (m.y > myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
-						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
-					} else if (m.y < myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
-						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
-					}
+					// go to battle view
+					// but for testing...
+					print ("Clicked on " + hit.collider.name);
+					selectedHorde = hit.collider.gameObject.GetComponent<Horde>();
+					selectedHorde.Spawn();
 				}
 			}
 		}
