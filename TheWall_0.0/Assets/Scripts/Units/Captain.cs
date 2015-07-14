@@ -19,26 +19,29 @@ public class Captain : Battle_Unit {
 //	}
 
 	void Start () {
-		// get a name, false for human
-		name = GetName (false);
-		description = "Default captain guy";
-		// Random stat init, ** This is for now
-		myStats = initStats ();
-		hitPoints = myStats [0];
-		attackRating = myStats [1];
-		defenseRating = myStats [2];
-
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
-//		targets = gameMaster != null ? gameMaster.monsterArray : null;
+		myWeapon = GetComponentInChildren<Weapon> (); // this works only if this is instantiated as a prefab with wpn as child
 
-		// *v Commented this to make sure this unit waits for battle to start
-//		if (gameMaster != null) TargetAssign ();
-
+		// THIS ONLY HAPPENS IF FOR SOME REASON THIS UNIT DOESN'T ALREADY HAVE QUALITY AND STATS
+		if (myStats [0] <= 0) { // easiest check is for HP since it HAS to be more than ONE if this unit has already initialized
+			// get a name, false for human
+			name = GetName (false);
+			description = "Default captain guy";
+			// first Time a Unit is created we determine its Quality
+			quality = initQuality ();
+			// Random stat init, ** This is for now
+			myStats = initStats (quality);
+			hitPoints = (float)myStats [0];
+			attackRating = myStats [1];
+			defenseRating = myStats [2];
+			allegiance = Allegiance.captain;
+		}
+	
 
 		//the weapon needs to know my attack rating
 		myWeapon.myAttackRating = attackRating;
 
-		allegiance = "captain";
+
 
 		myTransform = transform;
 

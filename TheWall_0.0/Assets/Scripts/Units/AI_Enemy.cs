@@ -10,20 +10,40 @@ public class AI_Enemy : Battle_Unit {
 	GameMaster gameMaster;
 	public bool canMove;
 
-
-	void Start () {
-		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
-
-		// *** v For now I'm leaving this as the initializers for the monster since they will already be on the field
-
-		// get a name, true for monster
-		name = GetName (true);
-		description = "Default monster thing.";
-		// Random stat init, ** This is for now
-		myStats = initStats ();
-		hitPoints = myStats [0];
+	public void ForceInit(Quality forcedQuality, string myName, int[] stats, Allegiance _allegiance){
+		quality = forcedQuality;
+		name = myName;
+		myStats = stats;
+		hitPoints = (float)myStats [0];
 		attackRating = myStats [1];
 		defenseRating = myStats [2];
+		allegiance = _allegiance;
+		description = "Default monster thing.";
+	}
+
+	void Awake(){
+		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
+	}
+	void Start () {
+	
+		myWeapon = GetComponentInChildren<Weapon> (); // this works only if this is instantiated as a prefab with wpn as child
+
+		// THIS ONLY HAPPENS IF FOR SOME REASON THIS UNIT DOESN'T ALREADY HAVE QUALITY AND STATS
+		if (myStats [0] <= 0) { // easiest check is for HP since it HAS to be more than ONE if this unit has already initialized
+			// first Time a Unit is created we determine its Quality
+			quality = initQuality ();
+			myStats = initStats (quality);
+			// get a name, true for monster
+			name = GetName (true);
+			description = "Default monster thing.";
+			hitPoints = (float)myStats [0];
+			attackRating = myStats [1];
+			defenseRating = myStats [2];
+			allegiance = Allegiance.monster;
+		}
+	
+
+	
 
 		// *v Commented this to make sure this unit waits for battle to start
 //		if (gameMaster != null) TargetAssign ();
@@ -31,7 +51,7 @@ public class AI_Enemy : Battle_Unit {
 		//the weapon needs to know my attack rating
 		myWeapon.myAttackRating = attackRating;
 
-		allegiance = "monster";
+	
 
 		myTransform = transform;
 		speed = 0.2f;
