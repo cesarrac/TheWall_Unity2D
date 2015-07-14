@@ -10,18 +10,22 @@ public class AI_Enemy : Battle_Unit {
 	GameMaster gameMaster;
 	public bool canMove;
 
-	public void ForceInit(Quality forcedQuality, string myName, int[] stats){
+	public void ForceInit(Quality forcedQuality, string myName, int[] stats, Allegiance _allegiance){
 		quality = forcedQuality;
-		myStats = stats;
 		name = myName;
+		myStats = stats;
+		hitPoints = (float)myStats [0];
+		attackRating = myStats [1];
+		defenseRating = myStats [2];
+		allegiance = _allegiance;
 		description = "Default monster thing.";
 	}
-	public AI_Enemy(){
-	
-	}
 
-	void Start () {
+	void Awake(){
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
+	}
+	void Start () {
+	
 		myWeapon = GetComponentInChildren<Weapon> (); // this works only if this is instantiated as a prefab with wpn as child
 
 		// THIS ONLY HAPPENS IF FOR SOME REASON THIS UNIT DOESN'T ALREADY HAVE QUALITY AND STATS

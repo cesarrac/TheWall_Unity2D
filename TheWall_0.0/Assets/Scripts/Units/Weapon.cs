@@ -30,6 +30,12 @@ public class Weapon : Unit {
 	// and the morale of that unit
 	public float longDamageBonus = 0, midDamageBonus = 0, shortDamageBonus = 0;
 
+	public void ForcedInit(int fireRate, float sDam, float mDam, float lDam){
+		rateOfFire = fireRate;
+		shortDamage = sDam;
+		midDamage = mDam;
+		longDamage = lDam;
+	}
 	void Awake () {
 		gameMaster = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
 		rdyToFire = true;
@@ -55,6 +61,7 @@ public class Weapon : Unit {
 
 	public void AssignTarget (GameObject target, bool trueForCaptain){
 		stopShooting = gameMaster.battleOver;
+
 		if (!stopShooting) {
 			myTarget = target.GetComponent<Battle_Unit> ();
 			targetAsGameObj = target;

@@ -26,7 +26,7 @@ public class WallPowers_Controls : MonoBehaviour {
 			if (Input.GetKeyDown (KeyCode.Space)) {
 				foreach (GameObject obj in wallTargetsScript.wallTargets){
 					Rigidbody2D rbody = obj.GetComponent<Rigidbody2D>();
-					rbody.AddForce(Vector2.up * 8f, ForceMode2D.Impulse);
+					rbody.AddForce(Vector2.up * 2f, ForceMode2D.Impulse);
 				}
 			}
 			

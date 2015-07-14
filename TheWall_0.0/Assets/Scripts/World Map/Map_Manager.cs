@@ -3,27 +3,37 @@ using System.Collections;
 using System.Collections.Generic;
 public class Map_Manager : MonoBehaviour {
 
+	// list of possible positions on the grid
 	public List<Vector3> gridPositions = new List<Vector3>();
 
 	// we can reference a Tile class that has:
 	// a variable for its type (stone, wood, empty, etc.),
 	// a corresponding GameObject prefab of that type for when it needs to be spawned (e.g. when the Player need to SEE it)
+
+	//list of tiles to reference each tile's data
 	public List<Tile> tileDataList = new List<Tile> ();
 
+	//prefab Resource tiles for instantiate
 	public GameObject emptyTile, woodTile, stoneTile, grainTile, metalTile;
+
+	//a string to ID the type of tile
 	string typeID;
+
 	// map divided in rows and colums
 	public int colums = 20;
 	public int rows = 20;
+	// with max tiles calculated at Start
 	int maxTiles;
 
+	//store my tranform and positions
 	Transform myTransform;
 	Vector3 myStoredPosition;
 	Vector3 myCurrentPosition;
 
-	// town tiles as Game Objects
+	// prefab Town tiles to instantiate
 	public GameObject initialTownTile;
 	public GameObject centerTTile, topLTTile, topCTTile, topRTTile, centerLTTile, centerRTTile, bottomLTTile, bottomCTTile, bottomRTTile;
+	// a list to keep track of tiles and be able to ADD or REMOVE
 	List<GameObject>townTiles = new List<GameObject>();
 
 

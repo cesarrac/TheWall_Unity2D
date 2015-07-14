@@ -20,7 +20,7 @@ public class Mouse_Controls : MonoBehaviour {
 	Horde selectedHorde;
 
 	void Start () {
-		gmScript = GetComponent<GameMaster> ();
+		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
 		myTransform = transform;
 	}
 	
@@ -36,7 +36,8 @@ public class Mouse_Controls : MonoBehaviour {
 	void Select (){
 		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 //		Vector3 camPos = Camera.main.transform.position;
-		RaycastHit2D hit = Physics2D.Raycast(new Vector2(m.x, m.y), -Vector2.up);  
+//		RaycastHit2D hit = Physics2D.Raycast(new Vector2(m.x, m.y), -Vector2.up);  
+		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (m.x, m.y), -Vector2.up);
 		if (hit.collider != null) {
 			if (hit.collider.CompareTag ("Captain")) {
 				if (Input.GetMouseButtonDown(0)){
@@ -58,28 +59,29 @@ public class Mouse_Controls : MonoBehaviour {
 				}
 			
 			} 
-//				else if (hit.collider.CompareTag("Tile")){
-//				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
-//				if (Input.GetMouseButtonUp(0)){
-//					print ("You clicked on a tile");
-//					if (m.x < myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // left
-//						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
-//					} else if(m.x > myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // right
-//						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
-//					} else if (m.y > myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
-//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
-//					} else if (m.y < myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
-//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
-//					}
-//				}
-//			} 
+				else if (hit.collider.CompareTag("Tile")){
+				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
+				if (Input.GetMouseButtonUp(0)){
+					print ("You clicked on a tile");
+					if (m.x < myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // left
+						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
+					} else if(m.x > myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // right
+						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
+					} else if (m.y > myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
+					} else if (m.y < myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
+					}
+				}
+			} 
 				else if (hit.collider.CompareTag("Badge")){
 				if (Input.GetMouseButtonUp(0)){
 					// go to battle view
-					// but for testing...
 					print ("Clicked on " + hit.collider.name);
 					selectedHorde = hit.collider.gameObject.GetComponent<Horde>();
-					selectedHorde.Spawn();
+					// a function here tells the GM to load battleview, with a parameter asking for this Horde unit
+
+					selectedHorde.GoToBattle();
 				}
 			}
 		}

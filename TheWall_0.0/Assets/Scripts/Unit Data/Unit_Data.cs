@@ -19,7 +19,11 @@ public class Unit_Data {
 
 	public Sprite mySprite;
 
-	public int[] myStats;
+	public int[] myStats = new int[3];
+
+	public int rateOfFire;
+	public float shortDamage, midDamage, longDamage;
+
 
 	public enum Quality
 	{
@@ -32,12 +36,16 @@ public class Unit_Data {
 		monster,
 		captain
 	}
-	public Unit_Data(string description, Allegiance allegiance, Quality quality){
+	public Unit_Data(string description, Allegiance allegiance, Quality quality, int fireRate, float sDamage, float mDamage, float lDamage){
 		myStats = initStats (quality);
 		myName = GetName();
 		myDescription = description;
 		myAllegiance = allegiance;
 		myQuality = quality;
+		rateOfFire = fireRate;
+		shortDamage = sDamage;
+		midDamage = mDamage;
+		longDamage = lDamage;
 
 		mySprite = GetSprite ();
 
@@ -72,48 +80,48 @@ public class Unit_Data {
 		// Low , Medium, High, Elite
 		// this would change the min and max of their stats (eg. Quality = elite; stats[0] = Random.Range(18, 32);
 		// need to fill up HP[0], Attack Rating[1], and Defense Rating[2]
-		int[] stats = new int[3];
+//		int[] stats = new int[3];
 		switch (quality) 
 		{
 		case Quality.elite:
-			stats [0] = Random.Range (18, 42); 
-			for (int x =1; x< stats.Length; x++) {
+			myStats [0] = Random.Range (18, 42); 
+			for (int x =1; x< myStats.Length; x++) {
 				int randomStat = Random.Range(10, 20);
-				stats[x] = randomStat;
+				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.high:
-			stats [0] = Random.Range (18, 25); 
-			for (int x =1; x< stats.Length; x++) {
+			myStats [0] = Random.Range (18, 25); 
+			for (int x =1; x< myStats.Length; x++) {
 				int randomStat = Random.Range(10, 20);
-				stats[x] = randomStat;
+				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.medium:
-			stats [0] = Random.Range (10, 22); 
-			for (int x =1; x< stats.Length; x++) {
+			myStats [0] = Random.Range (10, 22); 
+			for (int x =1; x< myStats.Length; x++) {
 				int randomStat = Random.Range(10, 20);
-				stats[x] = randomStat;
+				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.low:
-			stats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
-			for (int x =1; x< stats.Length; x++) {
+			myStats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
+			for (int x =1; x< myStats.Length; x++) {
 				int randomStat = Random.Range(2, 11);
-				stats[x] = randomStat;
+				myStats[x] = randomStat;
 			}
 			break;
 		default:
-			stats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
-			for (int x =1; x< stats.Length; x++) {
+			myStats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
+			for (int x =1; x< myStats.Length; x++) {
 				int randomStat = Random.Range(2, 11);
-				stats[x] = randomStat;
+				myStats[x] = randomStat;
 			}
 			break;
 		}
 		
 		
 		
-		return stats;
+		return myStats;
 	}
 }

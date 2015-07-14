@@ -5,8 +5,8 @@ using Random = UnityEngine.Random;
 
 public class GameMaster : MonoBehaviour {
 	//Arrays to be used for Unit targetting and for checking if battle is over
-	public GameObject[] monsterArray;
-	public GameObject[] captainArray;
+//	public GameObject[] monsterArray;
+//	public GameObject[] captainArray;
 
 	public List<GameObject> monsterList = new List<GameObject>();
 	public List<GameObject> captainList = new List<GameObject>();
@@ -24,33 +24,87 @@ public class GameMaster : MonoBehaviour {
 	// floats to keep track of Wall stats
 	public float maxWallEnergy;	// this gets affected by upgrades and new buildings during Town View
 
-
+	//for spawning Horde members (Monsters)
+	public List<Unit_Data> hordeMembers = new List<Unit_Data> ();
+	public GameObject unitToSpawn; // this public GameObject is blank except for the components needed for a Battle Unit
+	SpriteRenderer sr;
 
 	void Awake () {
-//		StartGame ();
+//		SpawnCaptains ();
+		DontDestroyOnLoad (this.gameObject);
+		monsterList.Clear ();
+		captainList.Clear ();
+		battleStarted = false;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (battleOver){
-			print ("Battle is over.");
-
+		if (Application.loadedLevel == 1) {
+			if (battleOver){
+				print ("Battle is over.");
+				
+			}
 		}
+
 	}
 
-	void StartGame(){
+	public void LoadBattleView(List<Unit_Data> members){
+		foreach (Unit_Data unit in members) {
+			hordeMembers.Add(unit); // populate the GM list of hordeMembers to spawn
+		}
+		Application.LoadLevel (1);
+		StartCoroutine (SetUpBattle ());
+
+	}
+
+	IEnumerator SetUpBattle(){
+		OnLoadedLevel ();
+		yield return new WaitForSeconds (1);
+		SpawnCaptains ();
+		StopCoroutine (SetUpBattle ());
+
+	}
+	void OnLoadedLevel(){
+		// spawn the members of the enemy horde
+		print ("Loading level!");
+			int maxMembersOfHorde = hordeMembers.Count;
+		for (int x=0; x < maxMembersOfHorde; x++) {
+			GameObject hordeSpawn = Instantiate(unitToSpawn, new Vector3(x, 3.6f, 0), Quaternion.identity) as GameObject;
+			DontDestroyOnLoad(hordeSpawn.gameObject);
+			sr = hordeSpawn.GetComponent<SpriteRenderer>();
+			sr.sprite = hordeMembers[x].mySprite;
+			AI_Enemy ai = hordeSpawn.GetComponent<AI_Enemy>();
+			Weapon weapon = hordeSpawn.GetComponentInChildren<Weapon>();
+			weapon.ForcedInit(hordeMembers[x].rateOfFire, hordeMembers[x].shortDamage, hordeMembers[x].midDamage, hordeMembers[x].longDamage); 
+			ai.ForceInit((Battle_Unit.Quality)hordeMembers[x].myQuality, hordeMembers[x].myName, hordeMembers[x].myStats, (Battle_Unit.Allegiance) hordeMembers[x].myAllegiance);
+
+			// add them to the monster list
+			monsterList.Add(hordeSpawn);
+		}
+
+
+
+	}
+
+	void SpawnCaptains(){
 		// ***************** TEMPORARY CAPTAINS SPAWN / REPLACE WITH ADD UNITS UI **************
 		// this creates the first 5 captains
 		float xOffset = -4;
+		GameObject cptSpawn;
 		for (int x = 0; x < 5; x++) {
 			int randomUnit = Random.Range(0, 2);
 			if ( randomUnit == 0){
-				Instantiate(captainOne, new Vector3(xOffset, -2, 0), Quaternion.identity);
+				cptSpawn = Instantiate(captainOne, new Vector3(xOffset, -2, 0), Quaternion.identity)as GameObject;
 				xOffset += 2;
+				// add to captain list
+				captainList.Add(cptSpawn);
 			}else{
-				Instantiate(captainTwo, new Vector3(xOffset, -2, 0), Quaternion.identity);
+				cptSpawn = Instantiate(captainTwo, new Vector3(xOffset, -2, 0), Quaternion.identity)as GameObject;
 				xOffset += 1;
+				// add to captain list
+				captainList.Add(cptSpawn);
 			}
+
 
 		}
 		// ***************** TEMPORARY CAPTAINS SPAWN / REPLACE WITH ADD UNITS UI **************
@@ -65,18 +119,18 @@ public class GameMaster : MonoBehaviour {
 	public void InitLists(){
 		// this fills up the MonsterArray with monsters, CaptainArray with Captain
 		print ("Initializing lists!!");
-		captainArray = GameObject.FindGameObjectsWithTag ("Captain");
-		// TODO: Instead of filling up the Captains list like this, I can fill it up when Player places them on wall
-		for (int y = 0; y < captainArray.Length; y++) {
-			captainList.Add(captainArray[y]);
-		}
-
-		// monsters are going to be pre-determined depending on the Attackers units
-		// TODO: Attacker units as a list or array of GameObjects that can be given to the monsterList
-		monsterArray = GameObject.FindGameObjectsWithTag ("Enemy");
-		for (int x = 0; x < monsterArray.Length; x++) {
-			monsterList.Add(monsterArray[x]);
-		}
+//		captainArray = GameObject.FindGameObjectsWithTag ("Captain");
+//		// TODO: Instead of filling up the Captains list like this, I can fill it up when Player places them on wall
+//		for (int y = 0; y < captainArray.Length; y++) {
+//			captainList.Add(captainArray[y]);
+//		}
+//
+//		// monsters are going to be pre-determined depending on the Attackers units
+//		// TODO: Use the list of Horde Members to fill up this monsterList
+//		monsterArray = GameObject.FindGameObjectsWithTag ("Enemy");
+//		for (int x = 0; x < monsterArray.Length; x++) {
+//			monsterList.Add(monsterArray[x]);
+//		}
 
 		// tell the Units the battle has started
 		battleStarted = true;
@@ -152,8 +206,10 @@ public class GameMaster : MonoBehaviour {
 
 	void BattleOverCheck(){
 //		print ("Monsters left: " + monsterList.Count + " Captains left: " + captainList.Count);
-		if (monsterList.Count < 1 || captainList.Count < 1 )
+		if (monsterList.Count <= 0 || captainList.Count <= 0) {
+			battleStarted = false;
 			battleOver = true;
+		}
 	}
 
 	// damage boost called by weather conditions,  wall powers, and other upgrades
