@@ -19,8 +19,15 @@ public class Mouse_Controls : MonoBehaviour {
 
 	Horde selectedHorde;
 
+	Town_Central townCentral;
+
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
+		if (Application.loadedLevel == 0) {
+			townCentral = GameObject.FindGameObjectWithTag("Town_Central").GetComponent<Town_Central>();
+
+		}
+	
 		myTransform = transform;
 	}
 	
@@ -63,15 +70,28 @@ public class Mouse_Controls : MonoBehaviour {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
 				if (Input.GetMouseButtonUp(0)){
 					print ("You clicked on a tile");
-					if (m.x < myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // left
+					Vector2 mouseRounded = new Vector2(Mathf.Round(m.x), Mathf.Round(m.y));
+					Vector2 myPosRounded =  new Vector2(Mathf.Round(myTransform.position.x), Mathf.Round(myTransform.position.y));
+					if (mouseRounded.x < myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y -1){ // left
 						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
-					} else if(m.x > myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // right
+					} else if(mouseRounded.x > myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y -1){ // right
 						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
-					} else if (m.y > myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+					} else if (mouseRounded.y >myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x -1){ // up
 						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
-					} else if (m.y < myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+					} else if (mouseRounded.y < myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x -1){ // up
 						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
 					}
+
+
+//					if (m.x < myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // left
+//						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
+//					} else if(m.x > myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // right
+//						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
+//					} else if (m.y > myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
+//					} else if (m.y < myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
+//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
+//					}
 				}
 			} 
 				else if (hit.collider.CompareTag("Badge")){
@@ -82,6 +102,11 @@ public class Mouse_Controls : MonoBehaviour {
 					// a function here tells the GM to load battleview, with a parameter asking for this Horde unit
 
 					selectedHorde.GoToBattle();
+				}
+			} else if(hit.collider.CompareTag("Gatherer")){
+				if (Input.GetMouseButtonDown(1)){
+					Destroy(hit.collider.gameObject);
+					townCentral.availableGatherers++;
 				}
 			}
 		}

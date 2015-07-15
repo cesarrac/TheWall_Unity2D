@@ -206,4 +206,10 @@ public class Map_Manager : MonoBehaviour {
 		return tile;
 	}
 
+	public void CheckResourceQuantity(Tile tile, int index, GameObject tileObj){
+		if (tile.maxResourceQuantity <= 0) {
+			tileDataList.RemoveAt(index);
+			Destroy(tileObj);
+		}
+	}
 }
