@@ -36,7 +36,6 @@ public class Horde : MonoBehaviour {
 	
 	}
 
-	// TODO: this needs to be replaced with a Load Battle View that loads the level then spawns in the units
 
 	// that load battleview function will then call the Spawn function below to instantiate the proper units
 	public void GoToBattle(){
@@ -44,6 +43,9 @@ public class Horde : MonoBehaviour {
 			gmScript.LoadBattleView(hordeMembers);
 		}
 	}
+
+	// HORDE MOVEMENT: called by the GM each "turn" controlled by a Coroutine
+
 
 	//for testing: Im calling this from Mouse_controls, when you click on the badge we spawn the units with the proper values from the Unit Data
 //	public void Spawn(){

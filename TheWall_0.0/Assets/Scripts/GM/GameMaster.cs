@@ -29,25 +29,41 @@ public class GameMaster : MonoBehaviour {
 	public GameObject unitToSpawn; // this public GameObject is blank except for the components needed for a Battle Unit
 	SpriteRenderer sr;
 
+	//for Turn Timer
+	public float turnTime;
+	public bool newTurn = true;
+
+	//need access to the Map Manager in order to know how big the grid is
+	Map_Manager mapScript;
+	public List<Vector3> mapPositions;
+
 	void Awake () {
 //		SpawnCaptains ();
 		DontDestroyOnLoad (this.gameObject);
 		monsterList.Clear ();
 		captainList.Clear ();
 		battleStarted = false;
+		if (Application.loadedLevel == 0) {
+			mapScript = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();
+			mapPositions = mapScript.InitGridPositionsList();
+		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		if (Application.loadedLevel == 1) {
-			if (battleOver){
+			if (battleOver) {
 				print ("Battle is over.");
-				
+			}
+		} else {
+			if (newTurn){
+				StartCoroutine(TurnTimer());
 			}
 		}
 
 	}
 
+	//***************************** - BATTLE VIEW LOAD LEVEL FUNCTIONS *********************
 	public void LoadBattleView(List<Unit_Data> members){
 		foreach (Unit_Data unit in members) {
 			hordeMembers.Add(unit); // populate the GM list of hordeMembers to spawn
@@ -81,10 +97,10 @@ public class GameMaster : MonoBehaviour {
 			// add them to the monster list
 			monsterList.Add(hordeSpawn);
 		}
-
-
-
 	}
+
+	//***************************** - BATTLE VIEW LOAD LEVEL FUNCTIONS *********************
+
 
 	void SpawnCaptains(){
 		// ***************** TEMPORARY CAPTAINS SPAWN / REPLACE WITH ADD UNITS UI **************
@@ -220,6 +236,53 @@ public class GameMaster : MonoBehaviour {
 		}
 	}
 
-	// ***********************************************************************************
+ 	// ******** BATTLE TOOLS *********************************
 
+	IEnumerator TurnTimer(){ // Controls TURNS for Horde movement
+	
+		// new turn false
+		newTurn = false;
+		// wait
+		yield return new WaitForSeconds (turnTime);
+		// move the hordes
+		MoveTheHordes ();
+	
+	}
+
+	public void MoveTheHordes(){
+		GameObject[] hordes = GameObject.FindGameObjectsWithTag ("Badge"); // Finds all Badges on the map
+		print ("hordes out there: " + hordes.Length);
+		foreach (GameObject horde in hordes) { // assign a random direction
+			// first make sure they are not next to player wall
+			Horde hScript = horde.gameObject.GetComponent<Horde>();
+			// before moving each one we need to make sure they are moving to a legal position
+			Vector3 hPos = horde.gameObject.GetComponent<Transform>().transform.position;
+
+			if (!hScript.nextToTownTile){
+				int randomDir = Random.Range(0,4);
+				if (randomDir == 1){ // up
+					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y + 1, 0))) ? new Vector3(hPos.x, hPos.y + 1, 0) : horde.transform.position;
+				}else if(randomDir == 2){ //down
+					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y - 1, 0))) ? new Vector3(hPos.x, hPos.y - 1, 0) : horde.transform.position;
+				}else if (randomDir == 3){ // left
+					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x - 1, hPos.y, 0))) ? new Vector3(hPos.x - 1, hPos.y, 0) : horde.transform.position;
+				}else if (randomDir == 4){ // right
+						horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x + 1, hPos.y, 0))) ? new Vector3(hPos.x + 1, hPos.y, 0) : horde.transform.position;
+				}
+			}	
+		}
+		// new turn true
+		newTurn = true;
+	}
+
+	bool CheckLegalPosition(Vector3 newPos){
+		foreach (Vector3 position in mapPositions){
+			if (newPos == position){
+				return true;
+				break;
+				print ("New Position is legal. " + newPos);
+			}
+		}
+		return false;
+	}
 }

@@ -56,12 +56,14 @@ public class Map_Manager : MonoBehaviour {
 	}
 
 	// here we initialize the possible positions for the tiles
-	void InitGridPositionsList(){
+	public List<Vector3> InitGridPositionsList(){
+
 		for (int x = 0; x < colums; x++) {
 			for (int y = 0; y < rows; y++){
 				gridPositions.Add(new Vector3(x, y, 0));
 			}
 		}
+		return gridPositions;
 	}
 
 	// create Tile Data for entire World Map
@@ -85,7 +87,7 @@ public class Map_Manager : MonoBehaviour {
 	// x: 10 - 12
 	// y: 10 - 12
 
-
+	// Add the first viewable tiles and the first Town tile
 	void SpawnInitialTiles (Vector3 position){
 
 		int posX = (int)position.x;
@@ -108,6 +110,7 @@ public class Map_Manager : MonoBehaviour {
 		myStoredPosition = position;
 	}
 
+	// This is called right now by Mouse Controls everytime the Player clicks on a tile
 	void SpawnTilesByExpanding(Vector3 centerPosition){
 		// check which direction we moved
 		int posX = (int)centerPosition.x;
@@ -117,7 +120,8 @@ public class Map_Manager : MonoBehaviour {
 		if (centerPosition.x > myStoredPosition.x) { // right
 			// spawn town tile first
 			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
-			for (int x = posX; x <= posX + 1; x++) {
+			// loop to Instantiate all the resource tiles around the new town tile 
+			for (int x = posX; x <= posX + 1; x++) { // right
 				for (int y = posY -1; y <= posY +1; y++) {
 					Vector3 tilePos = new Vector3 (x, y, 0);
 					foreach (Tile tile in tileDataList) {
@@ -127,7 +131,7 @@ public class Map_Manager : MonoBehaviour {
 						}
 					}
 				}
-			}
+			}		// repeat the same process for each side... 
 		} else if (centerPosition.x < myStoredPosition.x) {// left
 			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
 
@@ -171,15 +175,15 @@ public class Map_Manager : MonoBehaviour {
 				}
 			}
 		}
-		myStoredPosition = centerPosition;
+		myStoredPosition = centerPosition; // STORE THE NEW POSITION (right now this is always the new created town tile)
 
 	}
 
-	void SpawnTownTiles (Vector3 position){
-		if (position.x > myStoredPosition.x) { // right
-		
-		}
-	}
+//	void SpawnTownTiles (Vector3 position){
+//		if (position.x > myStoredPosition.x) { // right
+//		
+//		}
+//	}
 
 	GameObject TileType(int type){
 		GameObject tile;
