@@ -36,6 +36,12 @@ public class Map_Manager : MonoBehaviour {
 	// a list to keep track of tiles and be able to ADD or REMOVE
 	List<GameObject>townTiles = new List<GameObject>();
 
+	// a list of the tiles spawned during Scouting, to Remove them when scouting is done
+	[HideInInspector]
+	public List<GameObject>scoutedTiles = new List<GameObject>();
+
+	// a Transform for holding the Tiles in the Hierarchy
+	public Transform tileHolder;
 
 	void Start () {
 		maxTiles = colums * rows;
@@ -49,6 +55,7 @@ public class Map_Manager : MonoBehaviour {
 	
 
 	void Update () {
+		//TODO: change this so it DOESNT spawn town tiles everytime I move
 		myCurrentPosition = new Vector3 (myTransform.position.x, myTransform.position.y, 0);
 		if (myCurrentPosition != myStoredPosition) {
 			SpawnTilesByExpanding (myCurrentPosition);
@@ -98,6 +105,7 @@ public class Map_Manager : MonoBehaviour {
 				foreach (Tile tile in tileDataList){
 					if (tile.gridPosition == tilePos){
 						GameObject spawnedTile = Instantiate(tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+						spawnedTile.transform.parent = tileHolder;
 						break;
 					}
 				}
@@ -127,6 +135,7 @@ public class Map_Manager : MonoBehaviour {
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+							spawnedTile.transform.parent = tileHolder;
 							break;
 						}
 					}
@@ -141,6 +150,7 @@ public class Map_Manager : MonoBehaviour {
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+							spawnedTile.transform.parent = tileHolder;
 							break;
 						}
 					}
@@ -155,6 +165,7 @@ public class Map_Manager : MonoBehaviour {
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+							spawnedTile.transform.parent = tileHolder;
 							break;
 						}
 					}
@@ -169,6 +180,8 @@ public class Map_Manager : MonoBehaviour {
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+							spawnedTile.transform.parent = tileHolder;
+
 							break;
 						}
 					}
@@ -177,6 +190,63 @@ public class Map_Manager : MonoBehaviour {
 		}
 		myStoredPosition = centerPosition; // STORE THE NEW POSITION (right now this is always the new created town tile)
 
+	}
+
+	public void SpawnTilesForScout(Vector3 centerPosition){
+		// check which direction we moved
+		int posX = (int)centerPosition.x;
+		int posY = (int)centerPosition.y;
+		GameObject expandedTownTile;
+		if (centerPosition.y < myStoredPosition.y) {// down
+			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+			
+			for (int x = posX; x >= posX - 1; x--) {
+				for (int y = posY -1; y <= posY; y++) {
+					Vector3 tilePos = new Vector3 (x, y, 0);
+					foreach (Tile tile in tileDataList) {
+						if (tile.gridPosition == tilePos) {
+							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+							// add it to the list of scouted game objects to later destroy
+							scoutedTiles.Add(spawnedTile);
+							spawnedTile.transform.parent = tileHolder;
+
+							break;
+						}
+					}
+				}
+			}
+		} else if (centerPosition.y > myStoredPosition.y) {// up
+			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+			
+			for (int x = posX; x >= posX - 1; x--) {
+				for (int y = posY; y <= posY + 1; y++) {
+					Vector3 tilePos = new Vector3 (x, y, 0);
+					foreach (Tile tile in tileDataList) {
+						if (tile.gridPosition == tilePos) {
+							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+							// add it to the list of scouted game objects to later destroy
+							scoutedTiles.Add(spawnedTile);
+							spawnedTile.transform.parent = tileHolder;
+
+							break;
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	public void ClearScoutedTiles(){
+		if (scoutedTiles.Count > 0) {
+			foreach (GameObject obj in scoutedTiles) {
+				int i= 0;
+				Destroy(obj);
+//				scoutedTiles.RemoveAt(i);
+				i++;
+			}
+		}
+//		scoutedTiles.Clear ();
 	}
 
 //	void SpawnTownTiles (Vector3 position){

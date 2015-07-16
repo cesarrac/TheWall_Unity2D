@@ -21,10 +21,14 @@ public class Mouse_Controls : MonoBehaviour {
 
 	Town_Central townCentral;
 
+	// Access to the Camera script for Scout ability
+	Camera_Follow camFollowScript;
+
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
 		if (Application.loadedLevel == 0) {
 			townCentral = GameObject.FindGameObjectWithTag("Town_Central").GetComponent<Town_Central>();
+			camFollowScript = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera_Follow>();
 
 		}
 	
@@ -37,6 +41,8 @@ public class Mouse_Controls : MonoBehaviour {
 			Captain cpn = selectedUnit.GetComponent<Captain> ();
 			SelectTargetWithMouse(cpn);
 		}
+
+	
 	}
 
 
@@ -47,39 +53,38 @@ public class Mouse_Controls : MonoBehaviour {
 		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (m.x, m.y), -Vector2.up);
 		if (hit.collider != null) {
 			if (hit.collider.CompareTag ("Captain")) {
-				if (Input.GetMouseButtonDown(0)){
+				if (Input.GetMouseButtonDown (0)) {
 					print ("You clicked on Captain.");
 					selectedUnit = hit.collider.gameObject; // this stores the selected unit as a GameObject
 
 					// Instantiate a Selection Box at that Unit's position
-					if (mySBox == null){
-						mySBox = Instantiate(selectionBox, selectedUnit.transform.position, Quaternion.identity) as GameObject;
+					if (mySBox == null) {
+						mySBox = Instantiate (selectionBox, selectedUnit.transform.position, Quaternion.identity) as GameObject;
 						mySBox.transform.parent = selectedUnit.transform; 
 						// sets the Selection box parent to be the Unit so it can follow it around if Moved
 
-					}else{
-						Destroy(mySBox); // Destroy the old one, bring in the new selection
-						mySBox = Instantiate(selectionBox, selectedUnit.transform.position, Quaternion.identity) as GameObject;
+					} else {
+						Destroy (mySBox); // Destroy the old one, bring in the new selection
+						mySBox = Instantiate (selectionBox, selectedUnit.transform.position, Quaternion.identity) as GameObject;
 						mySBox.transform.parent = selectedUnit.transform; 
 
 					}
 				}
 			
-			} 
-				else if (hit.collider.CompareTag("Tile")){
+			} else if (hit.collider.CompareTag ("Tile")) {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
-				if (Input.GetMouseButtonUp(0)){
+				if (Input.GetMouseButtonUp (0)) {
 					print ("You clicked on a tile");
-					Vector2 mouseRounded = new Vector2(Mathf.Round(m.x), Mathf.Round(m.y));
-					Vector2 myPosRounded =  new Vector2(Mathf.Round(myTransform.position.x), Mathf.Round(myTransform.position.y));
-					if (mouseRounded.x < myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y -1){ // left
-						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
-					} else if(mouseRounded.x > myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y -1){ // right
-						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
-					} else if (mouseRounded.y >myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x -1){ // up
-						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
-					} else if (mouseRounded.y < myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x -1){ // up
-						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
+					Vector2 mouseRounded = new Vector2 (Mathf.Round (m.x), Mathf.Round (m.y));
+					Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
+					if (mouseRounded.x < myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y - 1) { // left
+						myTransform.position = new Vector3 (myTransform.position.x - 1, myTransform.position.y, 0);
+					} else if (mouseRounded.x > myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y - 1) { // right
+						myTransform.position = new Vector3 (myTransform.position.x + 1, myTransform.position.y, 0);
+					} else if (mouseRounded.y > myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x - 1) { // up
+						myTransform.position = new Vector3 (myTransform.position.x, myTransform.position.y + 1, 0);
+					} else if (mouseRounded.y < myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x - 1) { // up
+						myTransform.position = new Vector3 (myTransform.position.x, myTransform.position.y - 1, 0); // down
 					}
 
 
@@ -93,23 +98,22 @@ public class Mouse_Controls : MonoBehaviour {
 //						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
 //					}
 				}
-			} 
-				else if (hit.collider.CompareTag("Badge")){
-				if (Input.GetMouseButtonUp(0)){
+			} else if (hit.collider.CompareTag ("Badge")) {
+				if (Input.GetMouseButtonUp (0)) {
 					// go to battle view
 					print ("Clicked on " + hit.collider.name);
-					selectedHorde = hit.collider.gameObject.GetComponent<Horde>();
+					selectedHorde = hit.collider.gameObject.GetComponent<Horde> ();
 					// a function here tells the GM to load battleview, with a parameter asking for this Horde unit
 
-					selectedHorde.GoToBattle();
+					selectedHorde.GoToBattle ();
 				}
-			} else if(hit.collider.CompareTag("Gatherer")){
-				if (Input.GetMouseButtonDown(1)){
-					Destroy(hit.collider.gameObject);
+			} else if (hit.collider.CompareTag ("Gatherer")) {
+				if (Input.GetMouseButtonDown (1)) {
+					Destroy (hit.collider.gameObject);
 					townCentral.availableGatherers++;
 				}
 			}
-		}
+		} 
 		// for dragging the unit with mouse
 		if (selectedUnit != null) { // once you click on a unit this will be true
 			if (Input.GetMouseButton(0) && !gmScript.battleStarted){
@@ -118,6 +122,14 @@ public class Mouse_Controls : MonoBehaviour {
 			} else{
 				selectedUnit = null;
 			}
+		}
+
+		//Controls for Scout function (ability to look around the map) //TODO: Add finite ammount of scouting time
+		if (Input.GetMouseButton (1)) {
+			camFollowScript.scouting = true;
+			camFollowScript.ScoutCam (m);
+		} else {
+			camFollowScript.scouting = false;
 		}
 	} 
 
