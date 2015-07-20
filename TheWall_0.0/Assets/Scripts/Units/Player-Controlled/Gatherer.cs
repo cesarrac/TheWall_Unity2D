@@ -39,7 +39,7 @@ public class Gatherer : Unit {
 	public LayerMask mask = 9;
 
 	void Start () {
-		GetName (false);
+		name = GetName (false);
 		myTransform = transform;
 		townResources = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<TownResources> ();
 		mapManager = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();

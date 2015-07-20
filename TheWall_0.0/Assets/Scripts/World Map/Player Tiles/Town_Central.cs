@@ -14,6 +14,10 @@ public class Town_Central : MonoBehaviour {
 	// Text displaying available gatherers
 	public Text availableText;
 
+	// Damages for tap hits (keeping it simple for now)
+	public float shortRangeDamage;
+	public float longRangeDamage;
+
 	// Use this for initialization
 	void Start () {
 	}

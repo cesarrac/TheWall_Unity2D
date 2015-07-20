@@ -19,10 +19,13 @@ public class Mouse_Controls : MonoBehaviour {
 
 	Horde selectedHorde;
 
-	Town_Central townCentral;
+	Town_Central townCentral; // using this access to control Gatherers and get damages of player tap hits
 
 	// Access to the Camera script for Scout ability
 	Camera_Follow camFollowScript;
+
+	// Bool to stop expansion and town shooting when placing with mouse
+	public bool mouseIsBusy; // this turns true when mouse is holding a Gatherer or building for placement
 
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
@@ -73,7 +76,9 @@ public class Mouse_Controls : MonoBehaviour {
 			
 			} else if (hit.collider.CompareTag ("Tile")) {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
-				if (Input.GetMouseButtonUp (0)) {
+					// mouse must not be busy to be able to expand, meaning not currently shooting or placing units
+				mouseIsBusy = false;
+				if (Input.GetMouseButtonUp (0) && !mouseIsBusy) {
 					print ("You clicked on a tile");
 					Vector2 mouseRounded = new Vector2 (Mathf.Round (m.x), Mathf.Round (m.y));
 					Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
@@ -99,20 +104,41 @@ public class Mouse_Controls : MonoBehaviour {
 //					}
 				}
 			} else if (hit.collider.CompareTag ("Badge")) {
+				mouseIsBusy = true;
 				if (Input.GetMouseButtonUp (0)) {
-					// go to battle view
+					mouseIsBusy = false;
 					print ("Clicked on " + hit.collider.name);
 					selectedHorde = hit.collider.gameObject.GetComponent<Horde> ();
-					// a function here tells the GM to load battleview, with a parameter asking for this Horde unit
+					selectedHorde.TakeDamage (townCentral.shortRangeDamage);
+					print (selectedHorde.gameObject.name + " takes " + townCentral.shortRangeDamage + " damage!");
 
-					selectedHorde.GoToBattle ();
+					//check how many tiles away this Horde is
+					// both positions rounded
+//					Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
+//					Vector2 hordePosRounded = new Vector2 (Mathf.Round (selectedHorde.gameObject.transform.position.x), Mathf.Round (selectedHorde.gameObject.transform.position.y));
+//					if (hordePosRounded.x > myPosRounded.x + 2 || hordePosRounded.y > myPosRounded.y + 2){
+//						// long range damage
+//						selectedHorde.TakeDamage(townCentral.longRangeDamage);
+//						print (selectedHorde.gameObject.name + " takes " + townCentral.longRangeDamage + " damage!");
+//					} else if (hordePosRounded.x > myPosRounded.x || hordePosRounded.y > myPosRounded.y){
+//						// short range
+//						selectedHorde.TakeDamage(townCentral.shortRangeDamage);
+//						print (selectedHorde.gameObject.name + " takes " + townCentral.shortRangeDamage + " damage!");
+//					}
+
+					// tell the GM to load battleview
+					// THIS WOULD LOAD BATTLEVIEW selectedHorde.GoToBattle ();
 				}
 			} else if (hit.collider.CompareTag ("Gatherer")) {
+				mouseIsBusy = true;
 				if (Input.GetMouseButtonDown (1)) {
 					Destroy (hit.collider.gameObject);
 					townCentral.availableGatherers++;
+					mouseIsBusy = false;
 				}
 			}
+		} else { // hit.collider is null so mouse is definitely NOT busy
+			mouseIsBusy = false;
 		} 
 		// for dragging the unit with mouse
 		if (selectedUnit != null) { // once you click on a unit this will be true

@@ -37,6 +37,9 @@ public class GameMaster : MonoBehaviour {
 	Map_Manager mapScript;
 	public List<Vector3> mapPositions;
 
+	//access to the Town Resources 
+	public TownResources townResourceScript;
+
 	void Awake () {
 //		SpawnCaptains ();
 		DontDestroyOnLoad (this.gameObject);
@@ -246,6 +249,7 @@ public class GameMaster : MonoBehaviour {
 		yield return new WaitForSeconds (turnTime);
 		// move the hordes
 		MoveTheHordes ();
+		GiveXPPoints ();
 	
 	}
 
@@ -284,5 +288,9 @@ public class GameMaster : MonoBehaviour {
 			}
 		}
 		return false;
+	}
+
+	void GiveXPPoints(){
+		townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
 	}
 }
