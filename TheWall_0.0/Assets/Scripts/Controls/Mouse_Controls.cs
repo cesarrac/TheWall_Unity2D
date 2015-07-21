@@ -27,15 +27,27 @@ public class Mouse_Controls : MonoBehaviour {
 	// Bool to stop expansion and town shooting when placing with mouse
 	public bool mouseIsBusy; // this turns true when mouse is holding a Gatherer or building for placement
 
+	// Access to Map Manager to expand town tiles
+	Map_Manager mapScript;
+
+	// Tile select box
+//	public GameObject tileSelectionBox;
+
+	// need to store the resource tile to destroy when Expanding
+	public GameObject resourceTileToDestroy;
+
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
 		if (Application.loadedLevel == 0) {
 			townCentral = GameObject.FindGameObjectWithTag("Town_Central").GetComponent<Town_Central>();
 			camFollowScript = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera_Follow>();
-
+			mapScript = GetComponent<Map_Manager>();
 		}
 	
 		myTransform = transform;
+		// FOR NOW im going to spawn a selection box here to be able to see what town tile i have selected
+		GameObject tileSelectBox = Instantiate (selectionBox, myTransform.position, Quaternion.identity) as GameObject;
+		tileSelectBox.transform.parent = myTransform;
 	}
 	
 	void Update () {
@@ -78,30 +90,43 @@ public class Mouse_Controls : MonoBehaviour {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
 					// mouse must not be busy to be able to expand, meaning not currently shooting or placing units
 				mouseIsBusy = false;
-				if (Input.GetMouseButtonUp (0) && !mouseIsBusy) {
+				// as soon as I touch the tile I need to store it in case it will need to be destroyed
+//				resourceTileToDestroy = hit.collider.gameObject;
+//				GameObject destroyThisTile = resourceTileToDestroy;
+
+				if (Input.GetMouseButtonUp(0) && !mouseIsBusy) {
+				
 					print ("You clicked on a tile");
 					Vector2 mouseRounded = new Vector2 (Mathf.Round (m.x), Mathf.Round (m.y));
 					Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
-					if (mouseRounded.x < myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y - 1) { // left
-						myTransform.position = new Vector3 (myTransform.position.x - 1, myTransform.position.y, 0);
-					} else if (mouseRounded.x > myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y - 1) { // right
-						myTransform.position = new Vector3 (myTransform.position.x + 1, myTransform.position.y, 0);
-					} else if (mouseRounded.y > myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x - 1) { // up
-						myTransform.position = new Vector3 (myTransform.position.x, myTransform.position.y + 1, 0);
-					} else if (mouseRounded.y < myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x - 1) { // up
-						myTransform.position = new Vector3 (myTransform.position.x, myTransform.position.y - 1, 0); // down
+					print ("Destroyed " + resourceTileToDestroy.name);
+					if (mouseRounded.x == myPosRounded.x - 1 && mouseRounded.y == myPosRounded.y) { // left
+						//ADD & clear the resource tile under new town tile
+						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
+					} else if (mouseRounded.x == myPosRounded.x + 1 && mouseRounded.y == myPosRounded.y) { // right
+						//ADD & clear the resource tile under new town tile
+						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
+					} else if (mouseRounded.y == myPosRounded.y + 1 && mouseRounded.x == myPosRounded.x) { // up
+						//ADD & clear the resource tile under new town tile
+						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
+					} else if (mouseRounded.y == myPosRounded.y - 1 && mouseRounded.x == myPosRounded.x) { // down
+						//ADD & clear the resource tile under new town tile
+						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
 					}
 
+					// vvvvvv THIS CODE BELOW ACTUALLY MOVES THE GAMEOBJECT WITH THIS SCRIPT WHEN EXPANDING vvvv
 
-//					if (m.x < myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // left
-//						myTransform.position = new Vector3(myTransform.position.x -1, myTransform.position.y, 0);
-//					} else if(m.x > myTransform.position.x && m.y < myTransform.position.y + 1 && m.y > myTransform.position.y -1){ // right
-//						myTransform.position = new Vector3(myTransform.position.x +1, myTransform.position.y, 0);
-//					} else if (m.y > myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
-//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y + 1, 0);
-//					} else if (m.y < myTransform.position.y && m.x < myTransform.position.x + 1 && m.x > myTransform.position.x -1){ // up
-//						myTransform.position = new Vector3(myTransform.position.x, myTransform.position.y - 1, 0); // down
+					//Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
+//					if (mouseRounded.x < myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y - 1) { // left
+//						myTransform.position = new Vector3 (myTransform.position.x - 1, myTransform.position.y, 0);
+//					} else if (mouseRounded.x > myPosRounded.x && mouseRounded.y < myPosRounded.y + 1 && mouseRounded.y > myPosRounded.y - 1) { // right
+//						myTransform.position = new Vector3 (myTransform.position.x + 1, myTransform.position.y, 0);
+//					} else if (mouseRounded.y > myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x - 1) { // up
+//						myTransform.position = new Vector3 (myTransform.position.x, myTransform.position.y + 1, 0);
+//					} else if (mouseRounded.y < myPosRounded.y && mouseRounded.x < myPosRounded.x + 1 && mouseRounded.x > myPosRounded.x - 1) { // up
+//						myTransform.position = new Vector3 (myTransform.position.x, myTransform.position.y - 1, 0); // down
 //					}
+
 				}
 			} else if (hit.collider.CompareTag ("Badge")) {
 				mouseIsBusy = true;

@@ -65,22 +65,9 @@ public class Gatherer : Unit {
 		}
 	}
 
-	// once positioned the gatherer checks what type of tile it is in to begin extracting
-//	void TileCheck(){
-//		Vector2 rayPos = new Vector2 (myTransform.position.x - 0.2f, myTransform.position.y);
-//		Debug.DrawLine (new Vector3(rayPos.x, rayPos.y, 0), new Vector3(rayPos.x, myTransform.position.y, 0), Color.red);
-//
-//		RaycastHit2D hit = Physics2D.Linecast (rayPos, new Vector2(rayPos.x, myTransform.position.y - 0.2f), mask.value);
-//		if (hit.collider != null) {
-//			print ("Gatherer on top of " + hit.collider.gameObject.name);
-//			if (hit.collider.CompareTag("Tile")){
-//				Tile currentTile = hit.collider.gameObject.GetComponent<Tile>();
-//				StartCoroutine (GatherTime (gatherTime, currentTile.resourceType));
-//				print("Starting to gather!");
-//			}
-//		}
-//	}
-
+	// to check what tile we are in we check this Gatherer's position against the list of tile positions
+	//TODO: Once a render detector is created to only render objects that the camera can see, this check
+	// can be performed against those tiles on the list that can be found within the camera's viewing space
 	void TileCheck(){
 		// check my position against the position in the Tile Data List
 		for (int x = 0; x < mapManager.tileDataList.Count; x++) {
@@ -104,10 +91,10 @@ public class Gatherer : Unit {
 
 	void Gather(string tileType, int tileIndex){
 		if (currTileObj != null) { // make sure we are standing on a tile / tile has not been destroyed
-			townResources.AddResource (tileType, gatherAmmount);
+			townResources.AddResource (tileType, gatherAmmount);	// add resources to the town
 			int resourceQ = mapManager.tileDataList [tileIndex].maxResourceQuantity;
-			mapManager.tileDataList [tileIndex].maxResourceQuantity = resourceQ - gatherAmmount;
-			mapManager.CheckResourceQuantity (currentTile, tileIndex, currTileObj);
+			mapManager.tileDataList [tileIndex].maxResourceQuantity = resourceQ - gatherAmmount; // substract from tile
+			mapManager.CheckResourceQuantity (currentTile, tileIndex, currTileObj); // check if depleted & destroy
 			print ("Gathering " + gatherAmmount + " " + tileType);
 			gathering = false;
 		}

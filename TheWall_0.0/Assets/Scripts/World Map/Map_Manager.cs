@@ -48,6 +48,12 @@ public class Map_Manager : MonoBehaviour {
 	//Access to the Town Resources
 	public TownResources townResourcesScript;
 
+	// currently selected town tile 
+	public GameObject selectedTownTile;
+
+	// Prefab to spawn when resource is depleted by a Gatherer
+	public GameObject depletedTile;
+
 	void Start () {
 		maxTiles = colums * rows;
 
@@ -60,12 +66,12 @@ public class Map_Manager : MonoBehaviour {
 
 	void Update () {
 
-		myCurrentPosition = new Vector3 (myTransform.position.x, myTransform.position.y, 0);
+//		myCurrentPosition = new Vector3 (myTransform.position.x, myTransform.position.y, 0);
 		//TODO: Add it so you have to use some other control to expand instead of just left click
 		// can only call spawn tiles by expanding IF town has at least 1 XP point
-		if (myCurrentPosition != myStoredPosition && townResourcesScript.xp > 0) {
-			SpawnTilesByExpanding (myCurrentPosition);
-		}
+//		if (myCurrentPosition != myStoredPosition && townResourcesScript.xp > 0) {
+//			SpawnTilesByExpanding (myCurrentPosition);
+//		}
 
 	}
 
@@ -74,7 +80,7 @@ public class Map_Manager : MonoBehaviour {
 
 		for (int x = 0; x < colums; x++) {
 			for (int y = 0; y < rows; y++){
-				gridPositions.Add(new Vector3(x, y, 0));
+				gridPositions.Add(new Vector3(x, y, -2f)); // default Z to -2 so resource tiles get detected first by linecasts
 			}
 		}
 		return gridPositions;
@@ -88,8 +94,8 @@ public class Map_Manager : MonoBehaviour {
 					// Tiles need a type: (Empty, Wood, Stone, Metal, Grain)
 					// Tiles need a resource ammount: (None, Small, Medium, Large)
 				// for now EVERYTHING IS RANDOM
-				int tileTypePick = Random.Range(0, 4);
-				tileDataList.Add(new Tile(tileTypePick, 10, new Vector3(x, y, 0), TileType(tileTypePick)));
+				int tileTypePick = Random.Range(0, 5);
+				tileDataList.Add(new Tile(tileTypePick, 10, new Vector3(x, y,  -2f), TileType(tileTypePick)));
 			}
 		}
 		SpawnInitialTiles(myStoredPosition);
@@ -108,14 +114,20 @@ public class Map_Manager : MonoBehaviour {
 		int posY = (int)position.y;
 		for (int x = posX - 1; x <= posX + 1; x++) {
 			for (int y = posY -1; y <= posY +1; y++){
-				Vector3 tilePos = new Vector3(x, y, 0);
+				Vector3 tilePos = new Vector3(x, y,  -2f);
 				foreach (Tile tile in tileDataList){
-					if (tile.gridPosition == tilePos){
-						GameObject spawnedTile = Instantiate(tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-						// attach to holder
-						spawnedTile.transform.parent = tileHolder;
-						break;
+				 	if(tile.gridPosition == tilePos){
+						if (tilePos == position){ // dont spawn resources under init town tile
+							// make this resource on the list 0
+							tile.maxResourceQuantity = 0;
+						}else{
+							GameObject spawnedTile = Instantiate(tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+							// attach to holder
+							spawnedTile.transform.parent = tileHolder;
+							break;
+						}
 					}
+
 				}
 			}
 		}
@@ -125,17 +137,21 @@ public class Map_Manager : MonoBehaviour {
 		initTownTile.transform.parent = townHolder;
 		// and add it to the list of town tiles
 		townTiles.Add (initTownTile);
+
 		myStoredPosition = position;
 	}
 
 	// This is called right now by Mouse Controls everytime the Player clicks on a tile
-	void SpawnTilesByExpanding(Vector3 centerPosition){
+	public void SpawnTilesByExpanding(Vector3 centerPosition, GameObject resourceTile){
 		// check which direction we moved
 		int posX = (int)centerPosition.x;
 		int posY = (int)centerPosition.y;
 		GameObject expandedTownTile;
 
 		AddXPGainRate ();
+
+//		// clear resource tile under this new town tile
+//		ClearResourceTilesUnderTown (centerPosition, resourceTile);
 
 		if (centerPosition.x > myStoredPosition.x) { // right
 			// spawn town tile first
@@ -145,11 +161,16 @@ public class Map_Manager : MonoBehaviour {
 			townResourcesScript.xp = townResourcesScript.xp - 1;
 			// and add it to the list of town tiles
 			townTiles.Add (expandedTownTile);
+	
+			// inside each town tile a script can store its index in the townTiles list (for easy id)
+			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
+			// since we just added this tile to the list, its index will be count
+			tTileProperties.listIndex = townTiles.Count - 1;
 
 			// loop to Instantiate all the resource tiles around the new town tile 
 			for (int x = posX; x <= posX + 1; x++) { // right
 				for (int y = posY -1; y <= posY +1; y++) {
-					Vector3 tilePos = new Vector3 (x, y, 0);
+					Vector3 tilePos = new Vector3 (x, y,  -2f);
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
@@ -167,9 +188,14 @@ public class Map_Manager : MonoBehaviour {
 			// and add it to the list of town tiles
 			townTiles.Add (expandedTownTile);
 
+			// inside each town tile a script can store its index in the townTiles list (for easy id)
+			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
+			// since we just added this tile to the list, its index will be count
+			tTileProperties.listIndex = townTiles.Count - 1;
+
 			for (int x = posX; x >= posX - 1; x--) {
 				for (int y = posY -1; y <= posY +1; y++) {
-					Vector3 tilePos = new Vector3 (x, y, 0);
+					Vector3 tilePos = new Vector3 (x, y,  -2f);
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
@@ -187,9 +213,14 @@ public class Map_Manager : MonoBehaviour {
 			// and add it to the list of town tiles
 			townTiles.Add (expandedTownTile);
 
+			// inside each town tile a script can store its index in the townTiles list (for easy id)
+			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
+			// since we just added this tile to the list, its index will be count
+			tTileProperties.listIndex = townTiles.Count - 1;
+
 			for (int x = posX; x >= posX - 1; x--) {
 				for (int y = posY -1; y <= posY; y++) {
-					Vector3 tilePos = new Vector3 (x, y, 0);
+					Vector3 tilePos = new Vector3 (x, y,  -2f);
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
@@ -207,9 +238,15 @@ public class Map_Manager : MonoBehaviour {
 			// and add it to the list of town tiles
 			townTiles.Add (expandedTownTile);
 
+			// inside each town tile a script can store its index in the townTiles list (for easy id)
+			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
+			// since we just added this tile to the list, its index will be count
+			tTileProperties.listIndex = townTiles.Count - 1;
+
+
 			for (int x = posX; x >= posX - 1; x--) {
 				for (int y = posY; y <= posY + 1; y++) {
-					Vector3 tilePos = new Vector3 (x, y, 0);
+					Vector3 tilePos = new Vector3 (x, y,  -2f);
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
@@ -237,10 +274,8 @@ public class Map_Manager : MonoBehaviour {
 					foreach (Tile tile in tileDataList) {
 						if (tile.gridPosition == tilePos) {
 							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-							// add it to the list of scouted game objects to later destroy
-							scoutedTiles.Add(spawnedTile);
-							spawnedTile.transform.parent = tileHolder;
-
+							scoutedTiles.Add(spawnedTile);// add it to the list of scouted game objects to later destroy
+							spawnedTile.transform.parent = tileHolder;// parent it
 							break;
 						}
 					}
@@ -278,6 +313,17 @@ public class Map_Manager : MonoBehaviour {
 //		scoutedTiles.Clear ();
 	}
 
+	// Mouse control call this when player clicks on tile to expand, it feeds this the resource tile to destroy and take out of list
+	public void ClearResourceTilesUnderTown(Vector3 position, GameObject tile){
+		// check position of new town tile against tile data list
+		foreach (Tile t in tileDataList){
+			if (t.gridPosition == position){
+				t.maxResourceQuantity = 0; // instead of clearing it off the list, just make the quantity 0
+				break;
+			}
+		}
+		Destroy (tile);
+	}
 
 	GameObject TileType(int type){
 		GameObject tile;
@@ -307,8 +353,15 @@ public class Map_Manager : MonoBehaviour {
 	//This checks each resource tile being gathered to see if it is depleted and needs to be destroyed
 	public void CheckResourceQuantity(Tile tile, int index, GameObject tileObj){
 		if (tile.maxResourceQuantity <= 0) {
+			// first we need to store the position of this tile
+			Vector3 depletedTilePos = new Vector3(tileDataList[index].gridPosition.x, tileDataList[index].gridPosition.x, 0);
+			//then remove from list
 			tileDataList.RemoveAt(index);
-			Destroy(tileObj);
+			Destroy(tileObj); // & Destroy it
+			// then it its former position, spawn an empty tile tagged tile
+			GameObject replacementTile = Instantiate (depletedTile, depletedTilePos, Quaternion.identity) as GameObject;
+			replacementTile.transform.parent = tileHolder;
+
 		}
 	}
 
@@ -323,5 +376,44 @@ public class Map_Manager : MonoBehaviour {
 			int result = townTiles.Count % 5;
 			print ("result: " + result);
 		}
+	}
+
+
+
+	
+	// This checks what Town tile we currently have selected and stores it to check if it has a building on it
+	// called when we move
+//	public void CheckTownTileForBuilding(Vector3 currPos){
+//		bool hasBuilding = 
+//	
+//		foreach (GameObject obj in townTiles) {
+//			if (obj.transform.position == currPos){ // find the town tile that matches
+//
+//				selectedTownTile = obj;
+//				return thisHasBuilding;
+//				break;
+//			}
+//		}
+//		return thisHasBuilding;
+//	}
+
+	// Quicker way to get the current Town Tile, using its stored index
+	public GameObject GetTownTileByIndex(int index){
+		GameObject currTile = townTiles [index];
+		return currTile;
+	}
+
+	// Slower way to get current Town Tile, searching through entire list
+	public GameObject GetTownTileSearch(){
+		GameObject tile = new GameObject ();
+		foreach (GameObject obj in townTiles) {
+			if (obj.transform.position == myTransform.position){
+
+				tile = obj;
+				return tile;
+				break;
+			}
+		}
+		return null;
 	}
 }
