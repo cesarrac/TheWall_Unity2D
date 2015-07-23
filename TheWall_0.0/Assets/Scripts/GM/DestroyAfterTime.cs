@@ -56,7 +56,7 @@ public class DestroyAfterTime : MonoBehaviour {
 
 	void Fade(){
 		sr.color = new Color (sr.color.r, sr.color.g, sr.color.b, sr.color.a - 0.6f);
-		if (sr.color.a == 0) {
+		if (sr.color.a <= 0) {
 			Die ();
 		} else {
 			continueFade = true;

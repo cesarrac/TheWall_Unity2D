@@ -54,6 +54,9 @@ public class Map_Manager : MonoBehaviour {
 	// Prefab to spawn when resource is depleted by a Gatherer
 	public GameObject depletedTile;
 
+	// Index of town tile destroyed in town list
+	public int townTileIndex;
+
 	void Start () {
 		maxTiles = colums * rows;
 
@@ -325,6 +328,26 @@ public class Map_Manager : MonoBehaviour {
 		Destroy (tile);
 	}
 
+	// Called by a dying town tile to take it out of town list
+	public void ClearTownTile(int townIndex, Vector3 position){
+		int index = 0;
+		// if there are any problems finding this index, we can use the position
+		GameObject currTown = (townTiles [townIndex] != null) ? townTiles [townIndex] : null;
+		if (currTown != null) {
+			townTiles.RemoveAt (townIndex);
+			townTileIndex = townIndex;
+		} else {
+			foreach (GameObject obj in townTiles){
+				if (obj.transform.position == position){
+					townTiles.RemoveAt(index);
+				}else{
+					index++;
+				}
+			}
+		}
+	
+	}
+
 	GameObject TileType(int type){
 		GameObject tile;
 		switch (type) {
@@ -400,6 +423,7 @@ public class Map_Manager : MonoBehaviour {
 	// Quicker way to get the current Town Tile, using its stored index
 	public GameObject GetTownTileByIndex(int index){
 		GameObject currTile = townTiles [index];
+		// if theres a problem with the index use the position
 		return currTile;
 	}
 

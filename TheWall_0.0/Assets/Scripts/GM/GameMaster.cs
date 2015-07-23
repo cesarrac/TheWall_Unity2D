@@ -263,15 +263,15 @@ public class GameMaster : MonoBehaviour {
 			Vector3 hPos = horde.gameObject.GetComponent<Transform>().transform.position;
 
 			if (!hScript.nextToTownTile){
-				int randomDir = Random.Range(0,4);
+				int randomDir = Random.Range(0,5);
 				if (randomDir == 1){ // up
-					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y + 1, 0))) ? new Vector3(hPos.x, hPos.y + 1, 0) : horde.transform.position;
+					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y + 1, -2f))) ? new Vector3(hPos.x, hPos.y + 1, 0) : horde.transform.position;
 				}else if(randomDir == 2){ //down
-					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y - 1, 0))) ? new Vector3(hPos.x, hPos.y - 1, 0) : horde.transform.position;
+					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y - 1, -2f))) ? new Vector3(hPos.x, hPos.y - 1, 0) : horde.transform.position;
 				}else if (randomDir == 3){ // left
-					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x - 1, hPos.y, 0))) ? new Vector3(hPos.x - 1, hPos.y, 0) : horde.transform.position;
+					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x - 1, hPos.y, -2f))) ? new Vector3(hPos.x - 1, hPos.y, 0) : horde.transform.position;
 				}else if (randomDir == 4){ // right
-						horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x + 1, hPos.y, 0))) ? new Vector3(hPos.x + 1, hPos.y, 0) : horde.transform.position;
+					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x + 1, hPos.y, -2f))) ? new Vector3(hPos.x + 1, hPos.y, 0) : horde.transform.position;
 				}
 			}	
 		}

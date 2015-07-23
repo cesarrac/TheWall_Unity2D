@@ -6,13 +6,13 @@ public class TownTile_Trigger : MonoBehaviour {
 	Horde horde;
 	
 	//fill this up in awake to make sure
-	TownTile_HP townTile;
+	TownTile_Properties townTile;
 
 	// true if it has a building on it
 	public bool tileHasBuilding;
 	
 	void Awake(){
-		townTile = GetComponent<TownTile_HP> ();
+		townTile = GetComponent<TownTile_Properties> ();
 	}
 	
 	

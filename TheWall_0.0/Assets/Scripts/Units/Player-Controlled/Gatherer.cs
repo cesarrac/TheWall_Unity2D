@@ -21,7 +21,9 @@ public class Gatherer : Unit {
 	Transform myTransform;
 
 	// Access to town resources
+	GameObject town;
 	TownResources townResources;
+	Town_Central townCentral;
 
 	// Access to Map Manager to verify tile with my location
 	Map_Manager mapManager;
@@ -37,11 +39,23 @@ public class Gatherer : Unit {
 
 	// layer Mask for linecast
 	public LayerMask mask = 9;
+//
+//	public Gatherer(string name, int gatherAmm, float gatherT){
+//		name = name;
+//		gatherAmmount = gatherAmm;
+//		gatherTime = gatherT;
+//	}
 
 	void Start () {
-		name = GetName (false);
+		// check if name is null to see if this is a new gatherer or if it's already on the list
+		if (name == null) {
+			name = GetName (false);
+		}
+
 		myTransform = transform;
-		townResources = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<TownResources> ();
+		town = GameObject.FindGameObjectWithTag ("Town_Central");
+		townResources = town.GetComponent<TownResources> ();
+		townCentral = town.GetComponent<Town_Central> ();
 		mapManager = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();
 		gathering = true;
 	}
@@ -58,11 +72,22 @@ public class Gatherer : Unit {
 
 	void FollowMouse(){
 		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
-		myTransform.position = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), 0);
+		myTransform.position = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), -2f);
+//		myTransform.position = new Vector3 (m.x, m.y, -2f);
+
 		if (Input.GetMouseButtonDown (0)) {
 			beingMoved = false;
 			TileCheck(); // check what type of tile this gatherer was place on
 		}
+	}
+
+	// to better control how and when we destroy this gatherer
+	void OnMouseOver(){
+			if (Input.GetMouseButtonDown (1)) {
+				Destroy (this.gameObject);
+				townCentral.spawnedGatherers--;
+			}
+
 	}
 
 	// to check what tile we are in we check this Gatherer's position against the list of tile positions
