@@ -11,6 +11,7 @@ public class TownResources : MonoBehaviour {
 
 	// rate at which xp is gained each turn
 	public int xpGainRate = 1;
+
 	//Text components to display resource ammounts
 	public Text woodText;
 	public Text metalText;

@@ -40,6 +40,9 @@ public class GameMaster : MonoBehaviour {
 	//access to the Town Resources 
 	public TownResources townResourceScript;
 
+	//for determining if Town can receive XP if it meets req. of food costs
+	public int grainCostRate = 1; // 1 tile costs 1 grain
+
 	void Awake () {
 //		SpawnCaptains ();
 		DontDestroyOnLoad (this.gameObject);
@@ -249,7 +252,7 @@ public class GameMaster : MonoBehaviour {
 		yield return new WaitForSeconds (turnTime);
 		// move the hordes
 		MoveTheHordes ();
-		GiveXPPoints ();
+		CheckFoodForXP ();
 	
 	}
 
@@ -289,8 +292,21 @@ public class GameMaster : MonoBehaviour {
 		}
 		return false;
 	}
+//
+//	void GiveXPPoints(){
+//		townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
+//	}
 
-	void GiveXPPoints(){
-		townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
+	// this check if Town has enough food to get XP (you cant get more XP unless you have enough food)
+	void CheckFoodForXP(){
+		int foodCost = mapScript.townTiles.Count * grainCostRate; // this is how much food is need to get XP
+		if (townResourceScript.grain >= foodCost) {
+			// town has enough food, so give them XP
+			townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
+			// then charge the town the foodcost
+			townResourceScript.grain = townResourceScript.grain - foodCost;
+		} else {
+			print ("Not enough food to expand!");
+		}
 	}
 }

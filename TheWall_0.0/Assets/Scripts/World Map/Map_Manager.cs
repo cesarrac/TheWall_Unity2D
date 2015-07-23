@@ -156,110 +156,115 @@ public class Map_Manager : MonoBehaviour {
 //		// clear resource tile under this new town tile
 //		ClearResourceTilesUnderTown (centerPosition, resourceTile);
 
-		if (centerPosition.x > myStoredPosition.x) { // right
-			// spawn town tile first
-			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
-			expandedTownTile.transform.parent = townHolder;
-			//spend the resources XP point
-			townResourcesScript.xp = townResourcesScript.xp - 1;
-			// and add it to the list of town tiles
-			townTiles.Add (expandedTownTile);
+		if (townResourcesScript.xp >= 1) { // must check if we have any XP left to expand with
+		
+			if (centerPosition.x > myStoredPosition.x) { // right
+				// spawn town tile first
+				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile.transform.parent = townHolder;
+				//spend the resources XP point
+				townResourcesScript.xp = townResourcesScript.xp - 1;
+				// and add it to the list of town tiles
+				townTiles.Add (expandedTownTile);
 	
-			// inside each town tile a script can store its index in the townTiles list (for easy id)
-			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
-			// since we just added this tile to the list, its index will be count
-			tTileProperties.listIndex = townTiles.Count - 1;
+				// inside each town tile a script can store its index in the townTiles list (for easy id)
+				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
+				// since we just added this tile to the list, its index will be count
+				tTileProperties.listIndex = townTiles.Count - 1;
 
-			// loop to Instantiate all the resource tiles around the new town tile 
-			for (int x = posX; x <= posX + 1; x++) { // right
-				for (int y = posY -1; y <= posY +1; y++) {
-					Vector3 tilePos = new Vector3 (x, y,  -2f);
-					foreach (Tile tile in tileDataList) {
-						if (tile.gridPosition == tilePos) {
-							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-							spawnedTile.transform.parent = tileHolder;
-							break;
+				// loop to Instantiate all the resource tiles around the new town tile 
+				for (int x = posX; x <= posX + 1; x++) { // right
+					for (int y = posY -1; y <= posY +1; y++) {
+						Vector3 tilePos = new Vector3 (x, y, -2f);
+						foreach (Tile tile in tileDataList) {
+							if (tile.gridPosition == tilePos) {
+								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+								spawnedTile.transform.parent = tileHolder;
+								break;
+							}
+						}
+					}
+				}		// repeat the same process for each side... 
+			} else if (centerPosition.x < myStoredPosition.x) {// left
+				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile.transform.parent = townHolder;
+				//spend the resources XP point
+				townResourcesScript.xp = townResourcesScript.xp - 1;
+				// and add it to the list of town tiles
+				townTiles.Add (expandedTownTile);
+
+				// inside each town tile a script can store its index in the townTiles list (for easy id)
+				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
+				// since we just added this tile to the list, its index will be count
+				tTileProperties.listIndex = townTiles.Count - 1;
+
+				for (int x = posX; x >= posX - 1; x--) {
+					for (int y = posY -1; y <= posY +1; y++) {
+						Vector3 tilePos = new Vector3 (x, y, -2f);
+						foreach (Tile tile in tileDataList) {
+							if (tile.gridPosition == tilePos) {
+								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+								spawnedTile.transform.parent = tileHolder;
+								break;
+							}
 						}
 					}
 				}
-			}		// repeat the same process for each side... 
-		} else if (centerPosition.x < myStoredPosition.x) {// left
-			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
-			expandedTownTile.transform.parent = townHolder;
-			//spend the resources XP point
-			townResourcesScript.xp = townResourcesScript.xp - 1;
-			// and add it to the list of town tiles
-			townTiles.Add (expandedTownTile);
+			} else if (centerPosition.y < myStoredPosition.y) {// down
+				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile.transform.parent = townHolder;
+				//spend the resources XP point
+				townResourcesScript.xp = townResourcesScript.xp - 1;
+				// and add it to the list of town tiles
+				townTiles.Add (expandedTownTile);
 
-			// inside each town tile a script can store its index in the townTiles list (for easy id)
-			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
-			// since we just added this tile to the list, its index will be count
-			tTileProperties.listIndex = townTiles.Count - 1;
+				// inside each town tile a script can store its index in the townTiles list (for easy id)
+				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
+				// since we just added this tile to the list, its index will be count
+				tTileProperties.listIndex = townTiles.Count - 1;
 
-			for (int x = posX; x >= posX - 1; x--) {
-				for (int y = posY -1; y <= posY +1; y++) {
-					Vector3 tilePos = new Vector3 (x, y,  -2f);
-					foreach (Tile tile in tileDataList) {
-						if (tile.gridPosition == tilePos) {
-							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-							spawnedTile.transform.parent = tileHolder;
-							break;
+				for (int x = posX; x >= posX - 1; x--) {
+					for (int y = posY -1; y <= posY; y++) {
+						Vector3 tilePos = new Vector3 (x, y, -2f);
+						foreach (Tile tile in tileDataList) {
+							if (tile.gridPosition == tilePos) {
+								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+								spawnedTile.transform.parent = tileHolder;
+								break;
+							}
+						}
+					}
+				}
+			} else if (centerPosition.y > myStoredPosition.y) {// up
+				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile.transform.parent = townHolder;
+				//spend the resources XP point
+				townResourcesScript.xp = townResourcesScript.xp - 1;
+				// and add it to the list of town tiles
+				townTiles.Add (expandedTownTile);
+
+				// inside each town tile a script can store its index in the townTiles list (for easy id)
+				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
+				// since we just added this tile to the list, its index will be count
+				tTileProperties.listIndex = townTiles.Count - 1;
+
+
+				for (int x = posX; x >= posX - 1; x--) {
+					for (int y = posY; y <= posY + 1; y++) {
+						Vector3 tilePos = new Vector3 (x, y, -2f);
+						foreach (Tile tile in tileDataList) {
+							if (tile.gridPosition == tilePos) {
+								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+								spawnedTile.transform.parent = tileHolder;
+
+								break;
+							}
 						}
 					}
 				}
 			}
-		} else if (centerPosition.y < myStoredPosition.y) {// down
-			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
-			expandedTownTile.transform.parent = townHolder;
-			//spend the resources XP point
-			townResourcesScript.xp = townResourcesScript.xp - 1;
-			// and add it to the list of town tiles
-			townTiles.Add (expandedTownTile);
-
-			// inside each town tile a script can store its index in the townTiles list (for easy id)
-			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
-			// since we just added this tile to the list, its index will be count
-			tTileProperties.listIndex = townTiles.Count - 1;
-
-			for (int x = posX; x >= posX - 1; x--) {
-				for (int y = posY -1; y <= posY; y++) {
-					Vector3 tilePos = new Vector3 (x, y,  -2f);
-					foreach (Tile tile in tileDataList) {
-						if (tile.gridPosition == tilePos) {
-							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-							spawnedTile.transform.parent = tileHolder;
-							break;
-						}
-					}
-				}
-			}
-		} else if (centerPosition.y > myStoredPosition.y) {// up
-			expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
-			expandedTownTile.transform.parent = townHolder;
-			//spend the resources XP point
-			townResourcesScript.xp = townResourcesScript.xp - 1;
-			// and add it to the list of town tiles
-			townTiles.Add (expandedTownTile);
-
-			// inside each town tile a script can store its index in the townTiles list (for easy id)
-			TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties>();
-			// since we just added this tile to the list, its index will be count
-			tTileProperties.listIndex = townTiles.Count - 1;
-
-
-			for (int x = posX; x >= posX - 1; x--) {
-				for (int y = posY; y <= posY + 1; y++) {
-					Vector3 tilePos = new Vector3 (x, y,  -2f);
-					foreach (Tile tile in tileDataList) {
-						if (tile.gridPosition == tilePos) {
-							GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-							spawnedTile.transform.parent = tileHolder;
-
-							break;
-						}
-					}
-				}
-			}
+		} else {
+			print ("Not enough XP to expand!");
 		}
 		myStoredPosition = centerPosition; // STORE THE NEW POSITION (right now this is always the new created town tile)
 
