@@ -7,16 +7,17 @@ public class TownBuilding : MonoBehaviour {
 	public Map_Manager mapScript;
 	Transform myTransform;
 	// buttons
-	public Button firstBuildBtn;
-	public Button secondBuildBtn;
+	public Button firstBuildBtn, secondBuildBtn, thirdBuidBtn;
 	//basic building images
-	public Sprite houseSprite, basicDefenseSprite;
+	public Sprite houseSprite, basicDefenseSprite, slaughterSprite;
 	//advanced images
 	public Sprite stoneHouseSprite, metalHouseSprite, stoneDefenseSprite, metalDefenseSprite;
+	//destroy / cancel building image
+	public Sprite cancelSprite;
 
 	//prefab Buildings
 	// basic:
-	public GameObject houseFab, basicDefenseFab;
+	public GameObject houseFab, basicDefenseFab, slaughterHouseFab;
 	// advanced:
 	public GameObject stoneHouseFab, metalHouseFab, stoneDefenseFab, metalDefenseFab;
 
@@ -25,9 +26,8 @@ public class TownBuilding : MonoBehaviour {
 	GameObject storedTile;
 
 	// button Text
-	Text firstText;
-	Text secondText;
-	public string t1 ,t2;
+	Text firstText, secondText, thirdText;
+
 	// bool turns true if this tile has a building
 	public bool hasBuilding;
 
@@ -36,11 +36,12 @@ public class TownBuilding : MonoBehaviour {
 	TownResources townResources;
 
 	// costs for building
-	int woodCost, metalCost, stoneCost;
 	// house costs
 	public int houseCost, stoneHouseCost, metalHouseCost;
 	// defense costs
 	public int basicDefenseCost, stoneDefenseCost, metalDefenseCost;
+	// slaughterhouse cost
+	public int slaughterCost;
 
 
 	// we have resources check
@@ -54,6 +55,8 @@ public class TownBuilding : MonoBehaviour {
 
 		firstText = firstBuildBtn.GetComponentInChildren<Text>();
 		secondText = secondBuildBtn.GetComponentInChildren<Text>();
+		thirdText = thirdBuidBtn.GetComponentInChildren<Text>();
+
 //		CheckWhatTile ();
 //		townTile = mapScript.GetTownTile ();
 //		ShowBasicBuildings();
@@ -65,8 +68,6 @@ public class TownBuilding : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		CheckWhatTile ();
-		t1 = firstText.text;
-		t2 = secondText.text;
 
 		if (townTile != null) {
 			hasBuilding = townTile.GetComponent<TownTile_Properties>().tileHasBuilding;
@@ -130,10 +131,15 @@ public class TownBuilding : MonoBehaviour {
 		secondBuildBtn.image.sprite = basicDefenseSprite;
 		string defenseText = "Basic Defense";
 		secondText.text = defenseText;
+
+		thirdBuidBtn.image.sprite = slaughterSprite ;
+		string slaughterText = "Slaughterhouse";
+		thirdText.text = slaughterText;
 	}
 
 	// to show the right Advanced building options, I need to get the name of the building on this town tile
 	void ShowAdvancedBuildings(string buildingName){
+		string destroyText = "Destroy";
 
 		switch (buildingName) {
 		case "House":
@@ -147,6 +153,11 @@ public class TownBuilding : MonoBehaviour {
 			// get the text
 			string metalHouseText = "Metal House";
 			secondText.text = metalHouseText;
+			// as third show option for Destroy
+			thirdBuidBtn.image.sprite = cancelSprite;
+			// get the text
+
+			thirdText.text = destroyText;
 			break;
 		case "Basic Defense":
 			firstBuildBtn.image.sprite = stoneDefenseSprite;
@@ -156,6 +167,11 @@ public class TownBuilding : MonoBehaviour {
 			secondBuildBtn.image.sprite = metalDefenseSprite;
 			string metalDefenseText = "Metal Defense";
 			secondText.text = metalDefenseText;
+
+			// as third show option for Destroy
+			thirdBuidBtn.image.sprite = cancelSprite;
+			// get the text
+			thirdText.text = destroyText;
 			break;
 		default:
 			print ("No advanced options for this building found!");
@@ -180,9 +196,30 @@ public class TownBuilding : MonoBehaviour {
 		
 	}
 
+	public void ThirdBuild(){
+		string name = thirdText.text;
+		if (townTile != null) {
+			CheckBuildingRecipeAndBuild(name, townTile);
+		}
+	}
+
 	void CheckBuildingRecipeAndBuild(string name, GameObject towntile){
 
 		switch (name) {
+		case "Slaughterhouse":
+			if (townResources.wood >= slaughterCost){
+				GameObject building = Instantiate (slaughterHouseFab, myTransform.position, Quaternion.identity) as GameObject;
+				// parent it to the town tile this is on
+				building.transform.parent = towntile.transform;
+				// need to makes sure the new gameobject's name matches my hardcoded names
+				building.name = name;
+				towntile.name = name;
+				//then tell this tile that it has a building
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				townProps.tileHasBuilding = true;
+				townResources.wood = townResources.wood - slaughterCost;
+			}
+			break;
 		case "House":
 			if (townResources.wood >= houseCost){
 				GameObject building = Instantiate (houseFab, myTransform.position, Quaternion.identity) as GameObject;
