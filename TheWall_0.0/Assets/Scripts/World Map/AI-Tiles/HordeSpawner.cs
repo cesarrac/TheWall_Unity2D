@@ -30,11 +30,13 @@ public class HordeSpawner : MonoBehaviour {
 	// Sprite Renderer to enable and disable if player is close or not
 	SpriteRenderer sr;
 
-	//access to town central for damage var
-	Town_Central townCentral;
-
 	//object to spawn when dead
 	public GameObject deadSpawner;
+
+	// mask to avoid anything but tiles
+	public LayerMask mask;
+
+	BoxCollider2D currColl;
 
 	void Start () {
 		myTransform = transform;
@@ -42,8 +44,7 @@ public class HordeSpawner : MonoBehaviour {
 		sr = GetComponent<SpriteRenderer> ();
 		sr.enabled = false;
 
-		townCentral = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<Town_Central> ();
-
+		TurnOffColliderUnderneath ();
 	}
 
 	void Update(){
@@ -63,10 +64,11 @@ public class HordeSpawner : MonoBehaviour {
 
 	// need a way to turn off the resource tile under a Horde so it doens't interfere with our Raycast
 	void TurnOffColliderUnderneath(){
-		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (myTransform.position.x, myTransform.position.y), Vector2.up);
+		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (myTransform.position.x, myTransform.position.y), Vector2.up, mask.value);
 		if (hit.collider != null) {
 			if (hit.collider.CompareTag("Tile") || hit.collider.CompareTag("Empty Tile") ){
 				BoxCollider2D boxColl = hit.collider.gameObject.GetComponent<BoxCollider2D>();
+
 				if (boxColl.enabled){
 					boxColl.enabled = false;
 				}
@@ -78,6 +80,9 @@ public class HordeSpawner : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D coll){
 		if (coll.gameObject.tag == "Map_Manager") {
 			sr.enabled = true;
+//			TurnOffColliderUnderneath();
+		}
+		if (coll.gameObject.tag == "Tile") {
 			TurnOffColliderUnderneath();
 		}
 	}
@@ -87,14 +92,7 @@ public class HordeSpawner : MonoBehaviour {
 		}
 	}
 
-	// using this Mouse Over to detect when player hits this Spawner
-	void OnMouseOver(){
-		print ("Mouse over Spawner");
-		if (Input.GetMouseButtonDown (0)) {
-			// get the current town damage
-			TakeDamage (townCentral.shortRangeDamage);
-		}
-	}
+
 
 	public void SpawnHorde(){
 		Vector3 hordePos = new Vector3 (myTransform.position.x, myTransform.position.y, 0);
@@ -123,7 +121,7 @@ public class HordeSpawner : MonoBehaviour {
 		}
 	}
 
-	void TakeDamage(float damage){
+	public void TakeDamage(float damage){
 		myHitPoints = myHitPoints - damage;
 		if (myHitPoints <= 0) {
 			GameObject deadSpwn = Instantiate(deadSpawner, new Vector3(this.gameObject.transform.position.x, this.gameObject.transform.position.y, this.gameObject.transform.position.z), Quaternion.identity) as GameObject;

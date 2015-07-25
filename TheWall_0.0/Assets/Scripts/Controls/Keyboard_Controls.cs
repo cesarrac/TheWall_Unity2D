@@ -37,7 +37,12 @@ public class Keyboard_Controls : MonoBehaviour {
 			RefreshList();
 		}
 
-		MoveTileToTile ();
+		if (Input.GetKey (KeyCode.LeftShift)) {
+			MoveTileToTileFast ();
+		} else {
+			MoveTileToTile ();
+		}
+
 	}
 
 
@@ -58,7 +63,6 @@ public class Keyboard_Controls : MonoBehaviour {
 			Vector2 up = new Vector2(myTransform.position.x, myTransform.position.y + 1);
 			if (CheckIfValidMove(up)){
 				myTransform.position = new Vector3 (up.x, up.y, 0);
-
 			}
 		}else if (Input.GetKeyDown (KeyCode.S)) {
 			Vector2 down = new Vector2(myTransform.position.x, myTransform.position.y - 1);
@@ -77,6 +81,34 @@ public class Keyboard_Controls : MonoBehaviour {
 			if (CheckIfValidMove(right)){
 				myTransform.position = new Vector3 (right.x, right.y, 0);
 
+			}
+		}
+	}
+
+	void MoveTileToTileFast(){
+
+		if (Input.GetKey (KeyCode.W)) {
+			Vector2 up = new Vector2(myTransform.position.x, myTransform.position.y + 1);
+			if (CheckIfValidMove(up)){
+				myTransform.position = new Vector3 (up.x, up.y, 0);
+			}
+		}else if (Input.GetKey (KeyCode.S)) {
+			Vector2 down = new Vector2(myTransform.position.x, myTransform.position.y - 1);
+			if (CheckIfValidMove(down)){
+				myTransform.position = new Vector3 (down.x, down.y, 0);
+				
+			}
+		}else if (Input.GetKey (KeyCode.A)) {
+			Vector2 left = new Vector2(myTransform.position.x - 1, myTransform.position.y);
+			if (CheckIfValidMove(left)){
+				myTransform.position = new Vector3 (left.x, left.y, 0);
+				
+			}
+		}else if (Input.GetKey (KeyCode.D)) {
+			Vector2 right = new Vector2(myTransform.position.x + 1, myTransform.position.y);
+			if (CheckIfValidMove(right)){
+				myTransform.position = new Vector3 (right.x, right.y, 0);
+				
 			}
 		}
 	}

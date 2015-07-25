@@ -89,7 +89,7 @@ public class Mouse_Controls : MonoBehaviour {
 			} else if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Destroyed Town")  ) {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
 					// mouse must not be busy to be able to expand, meaning not currently shooting or placing units
-//				mouseIsBusy = false;
+				mouseIsBusy = false;
 				// as soon as I touch the tile I need to store it in case it will need to be destroyed
 //				resourceTileToDestroy = hit.collider.gameObject;
 //				GameObject destroyThisTile = resourceTileToDestroy;
@@ -129,8 +129,8 @@ public class Mouse_Controls : MonoBehaviour {
 
 				}
 			} 
-//			else if (hit.collider.CompareTag ("Badge")) {
-//				mouseIsBusy = true;
+			else if (hit.collider.CompareTag ("Badge")) {
+				mouseIsBusy = true;
 //				if (Input.GetMouseButtonUp (0)) {
 //					mouseIsBusy = false;
 //					print ("Clicked on " + hit.collider.name);
@@ -158,7 +158,7 @@ public class Mouse_Controls : MonoBehaviour {
 ////					// tell the GM to load battleview
 ////					// THIS WOULD LOAD BATTLEVIEW selectedHorde.GoToBattle ();
 //				}
-//			} 
+			} 
 //				else if (hit.collider.CompareTag ("Gatherer")) {
 //				mouseIsBusy = true;
 //				if (Input.GetMouseButtonDown (1)) {

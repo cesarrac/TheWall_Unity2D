@@ -6,9 +6,6 @@ public class Horde : MonoBehaviour {
 //	public List<AI_Enemy> hordeMembers = new List<AI_Enemy>();
 	public List<Unit_Data> hordeMembers = new List<Unit_Data> ();
 
-	// TODO: this needs a variable given to them by the faction that is spawning this horde
-
-	// it will tell them what to spawn
 //	public GameObject unitToSpawn; // this public GameObject is blank except for the components needed for a Battle Unit
 //	SpriteRenderer sr;
 
@@ -28,7 +25,12 @@ public class Horde : MonoBehaviour {
 	// access to Town Central to get the damage
 	Town_Central townCentral;
 
+	// Two colliders, one stores the last tile's collider the other one stores the current (changes when we move)
+	public BoxCollider2D storedTileColl, newTileColl;
+	public BoxCollider2D tileColl;
+
 	Transform myTransform;
+
 
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
@@ -46,10 +48,13 @@ public class Horde : MonoBehaviour {
 //		leader.ForceInit (Battle_Unit.Quality.high);
 
 		myTransform = transform;
+	
 
 	}
 
 	void Update () {
+
+	
 		if (nextToTownTile && townTile != null) {
 			if (canHitTile) {
 				StartCoroutine (TileHit ());
@@ -57,22 +62,61 @@ public class Horde : MonoBehaviour {
 		} else {
 			nextToTownTile = false;
 		}
-		TurnOffColliderUnderneath ();
+
+
+		SwitchColliderUnderneathOnOff ();
+//		if (tileColl != null) {
+//			SwitchColliderUnderneath(0);
+//		}
 	}
 
-	// need a way to turn off the resource tile under a Horde so it doens't interfere with our Raycast
-	void TurnOffColliderUnderneath(){
+	 //need a way to turn off the resource tile under a Horde so it doens't interfere with our Raycast
+	void SwitchColliderUnderneathOnOff(){
 		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (myTransform.position.x, myTransform.position.y), Vector2.up);
 		if (hit.collider != null) {
-			if (hit.collider.CompareTag("Tile") || hit.collider.CompareTag("Empty Tile") ){
-				BoxCollider2D boxColl = hit.collider.gameObject.GetComponent<BoxCollider2D>();
-				if (boxColl.enabled){
-					boxColl.enabled = false;
+			if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Empty Tile") || hit.collider.CompareTag ("Town_Tile")) {
+				BoxCollider2D boxColl = hit.collider.gameObject.GetComponent<BoxCollider2D> ();
+				if (boxColl != storedTileColl){
+					if (storedTileColl != null){
+						storedTileColl.enabled = true; // enable the old coll
+						boxColl.enabled = false;
+						storedTileColl = boxColl;
+					}else{
+						//storedTileColl is null so this must be the first tile this Horde has been on
+						boxColl.enabled = false;
+						storedTileColl = boxColl;
+					}
+
 				}
 			}
-		}
+		} 
 	}
 
+	// A trigger on each tile sends this function a box collider (tileColl) so it knows to turn on or off
+//	void SwitchColliderUnderneath(int onOff){
+//		if (tileColl != null) {
+//			if (onOff == 0){
+//				if (tileColl != storedTileColl){ // if this new tile coll is not my stored coll,
+//					if (storedTileColl != null){ // it means the horde moved
+//						// turn on stored Coll
+//						storedTileColl.enabled = true;
+//						// turn off new Coll
+//						tileColl.enabled = false;
+//						// now make this new tile Coll the stored coll
+//						storedTileColl = tileColl;
+//					}else{
+//						//storedTileColl is null so this must be the first tile this Horde has been on
+//						// turn off new Coll
+//						tileColl.enabled = false;
+//						storedTileColl = tileColl;
+//					}
+//				}
+//
+//			}else if (onOff == 1){
+//				tileColl.enabled = true;
+//			}
+//		}
+//	}
 	
 	// HORDE MOVEMENT IS DONE BY THE GM
 
@@ -86,7 +130,9 @@ public class Horde : MonoBehaviour {
 
 	void DamageTile(float damage){
 		print ("Horde hits tile");
-		townTile.TakeDamage (damage);
+		if (townTile != null) {
+			townTile.TakeDamage (damage);
+		}
 		canHitTile = true;
 	}
 
@@ -101,11 +147,14 @@ public class Horde : MonoBehaviour {
 
 	}
 
+
+
 	// This next function takes care of damaging the Horde once its clicked (called by Mouse_Control)
 	public void TakeDamage(float damage){
 		hordeMembers [0].hitPoints = hordeMembers [0].hitPoints - damage;
 		print (this.gameObject.name + " takes " + damage + " damage!");
 		if (hordeMembers [0].hitPoints <= 0) {
+		
 			Die();
 		}
 
@@ -114,9 +163,35 @@ public class Horde : MonoBehaviour {
 	void Die(){
 		// first instantiate my dead prefab self
 		GameObject deadHorde = Instantiate(deadHordeFab, new Vector3(this.gameObject.transform.position.x, this.gameObject.transform.position.y, this.gameObject.transform.position.z), Quaternion.identity) as GameObject;
-		// then die
-		Destroy (this.gameObject);
+		// turn on the tile underneath
+		if (storedTileColl != null) {
+			storedTileColl.enabled = true;
+			Destroy(this.gameObject);
+		}
+
 	}
+
+
+	// when this Horde moves to a tile that tile is ENTERING this Horde's Trigger/Collider
+	// the tile that is ENTERING has to be TURNED OFF
+	// At the same time the last tile this Horde was on is EXITING this Trigger
+	// the tile that is EXITING has to be TURNED ON
+	
+//	void OnTriggerEnter2D(Collider2D coll){
+//		if (coll.gameObject.tag == "Tile") {
+//			BoxCollider2D currTile = coll.gameObject.GetComponent<BoxCollider2D>();
+//			//  is this the same tile as Stored Tile?
+//			if (currTile != storedTileColl){
+//				newTileColl = currTile;
+//				storedTileColl = newTileColl;
+//			}else{
+//
+//			}
+//
+//		}
+//	}
+
+
 
 
 	// *****BATTLEVIEW ****
@@ -126,25 +201,22 @@ public class Horde : MonoBehaviour {
 //			gmScript.LoadBattleView(hordeMembers);
 //		}
 //	}
+
+	//for testing: Im calling this from Mouse_controls, when you click on the badge we spawn the units with the proper values from the Unit Data
+	//	public void Spawn(){
+	//		int maxMembersOfHorde = hordeMembers.Count;
+	//		for (int x=0; x < maxMembersOfHorde; x++) {
+	//			GameObject hordeSpawn = Instantiate(unitToSpawn, new Vector3(10, x, 0), Quaternion.identity) as GameObject;
+	//			sr = hordeSpawn.GetComponent<SpriteRenderer>();
+	//			sr.sprite = hordeMembers[x].mySprite;
+	//			AI_Enemy ai = hordeSpawn.GetComponent<AI_Enemy>();
+	//			Weapon weapon = hordeSpawn.GetComponentInChildren<Weapon>();
+	//			weapon.ForcedInit(hordeMembers[x].rateOfFire, hordeMembers[x].shortDamage, hordeMembers[x].midDamage, hordeMembers[x].longDamage); 
+	//			ai.ForceInit((Battle_Unit.Quality)hordeMembers[x].myQuality, hordeMembers[x].myName, hordeMembers[x].myStats, (Battle_Unit.Allegiance) hordeMembers[x].myAllegiance);
+	//		}
+	//	}
 	// *****BATTLEVIEW ****
 
 
 
-
-
-
-
-	//for testing: Im calling this from Mouse_controls, when you click on the badge we spawn the units with the proper values from the Unit Data
-//	public void Spawn(){
-//		int maxMembersOfHorde = hordeMembers.Count;
-//		for (int x=0; x < maxMembersOfHorde; x++) {
-//			GameObject hordeSpawn = Instantiate(unitToSpawn, new Vector3(10, x, 0), Quaternion.identity) as GameObject;
-//			sr = hordeSpawn.GetComponent<SpriteRenderer>();
-//			sr.sprite = hordeMembers[x].mySprite;
-//			AI_Enemy ai = hordeSpawn.GetComponent<AI_Enemy>();
-//			Weapon weapon = hordeSpawn.GetComponentInChildren<Weapon>();
-//			weapon.ForcedInit(hordeMembers[x].rateOfFire, hordeMembers[x].shortDamage, hordeMembers[x].midDamage, hordeMembers[x].longDamage); 
-//			ai.ForceInit((Battle_Unit.Quality)hordeMembers[x].myQuality, hordeMembers[x].myName, hordeMembers[x].myStats, (Battle_Unit.Allegiance) hordeMembers[x].myAllegiance);
-//		}
-//	}
 }

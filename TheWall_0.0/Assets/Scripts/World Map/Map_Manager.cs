@@ -176,7 +176,7 @@ public class Map_Manager : MonoBehaviour {
 		print ("XP = " + xp);
 		if ( xp  >= 1) { // must check if we have any XP left to expand with
 		
-			if (centerPosition.x > myStoredPosition.x) { // right
+			if (centerPosition.x > myTransform.position.x) { // right
 				// spawn town tile first
 				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
@@ -207,7 +207,7 @@ public class Map_Manager : MonoBehaviour {
 						}
 					}
 				}		// repeat the same process for each side... 
-			} else if (centerPosition.x < myStoredPosition.x) {// left
+			} else if (centerPosition.x < myTransform.position.x) {// left
 				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
 				//spend the resources XP point
@@ -237,7 +237,7 @@ public class Map_Manager : MonoBehaviour {
 						}
 					}
 				}
-			} else if (centerPosition.y < myStoredPosition.y) {// down
+			} else if (centerPosition.y < myTransform.position.y) {// down
 				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
 				//spend the resources XP point
@@ -267,7 +267,7 @@ public class Map_Manager : MonoBehaviour {
 						}
 					}
 				}
-			} else if (centerPosition.y > myStoredPosition.y) {// up
+			} else if (centerPosition.y > myTransform.position.y) {// up
 				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
 				//spend the resources XP point
@@ -405,7 +405,7 @@ public class Map_Manager : MonoBehaviour {
 	public void ClearTownTile(int townIndex, Vector3 position){
 		int index = 0;
 		// if there are any problems finding this index, we can use the position
-		GameObject currTown = (townTiles [townIndex] != null) ? townTiles [townIndex] : null;
+		GameObject currTown = (townIndex <= townTiles.Count - 1) ? townTiles [townIndex] : null;
 		if (currTown != null) {
 			townTiles.RemoveAt (townIndex);
 			townTileIndex = townIndex;

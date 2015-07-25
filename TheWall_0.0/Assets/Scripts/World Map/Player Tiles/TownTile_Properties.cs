@@ -20,7 +20,7 @@ public class TownTile_Properties : MonoBehaviour {
 	Transform myTransform;
 
 	// public Depleted tile to replace when this tile is destroyed
-	public GameObject depletedTile;
+	public GameObject depletedTile, destroyedTTile;
 
 	// bool to know if this tile is being attacked (this will impede the player from moving to this tile)
 	public bool beingAttacked;
@@ -92,16 +92,24 @@ public class TownTile_Properties : MonoBehaviour {
 			mapScript.ClearTownTile (listIndex, myTransform.position);
 			// create a position for the depleted tile at the same Z as a resource tile (for mouse linecast to work)
 			Vector3 depPos = new Vector3 (myTransform.position.x, myTransform.position.y, -2f);
+			// spawn Destroyed tile (this will fade away by itself, leaving only the depleted tile)
+			GameObject destroyedTile = Instantiate(destroyedTTile, depPos, Quaternion.identity) as GameObject;
 			// spawn depleted tile
 			GameObject depTile = Instantiate (depletedTile, depPos, Quaternion.identity)as GameObject;
 			// parent it to the town holder
 			depTile.transform.parent = myTransform.parent;
+			destroyedTile.transform.parent = myTransform.parent;
 			if (depTile != null) {
 				//destroy this town tile
 				Destroy (this.gameObject);
 			}
 		}
-	
-	
+	}
+
+	// to Destroy this tile im going to detect Mouse over and wait for a right click
+	void OnMouseOver(){
+		if (Input.GetMouseButtonDown (1)) {
+			KillTile();
+		}
 	}
 }

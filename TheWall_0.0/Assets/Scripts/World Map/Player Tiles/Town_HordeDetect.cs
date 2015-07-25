@@ -16,9 +16,28 @@ public class Town_HordeDetect : MonoBehaviour {
 	void OnTriggerEnter2D (Collider2D coll){
 		if (coll.CompareTag ("Badge")) {
 			horde = coll.GetComponent<Horde> ();
-			horde.nextToTownTile = true;
-			horde.townTile = townTile; // gives the horde the proper tile to do damage to.
-			townTile.beingAttacked = true;
+		
+				if (!horde.nextToTownTile){
+					horde.nextToTownTile = true;
+					horde.townTile = townTile; // gives the horde the proper tile to do damage to.
+					townTile.beingAttacked = true;
+				}
+			
+		} else {
+			townTile.beingAttacked = false;
+		}
+	}
+
+	void OnTriggerStay2D(Collider2D coll){
+		if (coll.CompareTag ("Badge")) {
+			horde = coll.GetComponent<Horde> ();
+			
+			if (!horde.nextToTownTile){
+				horde.nextToTownTile = true;
+				horde.townTile = townTile; // gives the horde the proper tile to do damage to.
+				townTile.beingAttacked = true;
+			}
+			
 		} else {
 			townTile.beingAttacked = false;
 		}
