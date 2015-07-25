@@ -11,6 +11,7 @@ public class TownTile_Properties : MonoBehaviour {
 
 	// bool to tell if this tile has a building on it
 	public bool tileHasBuilding;
+	public bool tileHasAdvancedBuilding;
 
 	// float for tile's Hit Points
 	public float tileHitPoints = 10f;
@@ -34,6 +35,8 @@ public class TownTile_Properties : MonoBehaviour {
 	//storing the town list will help update this tile's index when one is destroyed and removed from list
 	public int townListCount, startingListCount;
 
+	// storing the old building when Player adds advanced building on this tile
+	public GameObject deactivatedBuilding;
 
 	void Start () {
 		myTransform = transform;

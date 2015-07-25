@@ -57,6 +57,12 @@ public class Map_Manager : MonoBehaviour {
 	// Index of town tile destroyed in town list
 	public int townTileIndex;
 
+	// Index for resource tile to not Instantiate over tiles already created
+	int resourceTileIndex;
+
+	// an array of Transforms for resource tiles that have been instantiated
+	public Transform[] spawnedTiles;
+
 	void Start () {
 		maxTiles = colums * rows;
 
@@ -64,6 +70,8 @@ public class Map_Manager : MonoBehaviour {
 		myStoredPosition = new Vector3 (myTransform.position.x, myTransform.position.y, 0);
 
 		InitTileDataList ();
+
+
 	}
 	
 
@@ -142,10 +150,12 @@ public class Map_Manager : MonoBehaviour {
 		townTiles.Add (initTownTile);
 
 		myStoredPosition = position;
+
+		spawnedTiles = tileHolder.GetComponentsInChildren<Transform> (); 
 	}
 
 	// This is called right now by Mouse Controls everytime the Player clicks on a tile
-	public void SpawnTilesByExpanding(Vector3 centerPosition, GameObject resourceTile){
+	public void SpawnTilesByExpanding(Vector3 centerPosition){
 		// check which direction we moved
 		int posX = (int)centerPosition.x;
 		int posY = (int)centerPosition.y;
@@ -156,7 +166,15 @@ public class Map_Manager : MonoBehaviour {
 //		// clear resource tile under this new town tile
 //		ClearResourceTilesUnderTown (centerPosition, resourceTile);
 
-		if (townResourcesScript.xp >= 1) { // must check if we have any XP left to expand with
+		// get the Transforms of the tiles that already exist
+		spawnedTiles = tileHolder.GetComponentsInChildren<Transform> (); 
+		// SPAWNED TILE CHECK LOGIC: 
+		//if we are expanding to the RIGHT or the LEFT we need to get what # in spawntiles[]
+		// is the Transformm that is below myStoredPosition.x on the grid
+		//if expanding UP or DOWN we need the Transform to the right of myStoredPosition.x on the grid
+		float xp = Mathf.Round(townResourcesScript.xp);
+		print ("XP = " + xp);
+		if ( xp  >= 1) { // must check if we have any XP left to expand with
 		
 			if (centerPosition.x > myStoredPosition.x) { // right
 				// spawn town tile first
@@ -171,16 +189,20 @@ public class Map_Manager : MonoBehaviour {
 				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
 				// since we just added this tile to the list, its index will be count
 				tTileProperties.listIndex = townTiles.Count - 1;
-
 				// loop to Instantiate all the resource tiles around the new town tile 
 				for (int x = posX; x <= posX + 1; x++) { // right
 					for (int y = posY -1; y <= posY +1; y++) {
 						Vector3 tilePos = new Vector3 (x, y, -2f);
-						foreach (Tile tile in tileDataList) {
-							if (tile.gridPosition == tilePos) {
-								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-								spawnedTile.transform.parent = tileHolder;
-								break;
+						// make sure there isn't already a tile there
+						if (CheckIfTileExists(tilePos)){
+							// skips these
+						}else{
+							foreach (Tile tile in tileDataList) {
+								if (tile.gridPosition == tilePos) {
+									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+									spawnedTile.transform.parent = tileHolder;
+									break;
+								}
 							}
 						}
 					}
@@ -201,11 +223,16 @@ public class Map_Manager : MonoBehaviour {
 				for (int x = posX; x >= posX - 1; x--) {
 					for (int y = posY -1; y <= posY +1; y++) {
 						Vector3 tilePos = new Vector3 (x, y, -2f);
-						foreach (Tile tile in tileDataList) {
-							if (tile.gridPosition == tilePos) {
-								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-								spawnedTile.transform.parent = tileHolder;
-								break;
+						// make sure there isn't already a tile there
+						if (CheckIfTileExists(tilePos)){							
+							// skips these
+						}else{
+							foreach (Tile tile in tileDataList) {
+								if (tile.gridPosition == tilePos) {
+									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+									spawnedTile.transform.parent = tileHolder;
+									break;
+								}
 							}
 						}
 					}
@@ -223,14 +250,19 @@ public class Map_Manager : MonoBehaviour {
 				// since we just added this tile to the list, its index will be count
 				tTileProperties.listIndex = townTiles.Count - 1;
 
-				for (int x = posX; x >= posX - 1; x--) {
+				for (int x = posX + 1; x >= posX - 1; x--) {
 					for (int y = posY -1; y <= posY; y++) {
 						Vector3 tilePos = new Vector3 (x, y, -2f);
-						foreach (Tile tile in tileDataList) {
-							if (tile.gridPosition == tilePos) {
-								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-								spawnedTile.transform.parent = tileHolder;
-								break;
+						// make sure there isn't already a tile there
+						if (CheckIfTileExists(tilePos)){							
+							// skips these
+						}else{
+							foreach (Tile tile in tileDataList) {
+								if (tile.gridPosition == tilePos) {
+									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+									spawnedTile.transform.parent = tileHolder;
+									break;
+								}
 							}
 						}
 					}
@@ -249,15 +281,19 @@ public class Map_Manager : MonoBehaviour {
 				tTileProperties.listIndex = townTiles.Count - 1;
 
 
-				for (int x = posX; x >= posX - 1; x--) {
+				for (int x = posX + 1; x >= posX - 1; x--) {
 					for (int y = posY; y <= posY + 1; y++) {
 						Vector3 tilePos = new Vector3 (x, y, -2f);
-						foreach (Tile tile in tileDataList) {
-							if (tile.gridPosition == tilePos) {
-								GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
-								spawnedTile.transform.parent = tileHolder;
-
-								break;
+						// make sure there isn't already a tile there
+						if (CheckIfTileExists(tilePos)){
+							// skips these
+						}else{
+							foreach (Tile tile in tileDataList) {
+								if (tile.gridPosition == tilePos) {
+									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
+									spawnedTile.transform.parent = tileHolder;
+									break;
+								}
 							}
 						}
 					}
@@ -268,6 +304,38 @@ public class Map_Manager : MonoBehaviour {
 		}
 		myStoredPosition = centerPosition; // STORE THE NEW POSITION (right now this is always the new created town tile)
 
+	}
+
+//	void FindTileOnGrid(Vector3 centerPos, Vector3 storedPos, Transform[] spawnedT){
+//		Vector3 yBelow = new Vector3 (centerPos.x, centerPos.y - 1f, -2f);
+//		Vector3 xRight = new Vector3 (centerPos.x + 1f, centerPos.y, -2f);
+//
+//		if (centerPos.x > storedPos.x || centerPos.x < storedPos.x) { // moving left or right
+//			for (int x = 0; x < spawnedT.Length; x++) {
+//				// find the y below storedPos y
+//				if (spawnedT[x].position == yBelow){
+//					resourceTileIndex = x;
+//				}
+//			}
+//		} else if (centerPos.y > storedPos.y || centerPos.y < storedPos.y){ // up or down
+//			for (int x = 0; x < spawnedT.Length; x++) {
+//				// find the x to the right of storedPos x
+//				if (spawnedT[x].position == xRight){
+//					resourceTileIndex = x;
+//				}
+//			}
+//		}
+//		print ("Index is " + resourceTileIndex);
+//
+//	}
+
+	bool CheckIfTileExists(Vector3 newTilePos){
+		foreach (Transform trans in spawnedTiles) {
+			if (trans.position == newTilePos){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void SpawnTilesForScout(Vector3 centerPosition){

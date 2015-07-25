@@ -40,7 +40,7 @@ public class HordeSpawner : MonoBehaviour {
 		myTransform = transform;
 		SpawnHorde ();
 		sr = GetComponent<SpriteRenderer> ();
-//		sr.enabled = false;
+		sr.enabled = false;
 
 		townCentral = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<Town_Central> ();
 
@@ -75,14 +75,14 @@ public class HordeSpawner : MonoBehaviour {
 	}
 
 	// need to check for collisions with a town tile in order to turn on my renderer and turn off colliders underneath
-	void OnCollisionEnter2D(Collision2D coll){
-		if (coll.gameObject.tag == "Town_Tile") {
+	void OnTriggerEnter2D(Collider2D coll){
+		if (coll.gameObject.tag == "Map_Manager") {
 			sr.enabled = true;
 			TurnOffColliderUnderneath();
 		}
 	}
-	void OnCollisionExit2D(Collision2D coll){
-		if (coll.gameObject.tag == "Town_Tile") {
+	void OnTriggerExit2D(Collider2D coll){
+		if (coll.gameObject.tag == "Map_Manager") {
 			sr.enabled = false;
 		}
 	}

@@ -102,16 +102,16 @@ public class Mouse_Controls : MonoBehaviour {
 				
 					if (mouseRounded.x == myPosRounded.x - 1 && mouseRounded.y == myPosRounded.y) { // left
 						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
+						mapScript.SpawnTilesByExpanding(mouseRounded);
 					} else if (mouseRounded.x == myPosRounded.x + 1 && mouseRounded.y == myPosRounded.y) { // right
 						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
+						mapScript.SpawnTilesByExpanding(mouseRounded);
 					} else if (mouseRounded.y == myPosRounded.y + 1 && mouseRounded.x == myPosRounded.x) { // up
 						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
+						mapScript.SpawnTilesByExpanding(mouseRounded);
 					} else if (mouseRounded.y == myPosRounded.y - 1 && mouseRounded.x == myPosRounded.x) { // down
 						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded, resourceTileToDestroy);
+						mapScript.SpawnTilesByExpanding(mouseRounded);
 					}
 
 					// vvvvvv THIS CODE BELOW ACTUALLY MOVES THE GAMEOBJECT WITH THIS SCRIPT WHEN EXPANDING vvvv

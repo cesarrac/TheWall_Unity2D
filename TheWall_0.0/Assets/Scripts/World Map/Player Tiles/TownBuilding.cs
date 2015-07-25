@@ -29,7 +29,7 @@ public class TownBuilding : MonoBehaviour {
 	Text firstText, secondText, thirdText;
 
 	// bool turns true if this tile has a building
-	public bool hasBuilding;
+	public bool hasBuilding, hasAdvanced;
 
 	// access to Town Resources
 	public GameObject townRes;
@@ -42,10 +42,12 @@ public class TownBuilding : MonoBehaviour {
 	public int basicDefenseCost, stoneDefenseCost, metalDefenseCost;
 	// slaughterhouse cost
 	public int slaughterCost;
-
-
+	
 	// we have resources check
 	bool weHaveResources;
+
+	// Layer mask so we dont hit ourselves with LineCast
+	public LayerMask mask;
 
 	void Awake () {
 		mapScript = GetComponent<Map_Manager> ();
@@ -53,11 +55,12 @@ public class TownBuilding : MonoBehaviour {
 	void Start(){
 		myTransform = transform;
 
+
 		firstText = firstBuildBtn.GetComponentInChildren<Text>();
 		secondText = secondBuildBtn.GetComponentInChildren<Text>();
 		thirdText = thirdBuidBtn.GetComponentInChildren<Text>();
 
-//		CheckWhatTile ();
+
 //		townTile = mapScript.GetTownTile ();
 //		ShowBasicBuildings();
 
@@ -65,15 +68,18 @@ public class TownBuilding : MonoBehaviour {
 
 	}
 	
-	// Update is called once per frame
 	void Update () {
 		CheckWhatTile ();
 
 		if (townTile != null) {
 			hasBuilding = townTile.GetComponent<TownTile_Properties>().tileHasBuilding;
+			hasAdvanced = townTile.GetComponent<TownTile_Properties>().tileHasAdvancedBuilding;
 			if (hasBuilding){
 				ShowAdvancedBuildings(townTile.name);
-			}else{
+			}else if (hasAdvanced){
+				ShowOnlyDestroyed();
+			}
+			else{
 				ShowBasicBuildings();
 			}
 		}
@@ -82,7 +88,9 @@ public class TownBuilding : MonoBehaviour {
 	// linecast from this position to check what town tile we are on
 	public void CheckWhatTile(){
 
-		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (myTransform.position.x, myTransform.position.y), Vector2.up);
+//		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (myTransform.position.x, myTransform.position.y), -Vector2.up, mask.value);
+		RaycastHit2D hit = Physics2D.Raycast(new Vector2(myTransform.position.x, myTransform.position.y), -Vector2.up, 100, mask.value);  
+
 		if (hit.collider != null) {
 			print ("Camera hits " + hit.collider.name);
 			if (hit.collider.CompareTag("Town_Tile")){
@@ -102,26 +110,11 @@ public class TownBuilding : MonoBehaviour {
 		}
 	}
 
-	// Everytime we move from TileToTile (keyboard) this is called
-	public void CheckWhatToShow(){
 
-//		if (mapScript.CheckTownTileForBuilding(myTransform.position) == false) {
-//			townTile = mapScript.GetTownTile ();
-//			firstBuildBtn.enabled = true;
-//			ShowBasicBuildings();
-//
-//
-//		} else if (mapScript.CheckTownTileForBuilding(myTransform.position) == true) {
-//			firstBuildBtn.enabled = false;
-//			//check what buildings they are
-//			// to show upgrade options
-//		}
-	}
 
 	void ShowBasicBuildings(){
-//		firstBuildBtn.image.color = new Color (firstBuildBtn.image.color.r, firstBuildBtn.image.color.g, firstBuildBtn.image.color.b, firstBuildBtn.image.color.a + 50f);
-//		secondBuildBtn.image.color = new Color (secondBuildBtn.image.color.r, secondBuildBtn.image.color.g, secondBuildBtn.image.color.b, secondBuildBtn.image.color.a + 50f);
-
+		firstBuildBtn.enabled = true;
+		secondBuildBtn.enabled = true;
 		// show basic buildings
 		firstBuildBtn.image.sprite = houseSprite;
 		// get the text
@@ -140,7 +133,8 @@ public class TownBuilding : MonoBehaviour {
 	// to show the right Advanced building options, I need to get the name of the building on this town tile
 	void ShowAdvancedBuildings(string buildingName){
 		string destroyText = "Destroy";
-
+		firstBuildBtn.enabled = true;
+		secondBuildBtn.enabled = true;
 		switch (buildingName) {
 		case "House":
 			// show upgrades for house
@@ -179,6 +173,18 @@ public class TownBuilding : MonoBehaviour {
 		}
 	}
 
+	void ShowOnlyDestroyed(){
+		firstBuildBtn.enabled = false;
+
+		secondBuildBtn.enabled = false;
+		
+		// as third show option for Destroy
+		thirdBuidBtn.image.sprite = cancelSprite;
+		// get the text
+		string destroyText = "Destroy";
+		thirdText.text = destroyText;
+	}
+	
 	public void FirstBuild(){
 		string name = firstText.text;
 		if (townTile != null) {
@@ -199,7 +205,11 @@ public class TownBuilding : MonoBehaviour {
 	public void ThirdBuild(){
 		string name = thirdText.text;
 		if (townTile != null) {
-			CheckBuildingRecipeAndBuild(name, townTile);
+			if (name != "Destroy"){
+				CheckBuildingRecipeAndBuild(name, townTile);
+			}else{
+				DestroyBuilding(townTile);
+			}
 		}
 	}
 
@@ -214,9 +224,10 @@ public class TownBuilding : MonoBehaviour {
 				// need to makes sure the new gameobject's name matches my hardcoded names
 				building.name = name;
 				towntile.name = name;
-				//then tell this tile that it has a building
+				//then tell this tile that it has an Advanced building
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
-				townProps.tileHasBuilding = true;
+				townProps.tileHasBuilding = false; // no longer has basic building
+				townProps.tileHasAdvancedBuilding = true;
 				townResources.wood = townResources.wood - slaughterCost;
 			}
 			break;
@@ -236,29 +247,47 @@ public class TownBuilding : MonoBehaviour {
 			break;
 		case "Stone House":
 			if (townResources.stone >= stoneHouseCost){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+
+				// Need to DESTROY the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedBuilding = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+
 				GameObject building = Instantiate (stoneHouseFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
 				// need to makes sure the new gameobject's name matches my hardcoded names
 				building.name = name;
 				towntile.name = name;
-				//then tell this tile that it has a building
-				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
-				townProps.tileHasBuilding = true;
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasBuilding = false; // no longer has basic building
+				townProps.tileHasAdvancedBuilding = true;
 				townResources.stone = townResources.stone - stoneHouseCost;
 			}
 			break;
 		case "Metal House":
 			if (townResources.stone >= metalHouseCost){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				// Need to DESTROY the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedBuilding = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+		
+
 				GameObject building = Instantiate (metalHouseFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
 				// need to makes sure the new gameobject's name matches my hardcoded names
 				building.name = name;
 				towntile.name = name;
-				//then tell this tile that it has a building
-				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
-				townProps.tileHasBuilding = true;
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasBuilding = false; // no longer has basic building
+				townProps.tileHasAdvancedBuilding = true;
 				townResources.metal = townResources.metal - metalHouseCost;
 			}
 			break;
@@ -278,31 +307,46 @@ public class TownBuilding : MonoBehaviour {
 			break;
 		case "Stone Defense":
 			if (townResources.stone >= stoneDefenseCost){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+
+				// Need to DESTROY the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedBuilding = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+
 				GameObject building = Instantiate (stoneDefenseFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
 				// need to makes sure the new gameobject's name matches my hardcoded names
 				building.name = name;
 				towntile.name = name;
-				//then tell this tile that it has a building
-				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
-				townProps.tileHasBuilding = true;
-				// substract cost from resources
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasBuilding = false; // no longer has basic building
+				townProps.tileHasAdvancedBuilding = true;
 				townResources.stone = townResources.stone - stoneDefenseCost;
 			}
 			break;
 		case "Metal Defense":
 			if (townResources.metal >= metalDefenseCost){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				// Need to DISABLE the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedBuilding = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+
 				GameObject building = Instantiate (metalDefenseFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
 				// need to makes sure the new gameobject's name matches my hardcoded names
 				building.name = name;
 				towntile.name = name;
-				//then tell this tile that it has a building
-				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
-				townProps.tileHasBuilding = true;
-				// substract cost from resources
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasBuilding = false; // no longer has basic building
+				townProps.tileHasAdvancedBuilding = true;
 				townResources.metal = townResources.metal - metalDefenseCost;
 			}
 			break;
@@ -311,5 +355,24 @@ public class TownBuilding : MonoBehaviour {
 			break;
 		}
 
+	}
+
+	void DestroyBuilding(GameObject town){
+		Transform[] children = town.GetComponentsInChildren<Transform> ();
+		TownTile_Properties townProps = town.GetComponent<TownTile_Properties>();
+		if (townProps.tileHasBuilding) { // only destroy basic building
+			Destroy (children [1].gameObject);
+			// Change parent name to something else
+			townTile.name = "Town X";
+			townProps.tileHasBuilding = false;
+			print ("Children: " + children.Length);
+		}else if (townProps.tileHasAdvancedBuilding){
+			Destroy(children [1].gameObject); // destroy the advanced building
+			townProps.deactivatedBuilding.SetActive(true); // activate old building
+			// Change name back to old building name
+			townTile.name = townProps.deactivatedBuilding.name;
+			townProps.tileHasAdvancedBuilding = false;
+			townProps.tileHasBuilding = true;
+		}
 	}
 }

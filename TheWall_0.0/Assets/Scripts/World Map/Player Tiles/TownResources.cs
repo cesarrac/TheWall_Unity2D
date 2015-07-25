@@ -7,10 +7,10 @@ public class TownResources : MonoBehaviour {
 	public int metal;
 	public int grain;
 	public int stone;
-	public int xp = 2;
+	public float xp = 2;
 
 	// rate at which xp is gained each turn
-	public int xpGainRate = 1;
+	public float xpGainRate = 1;
 
 	//Text components to display resource ammounts
 	public Text woodText;
@@ -43,7 +43,7 @@ public class TownResources : MonoBehaviour {
 			stone = stone + quantityToAdd;
 			break;
 		case "xp":
-			xp = xp + quantityToAdd;
+			xp = xp + (float)quantityToAdd;
 			break;
 		default:
 			print ("Cant find that resource type!");
