@@ -92,7 +92,7 @@ public class TownBuilding : MonoBehaviour {
 		RaycastHit2D hit = Physics2D.Raycast(new Vector2(myTransform.position.x, myTransform.position.y), -Vector2.up, 100, mask.value);  
 
 		if (hit.collider != null) {
-			print ("Camera hits " + hit.collider.name);
+//			print ("Camera hits " + hit.collider.name);
 			if (hit.collider.CompareTag("Town_Tile")){
 				townTile = hit.collider.gameObject; // grab the gameobject the camera is detecting
 
@@ -105,6 +105,8 @@ public class TownBuilding : MonoBehaviour {
 				// moves the player out of that tile so you cant access it
 //				myTransform.position = new Vector3(myTransform.position.x + 1f, myTransform.position.y, myTransform.position.z);
 			}else if (hit.collider.CompareTag("Destroyed Town")){
+				Destroy(hit.collider.gameObject);
+			}else if (hit.collider.CompareTag("Depleted")){
 				Destroy(hit.collider.gameObject);
 			}
 		}
@@ -368,11 +370,18 @@ public class TownBuilding : MonoBehaviour {
 			print ("Children: " + children.Length);
 		}else if (townProps.tileHasAdvancedBuilding){
 			Destroy(children [1].gameObject); // destroy the advanced building
-			townProps.deactivatedBuilding.SetActive(true); // activate old building
-			// Change name back to old building name
-			townTile.name = townProps.deactivatedBuilding.name;
-			townProps.tileHasAdvancedBuilding = false;
-			townProps.tileHasBuilding = true;
+			if (townProps.deactivatedBuilding != null){
+				townProps.deactivatedBuilding.SetActive(true); // activate old building
+				// Change name back to old building name
+				townTile.name = townProps.deactivatedBuilding.name;
+				townProps.tileHasAdvancedBuilding = false;
+				townProps.tileHasBuilding = true;
+			}else{
+				townTile.name = "Town S";
+				townProps.tileHasAdvancedBuilding = false;
+				townProps.tileHasBuilding = false;
+			}
+
 		}
 	}
 }

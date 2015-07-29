@@ -36,6 +36,11 @@ public class Mouse_Controls : MonoBehaviour {
 	// need to store the resource tile to destroy when Expanding
 	public GameObject resourceTileToDestroy;
 
+	// GameObject that spanws when I hit a Horde
+	public GameObject hitSparkFab;
+
+	public LayerMask mask;
+
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
 		if (Application.loadedLevel == 0) {
@@ -51,7 +56,12 @@ public class Mouse_Controls : MonoBehaviour {
 	}
 	
 	void Update () {
-		Select ();
+		if (Input.GetKey (KeyCode.LeftShift)) {
+			AttackRay ();
+		} else {
+			Select ();
+		}
+
 		if (selectedUnit != null) {
 			Captain cpn = selectedUnit.GetComponent<Captain> ();
 			SelectTargetWithMouse(cpn);
@@ -86,14 +96,11 @@ public class Mouse_Controls : MonoBehaviour {
 					}
 				}
 			
-			} else if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Destroyed Town")  ) {
+			} else if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Destroyed Town") || hit.collider.CompareTag ("Depleted")  ) {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
-					// mouse must not be busy to be able to expand, meaning not currently shooting or placing units
-				mouseIsBusy = false;
-				// as soon as I touch the tile I need to store it in case it will need to be destroyed
-//				resourceTileToDestroy = hit.collider.gameObject;
-//				GameObject destroyThisTile = resourceTileToDestroy;
-
+					// mouse is not busy, meaning not currently shooting or placing units
+//				mouseIsBusy = false;
+			
 				if (Input.GetMouseButtonUp(0) && !mouseIsBusy) {
 				
 					print ("You clicked on a tile");
@@ -131,45 +138,19 @@ public class Mouse_Controls : MonoBehaviour {
 			} 
 			else if (hit.collider.CompareTag ("Badge")) {
 				mouseIsBusy = true;
-//				if (Input.GetMouseButtonUp (0)) {
-//					mouseIsBusy = false;
-//					print ("Clicked on " + hit.collider.name);
-//					selectedHorde = hit.collider.gameObject.GetComponent<Horde> ();
-//					if (selectedHorde.nextToTownTile){
-//						selectedHorde.TakeDamage (townCentral.shortRangeDamage);
-//						print (selectedHorde.gameObject.name + " takes " + townCentral.shortRangeDamage + " damage!");
-//					}
-//
-////
-////					//check how many tiles away this Horde is
-////					// both positions rounded
-//////					Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
-//////					Vector2 hordePosRounded = new Vector2 (Mathf.Round (selectedHorde.gameObject.transform.position.x), Mathf.Round (selectedHorde.gameObject.transform.position.y));
-//////					if (hordePosRounded.x > myPosRounded.x + 2 || hordePosRounded.y > myPosRounded.y + 2){
-//////						// long range damage
-//////						selectedHorde.TakeDamage(townCentral.longRangeDamage);
-//////						print (selectedHorde.gameObject.name + " takes " + townCentral.longRangeDamage + " damage!");
-//////					} else if (hordePosRounded.x > myPosRounded.x || hordePosRounded.y > myPosRounded.y){
-//////						// short range
-//////						selectedHorde.TakeDamage(townCentral.shortRangeDamage);
-//////						print (selectedHorde.gameObject.name + " takes " + townCentral.shortRangeDamage + " damage!");
-//////					}
-////
-////					// tell the GM to load battleview
-////					// THIS WOULD LOAD BATTLEVIEW selectedHorde.GoToBattle ();
-//				}
+
+////				// THIS WOULD LOAD BATTLEVIEW 
+				/// selectedHorde.GoToBattle ();
+
 			} 
-//				else if (hit.collider.CompareTag ("Gatherer")) {
-//				mouseIsBusy = true;
-//				if (Input.GetMouseButtonDown (1)) {
-//					Destroy (hit.collider.gameObject);
-//					townCentral.availableGatherers++;
-//					mouseIsBusy = false;
-//				}
-//			}
+				else if (hit.collider.CompareTag ("Gatherer")) {
+				mouseIsBusy = true;
+			}
 		} else { // hit.collider is null so mouse is definitely NOT busy
 			mouseIsBusy = false;
 		} 
+
+		// vvv BATTLEVIEW VVVV
 		// for dragging the unit with mouse
 		if (selectedUnit != null) { // once you click on a unit this will be true
 			if (Input.GetMouseButton(0) && !gmScript.battleStarted){
@@ -189,6 +170,34 @@ public class Mouse_Controls : MonoBehaviour {
 		}
 	} 
 
+	// this Ray happens instead when player wants to attack something
+	void AttackRay(){
+		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
+		RaycastHit2D hit = Physics2D.Raycast(new Vector2(m.x, m.y), -Vector2.up, mask.value);
+		Vector3 mouseRounded = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), 0);
+		if (hit.collider != null) {
+			if (hit.collider.CompareTag("Badge")){
+				mouseIsBusy = true;
+				print ("Hit the Horde!!");
+				Horde horde = hit.collider.gameObject.GetComponent<Horde>();
+				if (horde.nextToTownTile && Input.GetMouseButtonDown(0)){
+					// spawn a spark over the horde for the player to see their hit
+					float randomZ =(float) Random.Range (0, 180);
+					GameObject spark = Instantiate (hitSparkFab, mouseRounded, Quaternion.Euler(new Vector3(0, 0, randomZ))) as GameObject;
+				}
+			}
+			else if (hit.collider.CompareTag("Horde Spawner")){
+				mouseIsBusy = true;
+				print ("Hit the spawner!!");
+				Spawner_HitBox spawner = hit.collider.gameObject.GetComponent<Spawner_HitBox>();
+				if (spawner.visible && Input.GetMouseButtonDown(0)){
+					// spawn a spark over the horde for the player to see their hit
+					float randomZ =(float) Random.Range (0, 180);
+					GameObject spark = Instantiate (hitSparkFab, mouseRounded, Quaternion.Euler(new Vector3(0, 0, randomZ))) as GameObject;
+				}
+			}
+		}
+	}
 
 	void SelectTargetWithMouse(Captain selectCaptain){
 		// this will check if the Mouse is over a Monster, if it IS  when user RIGHTCLICKS it returns target as GameObject 

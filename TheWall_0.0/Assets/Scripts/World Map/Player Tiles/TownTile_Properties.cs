@@ -88,8 +88,7 @@ public class TownTile_Properties : MonoBehaviour {
 	void KillTile(){
 	
 		if (mapScript != null) {
-			// remove it from the list of town tiles
-			mapScript.ClearTownTile (listIndex, myTransform.position);
+
 			// create a position for the depleted tile at the same Z as a resource tile (for mouse linecast to work)
 			Vector3 depPos = new Vector3 (myTransform.position.x, myTransform.position.y, -2f);
 			// spawn Destroyed tile (this will fade away by itself, leaving only the depleted tile)
@@ -100,6 +99,8 @@ public class TownTile_Properties : MonoBehaviour {
 			depTile.transform.parent = myTransform.parent;
 			destroyedTile.transform.parent = myTransform.parent;
 			if (depTile != null) {
+				// remove it from the list of town tiles
+				mapScript.ClearTownTile (listIndex, myTransform.position);
 				//destroy this town tile
 				Destroy (this.gameObject);
 			}

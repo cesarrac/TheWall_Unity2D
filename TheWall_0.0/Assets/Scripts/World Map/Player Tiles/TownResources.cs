@@ -25,7 +25,11 @@ public class TownResources : MonoBehaviour {
 		metalText.text = "METAL: " + metal;
 		grainText.text = "GRAIN: " + grain;
 		stoneText.text = "STONE: " + stone;
-		xpText.text = "XP: " + xp;
+		if (xp >= 1) {
+			xpText.text = "XP: " + xp;
+		} else {
+			xpText.text = "XP: " + 0;
+		}
 	}
 
 	public void AddResource (string id, int quantityToAdd){
@@ -43,7 +47,7 @@ public class TownResources : MonoBehaviour {
 			stone = stone + quantityToAdd;
 			break;
 		case "xp":
-			xp = xp + (float)quantityToAdd;
+			xp = Mathf.Round(xp + (float)quantityToAdd);
 			break;
 		default:
 			print ("Cant find that resource type!");

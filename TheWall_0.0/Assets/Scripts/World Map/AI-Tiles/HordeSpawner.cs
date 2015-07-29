@@ -29,6 +29,8 @@ public class HordeSpawner : MonoBehaviour {
 
 	// Sprite Renderer to enable and disable if player is close or not
 	SpriteRenderer sr;
+	// bool to tell if renderer is On or Off
+	public bool visible;
 
 	//object to spawn when dead
 	public GameObject deadSpawner;
@@ -80,6 +82,7 @@ public class HordeSpawner : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D coll){
 		if (coll.gameObject.tag == "Map_Manager") {
 			sr.enabled = true;
+			visible = true;
 //			TurnOffColliderUnderneath();
 		}
 		if (coll.gameObject.tag == "Tile") {
@@ -89,6 +92,7 @@ public class HordeSpawner : MonoBehaviour {
 	void OnTriggerExit2D(Collider2D coll){
 		if (coll.gameObject.tag == "Map_Manager") {
 			sr.enabled = false;
+			visible = false;
 		}
 	}
 

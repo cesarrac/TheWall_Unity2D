@@ -74,7 +74,7 @@ public class Horde : MonoBehaviour {
 	void SwitchColliderUnderneathOnOff(){
 		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (myTransform.position.x, myTransform.position.y), Vector2.up);
 		if (hit.collider != null) {
-			if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Empty Tile") || hit.collider.CompareTag ("Town_Tile")) {
+			if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Empty Tile") || hit.collider.CompareTag ("Town_Tile") || hit.collider.CompareTag ("Depleted")) {
 				BoxCollider2D boxColl = hit.collider.gameObject.GetComponent<BoxCollider2D> ();
 				if (boxColl != storedTileColl){
 					if (storedTileColl != null){
@@ -151,6 +151,7 @@ public class Horde : MonoBehaviour {
 
 	// This next function takes care of damaging the Horde once its clicked (called by Mouse_Control)
 	public void TakeDamage(float damage){
+
 		hordeMembers [0].hitPoints = hordeMembers [0].hitPoints - damage;
 		print (this.gameObject.name + " takes " + damage + " damage!");
 		if (hordeMembers [0].hitPoints <= 0) {

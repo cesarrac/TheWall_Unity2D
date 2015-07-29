@@ -32,8 +32,8 @@ public class Map_Manager : MonoBehaviour {
 	Vector3 myCurrentPosition;
 
 	// prefab Town tiles to instantiate
-	public GameObject initialTownTile;
-	public GameObject centerTTile, topLTTile, topCTTile, topRTTile, centerLTTile, centerRTTile, bottomLTTile, bottomCTTile, bottomRTTile;
+	public GameObject initialTownTile, newTownTile;
+//	public GameObject centerTTile, topLTTile, topCTTile, topRTTile, centerLTTile, centerRTTile, bottomLTTile, bottomCTTile, bottomRTTile;
 	// a list to keep track of tiles and be able to ADD or REMOVE
 	public List<GameObject>townTiles = new List<GameObject>();
 
@@ -63,11 +63,12 @@ public class Map_Manager : MonoBehaviour {
 	// an array of Transforms for resource tiles that have been instantiated
 	public Transform[] spawnedTiles;
 
+
 	void Start () {
 		maxTiles = colums * rows;
 
 		myTransform = transform;
-		myStoredPosition = new Vector3 (myTransform.position.x, myTransform.position.y, 0);
+		myStoredPosition = new Vector3 (myTransform.position.x, myTransform.position.y, -2f);
 
 		InitTileDataList ();
 
@@ -173,12 +174,12 @@ public class Map_Manager : MonoBehaviour {
 		// is the Transformm that is below myStoredPosition.x on the grid
 		//if expanding UP or DOWN we need the Transform to the right of myStoredPosition.x on the grid
 		float xp = Mathf.Round(townResourcesScript.xp);
-		print ("XP = " + xp);
+	
 		if ( xp  >= 1) { // must check if we have any XP left to expand with
 		
 			if (centerPosition.x > myTransform.position.x) { // right
 				// spawn town tile first
-				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile = Instantiate (newTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
 				//spend the resources XP point
 				townResourcesScript.xp = townResourcesScript.xp - 1;
@@ -208,7 +209,7 @@ public class Map_Manager : MonoBehaviour {
 					}
 				}		// repeat the same process for each side... 
 			} else if (centerPosition.x < myTransform.position.x) {// left
-				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile = Instantiate (newTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
 				//spend the resources XP point
 				townResourcesScript.xp = townResourcesScript.xp - 1;
@@ -238,7 +239,7 @@ public class Map_Manager : MonoBehaviour {
 					}
 				}
 			} else if (centerPosition.y < myTransform.position.y) {// down
-				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile = Instantiate (newTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
 				//spend the resources XP point
 				townResourcesScript.xp = townResourcesScript.xp - 1;
@@ -268,7 +269,7 @@ public class Map_Manager : MonoBehaviour {
 					}
 				}
 			} else if (centerPosition.y > myTransform.position.y) {// up
-				expandedTownTile = Instantiate (initialTownTile, centerPosition, Quaternion.identity) as GameObject;
+				expandedTownTile = Instantiate (newTownTile, centerPosition, Quaternion.identity) as GameObject;
 				expandedTownTile.transform.parent = townHolder;
 				//spend the resources XP point
 				townResourcesScript.xp = townResourcesScript.xp - 1;
@@ -343,7 +344,7 @@ public class Map_Manager : MonoBehaviour {
 		int posX = (int)centerPosition.x;
 		int posY = (int)centerPosition.y;
 	
-		if (centerPosition.y < myStoredPosition.y) {// down
+		if (centerPosition.y < myTransform.position.y) {// down
 			for (int x = posX; x >= posX - 1; x--) {
 				for (int y = posY -1; y <= posY; y++) {
 					Vector3 tilePos = new Vector3 (x, y, 0);
@@ -357,7 +358,7 @@ public class Map_Manager : MonoBehaviour {
 					}
 				}
 			}
-		} else if (centerPosition.y > myStoredPosition.y) {// up
+		} else if (centerPosition.y > myTransform.position.y) {// up
 			for (int x = posX; x >= posX - 1; x--) {
 				for (int y = posY; y <= posY + 1; y++) {
 					Vector3 tilePos = new Vector3 (x, y, 0);
@@ -447,18 +448,26 @@ public class Map_Manager : MonoBehaviour {
 	}
 
 	//This checks each resource tile being gathered to see if it is depleted and needs to be destroyed
-	public void CheckResourceQuantity(Tile tile, int index, GameObject tileObj){
+	// Accesing the postion of the tile was not working so I'm just going to get the Pos from the gatherer that calls this
+	public bool CheckResourceQuantity(Tile tile){
 		if (tile.maxResourceQuantity <= 0) {
 			// first we need to store the position of this tile
-			Vector3 depletedTilePos = new Vector3(tileDataList[index].gridPosition.x, tileDataList[index].gridPosition.x, 0);
-			//then remove from list
-			tileDataList.RemoveAt(index);
-			Destroy(tileObj); // & Destroy it
-			// then it its former position, spawn an empty tile tagged tile
-			GameObject replacementTile = Instantiate (depletedTile, depletedTilePos, Quaternion.identity) as GameObject;
-			replacementTile.transform.parent = tileHolder;
+//			Vector3 depletedTilePos = new Vector3(tileDataList[index].gridPosition.x, tileDataList[index].gridPosition.y, tileDataList[index].gridPosition.z);
+			//then remove
 
+			return false;
+		} else {
+			return true;
 		}
+	}
+
+	public void SpawnDepletedTile(Vector3 position, int index, GameObject tileObj){
+		//then remove from list
+		tileDataList.RemoveAt(index);
+		Destroy(tileObj); // & Destroy it
+		// then it its former position, spawn an empty tile tagged tile
+		GameObject replacementTile = Instantiate (depletedTile, position, Quaternion.identity) as GameObject;
+		replacementTile.transform.parent = tileHolder;
 	}
 
 	//call this each time player expands
