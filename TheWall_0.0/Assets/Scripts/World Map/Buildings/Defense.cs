@@ -2,7 +2,7 @@
 using System.Collections;
 
 [System.Serializable]
-public class Defense : MonoBehaviour {
+public class Defense : Building {
 
 	// **** Using this script on every object that boosts a tile defenses, all it REQUIRES is to specify
 							// the TYPE OF DEFENSE this is in the Editor
@@ -10,51 +10,47 @@ public class Defense : MonoBehaviour {
 
 	// how much HP to boost, determined by the defense type below
 	float hitPointsBoost;
-	
-	// access to Town Properties to boost its HP
-	TownTile_Properties townTileProps;
-
-	// store and view in the Editor what type of Defense this is (Basic, Stone or Metal)
-	public DefenseType myDefenseType;
-
-	public enum DefenseType
-	{
-		basic,
-		stone,
-		metal
-	}
 
 	void Start () {
+		if (townCentral == null) {
+			townCentral = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<Town_Central> ();
+		}
+		if (townTProps == null) {
+			townTProps = GetComponentInParent<TownTile_Properties> ();
+		}
 		
-		townTileProps = GetComponentInParent<TownTile_Properties> ();
-//		townTileProps.tileHitPoints = townTileProps.tileHitPoints + hitPointsBoost;
-		if (townTileProps != null) {
-			myDefenseType = myDefenseType;
-			BoostTileHitPoints(myDefenseType);
+		if (townCentral != null && townTProps != null) {
+			myBuildMaterial = myBuildMaterial;
+			BoostTileHitPoints(myBuildMaterial);
 		}
 	}
 
-	void BoostTileHitPoints(DefenseType type){
+	void BoostTileHitPoints(BuildMaterialType type){
 		switch (type) {
-		case DefenseType.basic:
+		case BuildMaterialType.basic:
 			hitPointsBoost = 10f;
-			townTileProps.tileHitPoints = townTileProps.tileHitPoints + hitPointsBoost;
+			floatBonus1 = hitPointsBoost;
+			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
 			break;
-		case DefenseType.stone:
+		case BuildMaterialType.stone:
 			hitPointsBoost = 20f;
-			townTileProps.tileHitPoints = townTileProps.tileHitPoints + hitPointsBoost;
+			floatBonus1 = hitPointsBoost;
+			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
 			break;
-		case DefenseType.metal:
+		case BuildMaterialType.metal:
 			hitPointsBoost = 30f;
-			townTileProps.tileHitPoints = townTileProps.tileHitPoints + hitPointsBoost;
+			floatBonus1 = hitPointsBoost;
+			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
 			break;
 		default:
 			hitPointsBoost = 10f;
-			townTileProps.tileHitPoints = townTileProps.tileHitPoints + hitPointsBoost;
+			floatBonus1 = hitPointsBoost;
+			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
 			break;
 		}
 
 	}
-	
+
+
 	
 }

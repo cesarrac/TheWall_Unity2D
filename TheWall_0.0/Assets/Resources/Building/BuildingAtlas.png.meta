@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: eff0b4bd4889ffa4386f9618a20c8b91
-timeCreated: 1437946592
+timeCreated: 1438529736
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -12,6 +12,7 @@ TextureImporter:
     21300010: BuildingAtlas_5
     21300012: BuildingAtlas_6
     21300014: BuildingAtlas_7
+    21300016: BuildingAtlas_8
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -65,7 +66,7 @@ TextureImporter:
         width: 16
         height: 18
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: BuildingAtlas_1
       rect:
@@ -75,17 +76,17 @@ TextureImporter:
         width: 16
         height: 18
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: BuildingAtlas_2
       rect:
         serializedVersion: 2
         x: 32
-        y: 18
+        y: 17
         width: 16
-        height: 18
+        height: 19
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: BuildingAtlas_3
       rect:
@@ -113,9 +114,9 @@ TextureImporter:
         x: 0
         y: 0
         width: 16
-        height: 18
+        height: 17
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: BuildingAtlas_6
       rect:
@@ -123,14 +124,24 @@ TextureImporter:
         x: 16
         y: 0
         width: 16
-        height: 18
+        height: 17
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: BuildingAtlas_7
       rect:
         serializedVersion: 2
         x: 32
+        y: 0
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: BuildingAtlas_8
+      rect:
+        serializedVersion: 2
+        x: 48
         y: 0
         width: 16
         height: 18

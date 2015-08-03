@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Basic_Defense : MonoBehaviour {
+public class Basic_Defense : Building {
 
 	public float hitPointsBoost = 10f;
 
@@ -15,8 +15,5 @@ public class Basic_Defense : MonoBehaviour {
 		townTileProps.tileHitPoints = townTileProps.tileHitPoints + hitPointsBoost;
 	}
 	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
 }

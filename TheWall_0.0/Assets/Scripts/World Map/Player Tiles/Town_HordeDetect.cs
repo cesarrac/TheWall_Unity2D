@@ -17,14 +17,19 @@ public class Town_HordeDetect : MonoBehaviour {
 		if (coll.CompareTag ("Badge")) {
 			horde = coll.GetComponent<Horde> ();
 		
-				if (!horde.nextToTownTile){
-					horde.nextToTownTile = true;
-					horde.townTile = townTile; // gives the horde the proper tile to do damage to.
-					townTile.beingAttacked = true;
-				}
+			if (!horde.nextToTownTile) {
+				horde.nextToTownTile = true;
+				horde.townTile = townTile; // gives the horde the proper tile to do damage to.
+				townTile.beingAttacked = true;
+			}
 			
-		} else {
-			townTile.beingAttacked = false;
+		}
+
+		if (coll.CompareTag ("Survivor")) {
+			Survivor survivor = coll.gameObject.GetComponent<Survivor>();
+			if(!survivor.partOfTown){
+				survivor.Talk("Welcome"); // Only call Welcome when survivor is not part of town
+			}
 		}
 	}
 
@@ -32,14 +37,11 @@ public class Town_HordeDetect : MonoBehaviour {
 		if (coll.CompareTag ("Badge")) {
 			horde = coll.GetComponent<Horde> ();
 			
-			if (!horde.nextToTownTile){
+			if (!horde.nextToTownTile) {
 				horde.nextToTownTile = true;
 				horde.townTile = townTile; // gives the horde the proper tile to do damage to.
 				townTile.beingAttacked = true;
 			}
-			
-		} else {
-			townTile.beingAttacked = false;
 		}
 	}
 	void OnTriggerExit2D (Collider2D coll){
@@ -48,9 +50,7 @@ public class Town_HordeDetect : MonoBehaviour {
 			horde.nextToTownTile = false;
 			townTile.beingAttacked = false;
 		}
-		else {
-			townTile.beingAttacked = false;
-		}
+
 	}
 
 }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
+using UnityEngine.UI;
 
 public class GameMaster : MonoBehaviour {
 	//Arrays to be used for Unit targetting and for checking if battle is over
@@ -31,7 +32,7 @@ public class GameMaster : MonoBehaviour {
 
 	//for Turn Timer
 	public float turnTime;
-	public bool newTurn = true;
+	public bool newTurn;
 
 	//need access to the Map Manager in order to know how big the grid is
 	Map_Manager mapScript;
@@ -43,6 +44,15 @@ public class GameMaster : MonoBehaviour {
 	//for determining if Town can receive XP if it meets req. of food costs
 	public int grainCostRate = 1; // 1 tile costs 1 grain
 
+	//access to Town Central to affect Survivor Mood
+	public Town_Central townCentral;
+
+	// GAME OVER - loads Game Over scene if Player's town capital is destroyed
+	// the GM displays the number of turns the Player survived
+	public bool gameOver, stopGame;
+	public int numberOfTurns = 0;
+	public Text survivedText;
+
 	void Awake () {
 //		SpawnCaptains ();
 		DontDestroyOnLoad (this.gameObject);
@@ -51,19 +61,38 @@ public class GameMaster : MonoBehaviour {
 		battleStarted = false;
 		if (Application.loadedLevel == 0) {
 			mapScript = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();
-			mapPositions = mapScript.InitGridPositionsList();
+			mapPositions = mapScript.InitGridPositionsList ();
+			newTurn = true;
+		} else if (Application.loadedLevel == 2) {
+			survivedText = GameObject.FindGameObjectWithTag("Game Over Text").GetComponent<Text>();
+			if(gameOver && !stopGame){
+				// display game over text
+				GameOverText(numberOfTurns);
+				newTurn = false;
+			}
 		}
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (Application.loadedLevel == 1) {
-			if (battleOver) {
-				print ("Battle is over.");
+//		if (Application.loadedLevel == 1) {
+//			if (battleOver) {
+//				print ("Battle is over.");
+//			}
+//		}
+		if (Application.loadedLevel == 0) { // on the Map
+			if (newTurn && !gameOver) {
+				StartCoroutine (TurnTimer ());
+			} else if (gameOver && !stopGame) {
+				// load game over
+				LoadGameOverScreen (); // load game over
 			}
-		} else {
-			if (newTurn){
-				StartCoroutine(TurnTimer());
+		} else if (Application.loadedLevel == 2) { // we are on Game Over so load the text
+			newTurn = false;
+			survivedText = GameObject.FindGameObjectWithTag("Game Over Text").GetComponent<Text>();
+			if(gameOver && !stopGame){
+				// display game over text
+				GameOverText(numberOfTurns);
 			}
 		}
 
@@ -253,6 +282,9 @@ public class GameMaster : MonoBehaviour {
 		// move the hordes
 		MoveTheHordes ();
 		CheckFoodForXP ();
+
+		// every time a turn passes, count it
+		numberOfTurns++;
 	
 	}
 
@@ -292,21 +324,36 @@ public class GameMaster : MonoBehaviour {
 		}
 		return false;
 	}
-//
-//	void GiveXPPoints(){
-//		townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
-//	}
 
 	// this check if Town has enough food to get XP (you cant get more XP unless you have enough food)
 	void CheckFoodForXP(){
-		int foodCost = mapScript.townTiles.Count * grainCostRate; // this is how much food is need to get XP
+		int foodCost = (mapScript.townTiles.Count / 2) * grainCostRate; // this is how much food is need to get XP
 		if (townResourceScript.grain >= foodCost) {
 			// town has enough food, so give them XP
 			townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
 			// then charge the town the foodcost
 			townResourceScript.grain = townResourceScript.grain - foodCost;
+
+			// we have enough food so Mood does not change
+
 		} else {
 			print ("Not enough food to expand!");
+			// not enough food so Mood has to go down
+			ChangeMoods(-0.1f);
 		}
+	}
+
+	void ChangeMoods(float change){
+		// changing the moods here for testing with a hardcoded mood change
+		townCentral.MoodChange (change);
+	}
+
+	void LoadGameOverScreen(){
+		Application.LoadLevel (2);
+
+	}
+	void GameOverText(int numTurns){
+		survivedText.text = "You survived " + numTurns + " turns.";
+		stopGame = true;
 	}
 }
