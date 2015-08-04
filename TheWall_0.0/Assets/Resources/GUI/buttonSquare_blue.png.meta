@@ -1,10 +1,9 @@
 fileFormatVersion: 2
-guid: 2386c64503ec89f4fa63509ed01f8503
-timeCreated: 1438631654
+guid: f154915eef120694e8aef35e0db03dee
+timeCreated: 1438702098
 licenseType: Free
 TextureImporter:
-  fileIDToRecycleName:
-    21300000: distanceMeter_0
+  fileIDToRecycleName: {}
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -28,7 +27,7 @@ TextureImporter:
   cubemapConvolutionExponent: 1.5
   seamlessCubemap: 0
   textureFormat: -3
-  maxTextureSize: 1024
+  maxTextureSize: 64
   textureSettings:
     filterMode: 0
     aniso: 16
@@ -38,28 +37,18 @@ TextureImporter:
   lightmap: 0
   rGBM: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: .5, y: .5}
-  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spritePixelsToUnits: 300
+  spriteBorder: {x: 6, y: 9, z: 6, w: 5}
+  spritePixelsToUnits: 100
   alphaIsTransparency: 1
   textureType: 8
   buildTargetSettings: []
   spriteSheet:
-    sprites:
-    - name: distanceMeter_0
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 0
-        width: 64
-        height: 648
-      alignment: 0
-      pivot: {x: .5, y: .5}
-      border: {x: 15, y: 15, z: 15, w: 15}
+    sprites: []
   spritePackingTag: 
   userData: 
   assetBundleName: 

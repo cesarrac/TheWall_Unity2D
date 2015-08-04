@@ -1,18 +1,24 @@
 fileFormatVersion: 2
-guid: eff0b4bd4889ffa4386f9618a20c8b91
-timeCreated: 1438529736
+guid: 5de28c83882fa2746bdf1054cfce0fa8
+timeCreated: 1438701805
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
-    21300000: BuildingAtlas_0
-    21300002: BuildingAtlas_1
-    21300004: BuildingAtlas_2
-    21300006: BuildingAtlas_3
-    21300008: BuildingAtlas_4
-    21300010: BuildingAtlas_5
-    21300012: BuildingAtlas_6
-    21300014: BuildingAtlas_7
-    21300016: BuildingAtlas_8
+    21300000: BuildingAtlas-v2_0
+    21300002: BuildingAtlas-v2_1
+    21300004: BuildingAtlas-v2_2
+    21300006: BuildingAtlas-v2_3
+    21300008: BuildingAtlas-v2_4
+    21300010: BuildingAtlas-v2_5
+    21300012: BuildingAtlas-v2_6
+    21300014: BuildingAtlas-v2_7
+    21300016: BuildingAtlas-v2_8
+    21300018: BuildingAtlas-v2_9
+    21300020: BuildingAtlas-v2_10
+    21300022: BuildingAtlas-v2_11
+    21300024: BuildingAtlas-v2_12
+    21300026: BuildingAtlas-v2_13
+    21300028: BuildingAtlas-v2_14
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -58,7 +64,57 @@ TextureImporter:
   buildTargetSettings: []
   spriteSheet:
     sprites:
-    - name: BuildingAtlas_0
+    - name: BuildingAtlas-v2_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 36
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: BuildingAtlas-v2_1
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 36
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: BuildingAtlas-v2_2
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 36
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: BuildingAtlas-v2_3
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 36
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: BuildingAtlas-v2_4
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 36
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: .5, y: .5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: BuildingAtlas-v2_5
       rect:
         serializedVersion: 2
         x: 0
@@ -68,7 +124,7 @@ TextureImporter:
       alignment: 0
       pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_1
+    - name: BuildingAtlas-v2_6
       rect:
         serializedVersion: 2
         x: 16
@@ -78,17 +134,17 @@ TextureImporter:
       alignment: 0
       pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_2
+    - name: BuildingAtlas-v2_7
       rect:
         serializedVersion: 2
         x: 32
-        y: 17
+        y: 18
         width: 16
-        height: 19
+        height: 18
       alignment: 0
       pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_3
+    - name: BuildingAtlas-v2_8
       rect:
         serializedVersion: 2
         x: 48
@@ -96,9 +152,9 @@ TextureImporter:
         width: 16
         height: 18
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_4
+    - name: BuildingAtlas-v2_9
       rect:
         serializedVersion: 2
         x: 64
@@ -106,47 +162,57 @@ TextureImporter:
         width: 16
         height: 18
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_5
+    - name: BuildingAtlas-v2_10
       rect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 16
-        height: 17
+        height: 18
       alignment: 0
       pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_6
+    - name: BuildingAtlas-v2_11
       rect:
         serializedVersion: 2
         x: 16
         y: 0
         width: 16
-        height: 17
-      alignment: 0
-      pivot: {x: .5, y: .5}
+        height: 18
+      alignment: 9
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_7
+    - name: BuildingAtlas-v2_12
       rect:
         serializedVersion: 2
         x: 32
         y: 0
         width: 16
-        height: 17
-      alignment: 0
-      pivot: {x: .5, y: .5}
+        height: 18
+      alignment: 9
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: BuildingAtlas_8
+    - name: BuildingAtlas-v2_13
       rect:
         serializedVersion: 2
         x: 48
         y: 0
         width: 16
         height: 18
+      alignment: 9
+      pivot: {x: .5, y: .200000003}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: BuildingAtlas-v2_14
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 2
+        width: 3
+        height: 3
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: .5, y: .5}
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
   userData: 

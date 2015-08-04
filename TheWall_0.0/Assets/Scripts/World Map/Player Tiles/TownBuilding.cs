@@ -22,7 +22,7 @@ public class TownBuilding : MonoBehaviour {
 	// basic:
 	public GameObject houseFab, basicDefenseFab, slaughterHouseFab, workshopFab;
 	// advanced:
-	public GameObject stoneHouseFab, metalHouseFab, stoneDefenseFab, metalDefenseFab;
+	public GameObject stoneHouseFab, metalHouseFab, stoneDefenseFab, metalDefenseFab, stoneWorkFab, metalWorkFab;
 
 	//current town tile
 	public GameObject townTile;
@@ -38,16 +38,23 @@ public class TownBuilding : MonoBehaviour {
 	public GameObject townRes;
 	TownResources townResources;
 
-	// costs for building
+	// costs for building as an array of int [], wood = [0], stone = [1], metal = [2]
 	// house costs
-	public int houseCost, stoneHouseCost, metalHouseCost;
+	public int[] houseCost = new int[3];
+	public int[] stoneHouseCost = new int[3];
+	public int[]metalHouseCost = new int[3];
 	// defense costs
-	public int basicDefenseCost, stoneDefenseCost, metalDefenseCost;
+	public int[] basicDefenseCost = new int[3];
+	public int[] stoneDefenseCost = new int[3];
+	public int[] metalDefenseCost = new int[3];
 	// slaughterhouse cost
-	public int slaughterCost;
+	public int[] slaughterCost= new int[3];
 	// workshop costs
-	public int workshopCost;
-	
+	public int[] workshopCost= new int[3];
+	public int[] metalWorkshopCost= new int[3];
+	public int[] stoneWorkshopCost= new int[3];
+
+
 	// we have resources check
 	bool weHaveResources;
 
@@ -281,7 +288,7 @@ public class TownBuilding : MonoBehaviour {
 //			}
 //			break;
 		case "Workshop":
-			if (townResources.wood >= workshopCost){
+			if (CheckResourceCost(wood: workshopCost[0], stone: workshopCost[1], metal: workshopCost[2])){
 				GameObject building = Instantiate (workshopFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
@@ -291,13 +298,57 @@ public class TownBuilding : MonoBehaviour {
 				//then tell this tile that it has an Advanced building
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
 				townProps.tileHasBuilding = true; 
-				townResources.wood = townResources.wood - workshopCost;
+
 				// CHECK to see what options to show next
 				GetOptionsToShow(towntile);
 			}
 			break;
+		case "Stone Workshop":
+			if (CheckResourceCost(wood: stoneWorkshopCost[0], stone: stoneWorkshopCost[1], metal: stoneWorkshopCost[2])){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				
+				// Need to DESTROY the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedBuilding = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+				
+				GameObject building = Instantiate (stoneWorkFab, myTransform.position, Quaternion.identity) as GameObject;
+				// parent it to the town tile this is on
+				building.transform.parent = towntile.transform;
+				// need to makes sure the new gameobject's name matches my hardcoded names
+				building.name = name;
+				towntile.name = name;
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasBuilding = false; // no longer has basic building
+				townProps.tileHasAdvancedBuilding = true;
+			}
+			break;
+		case "Metal Workshop":
+			if (CheckResourceCost(wood: metalWorkshopCost[0], stone: metalWorkshopCost[1], metal: metalWorkshopCost[2])){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				
+				// Need to DESTROY the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedBuilding = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+				
+				GameObject building = Instantiate (metalWorkFab, myTransform.position, Quaternion.identity) as GameObject;
+				// parent it to the town tile this is on
+				building.transform.parent = towntile.transform;
+				// need to makes sure the new gameobject's name matches my hardcoded names
+				building.name = name;
+				towntile.name = name;
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasBuilding = false; // no longer has basic building
+				townProps.tileHasAdvancedBuilding = true;
+			}
+			break;
 		case "House":
-			if (townResources.wood >= houseCost){
+			if (CheckResourceCost(wood: houseCost[0], stone: houseCost[1], metal: houseCost[2])){
 				GameObject building = Instantiate (houseFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
@@ -307,12 +358,12 @@ public class TownBuilding : MonoBehaviour {
 				//then tell this tile that it has a building
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
 				townProps.tileHasBuilding = true;
-				townResources.wood = townResources.wood - houseCost;
+
 				GetOptionsToShow(towntile);
 			}
 			break;
 		case "Stone House":
-			if (townResources.stone >= stoneHouseCost){
+			if (CheckResourceCost(wood: stoneHouseCost[0], stone: stoneHouseCost[1], metal: stoneHouseCost[2])){
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
 
 				// Need to DESTROY the old house in this towntile (use an array to get the child)
@@ -331,11 +382,11 @@ public class TownBuilding : MonoBehaviour {
 				//then tell this tile that it has an Advanced building
 				townProps.tileHasBuilding = false; // no longer has basic building
 				townProps.tileHasAdvancedBuilding = true;
-				townResources.stone = townResources.stone - stoneHouseCost;
+
 			}
 			break;
 		case "Metal House":
-			if (townResources.stone >= metalHouseCost){
+			if (CheckResourceCost(wood: metalHouseCost[0], stone: metalHouseCost[1], metal: metalHouseCost[2])){
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
 				// Need to DESTROY the old house in this towntile (use an array to get the child)
 				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
@@ -354,11 +405,11 @@ public class TownBuilding : MonoBehaviour {
 				//then tell this tile that it has an Advanced building
 				townProps.tileHasBuilding = false; // no longer has basic building
 				townProps.tileHasAdvancedBuilding = true;
-				townResources.metal = townResources.metal - metalHouseCost;
+		
 			}
 			break;
 		case "Basic Defense":
-			if (townResources.wood >= basicDefenseCost){
+			if (CheckResourceCost(wood: basicDefenseCost[0], stone: basicDefenseCost[1], metal: basicDefenseCost[2])){
 				GameObject building = Instantiate (basicDefenseFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
@@ -368,12 +419,11 @@ public class TownBuilding : MonoBehaviour {
 				//then tell this tile that it has a building
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
 				townProps.tileHasBuilding = true;
-				townResources.wood = townResources.wood - basicDefenseCost;
 				GetOptionsToShow(towntile);
 			}
 			break;
 		case "Stone Defense":
-			if (townResources.stone >= stoneDefenseCost){
+			if (CheckResourceCost(wood: stoneDefenseCost[0], stone: stoneDefenseCost[1], metal: stoneDefenseCost[2])){
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
 
 				// Need to DESTROY the old house in this towntile (use an array to get the child)
@@ -392,11 +442,10 @@ public class TownBuilding : MonoBehaviour {
 				//then tell this tile that it has an Advanced building
 				townProps.tileHasBuilding = false; // no longer has basic building
 				townProps.tileHasAdvancedBuilding = true;
-				townResources.stone = townResources.stone - stoneDefenseCost;
 			}
 			break;
 		case "Metal Defense":
-			if (townResources.metal >= metalDefenseCost){
+			if (CheckResourceCost(wood: metalDefenseCost[0], stone: metalDefenseCost[1], metal: metalDefenseCost[2])){
 				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
 				// Need to DISABLE the old house in this towntile (use an array to get the child)
 				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
@@ -414,7 +463,6 @@ public class TownBuilding : MonoBehaviour {
 				//then tell this tile that it has an Advanced building
 				townProps.tileHasBuilding = false; // no longer has basic building
 				townProps.tileHasAdvancedBuilding = true;
-				townResources.metal = townResources.metal - metalDefenseCost;
 			}
 			break;
 		default:
@@ -422,6 +470,17 @@ public class TownBuilding : MonoBehaviour {
 			break;
 		}
 
+	}
+
+	bool CheckResourceCost(int wood, int stone, int metal){
+		if (townResources.wood >= wood && townResources.stone >= stone && townResources.metal >= metal) {
+			townResources.wood = townResources.wood - wood;
+			townResources.stone = townResources.stone - stone;
+			townResources.metal = townResources.metal - metal;
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	void DestroyBuilding(GameObject town){

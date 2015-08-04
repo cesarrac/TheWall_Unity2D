@@ -143,8 +143,11 @@ public class Horde : MonoBehaviour {
 		// turn on the tile underneath
 		if (storedTileColl != null) {
 			storedTileColl.enabled = true;
-			Destroy(this.gameObject);
+			Destroy (this.gameObject);
+		} else {
+			Destroy (this.gameObject);
 		}
+
 
 	}
 
