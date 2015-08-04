@@ -39,7 +39,7 @@ public class Mouse_Controls : MonoBehaviour {
 	// GameObject that spanws when I hit a Horde
 	public GameObject hitSparkFab;
 
-	public LayerMask mask;
+	public LayerMask maskForTiles, maskForUnits;
 
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
@@ -62,12 +62,11 @@ public class Mouse_Controls : MonoBehaviour {
 			Select ();
 		}
 
-		if (selectedUnit != null) {
-			Captain cpn = selectedUnit.GetComponent<Captain> ();
-			SelectTargetWithMouse(cpn);
-		}
+//		if (selectedUnit != null) {
+//			Captain cpn = selectedUnit.GetComponent<Captain> ();
+//			SelectTargetWithMouse(cpn);
+//		}
 
-	
 	}
 
 
@@ -135,17 +134,10 @@ public class Mouse_Controls : MonoBehaviour {
 //					}
 
 				}
-			} 
-			else if (hit.collider.CompareTag ("Badge")) {
-				mouseIsBusy = true;
-
-////				// THIS WOULD LOAD BATTLEVIEW 
-				/// selectedHorde.GoToBattle ();
-
-			} 
-				else if (hit.collider.CompareTag ("Gatherer")) {
+			} else if (hit.collider.gameObject.tag == "Gatherer"){
 				mouseIsBusy = true;
 			}
+
 		} else { // hit.collider is null so mouse is definitely NOT busy
 			mouseIsBusy = false;
 		} 
@@ -165,15 +157,17 @@ public class Mouse_Controls : MonoBehaviour {
 		if (Input.GetMouseButton (1)) {
 			camFollowScript.scouting = true;
 			camFollowScript.ScoutCam (m);
+			mapScript.SpawnTilesForScout(m);
 		} else {
 			camFollowScript.scouting = false;
+			mapScript.ClearScoutedTiles();
 		}
 	} 
 
 	// this Ray happens instead when player wants to attack something
 	void AttackRay(){
 		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
-		RaycastHit2D hit = Physics2D.Raycast(new Vector2(m.x, m.y), -Vector2.up, mask.value);
+		RaycastHit2D hit = Physics2D.Raycast(new Vector2(m.x, m.y), -Vector2.up, maskForUnits.value);
 		Vector3 mouseRounded = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), 0);
 		if (hit.collider != null) {
 			if (hit.collider.CompareTag("Badge")){

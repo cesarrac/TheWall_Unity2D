@@ -8,8 +8,9 @@ public class Gatherer : Unit {
 	// Ammount this unit can gather per turn, this can be upgraded later
 	public int gatherAmmount = 2; 
 
-	// Time it takes to gather
-	public float gatherTime = 30f;
+	// Time it takes to gather by type of resource
+	public float grainGatherTime, woodGatherTime, stoneGatherTime, metalGatherTime, genGatherTime;
+	float currGatherTime;
 
 	// Picked Up, returns true if player is moving this Gatherer
 	bool beingMoved = true;
@@ -58,7 +59,7 @@ public class Gatherer : Unit {
 			FollowMouse ();
 		} else {
 			if (!gathering){
-				StartCoroutine (GatherTime (gatherTime, currentTile.resourceType));
+				StartCoroutine (GatherTime (currGatherTime, currentTile.resourceType));
 			}
 		}
 	}
@@ -68,7 +69,7 @@ public class Gatherer : Unit {
 		myTransform.position = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), -2f);
 //		myTransform.position = new Vector3 (m.x, m.y, -2f);
 
-		if (Input.GetMouseButtonDown (0)) {
+		if (Input.GetMouseButtonUp (0)) {
 			TileCheck(); // check what type of tile this gatherer was place on
 			beingMoved = false;
 		}
@@ -91,12 +92,41 @@ public class Gatherer : Unit {
 			if (myTransform.position == mapManager.tileDataList[x].gridPosition){
 				currentTile = mapManager.tileDataList[x];
 				currentTileIndex = x;
-				gathering = false;
+				TimeToGather(currentTile.resourceType);
 				print("Starting to gather!");
+				break;
 			}
 		}
 	}
 
+	// this finds out how long it would take this gatherer to gather this resource and starts the coroutine 
+	// by making gathering false
+	void TimeToGather(string tileType){
+		switch (tileType) {
+		case "wood":
+			currGatherTime = woodGatherTime + genGatherTime;
+			gathering = false;
+			break;
+		case "grain":
+			currGatherTime = grainGatherTime + genGatherTime;
+			gathering = false;
+			break;
+		case  "metal":
+			currGatherTime = metalGatherTime + genGatherTime;
+			gathering = false;
+			break;
+		case  "stone":
+			currGatherTime = stoneGatherTime + genGatherTime;
+			gathering = false;
+			break;
+		case "empty":
+			gathering = true; // stop gathering
+			break;
+		default:
+			gathering = true; // stop gathering
+			break;
+		}
+	}
 
 	IEnumerator GatherTime(float time, string tileType){
 		print ("Counting down gather time.");

@@ -92,31 +92,7 @@ public class Horde : MonoBehaviour {
 		} 
 	}
 
-	// A trigger on each tile sends this function a box collider (tileColl) so it knows to turn on or off
-//	void SwitchColliderUnderneath(int onOff){
-//		if (tileColl != null) {
-//			if (onOff == 0){
-//				if (tileColl != storedTileColl){ // if this new tile coll is not my stored coll,
-//					if (storedTileColl != null){ // it means the horde moved
-//						// turn on stored Coll
-//						storedTileColl.enabled = true;
-//						// turn off new Coll
-//						tileColl.enabled = false;
-//						// now make this new tile Coll the stored coll
-//						storedTileColl = tileColl;
-//					}else{
-//						//storedTileColl is null so this must be the first tile this Horde has been on
-//						// turn off new Coll
-//						tileColl.enabled = false;
-//						storedTileColl = tileColl;
-//					}
-//				}
-//
-//			}else if (onOff == 1){
-//				tileColl.enabled = true;
-//			}
-//		}
-//	}
+
 	
 	// HORDE MOVEMENT IS DONE BY THE GM
 
@@ -167,30 +143,16 @@ public class Horde : MonoBehaviour {
 		// turn on the tile underneath
 		if (storedTileColl != null) {
 			storedTileColl.enabled = true;
-			Destroy(this.gameObject);
+			Destroy (this.gameObject);
+		} else {
+			Destroy (this.gameObject);
 		}
+
 
 	}
 
 
-	// when this Horde moves to a tile that tile is ENTERING this Horde's Trigger/Collider
-	// the tile that is ENTERING has to be TURNED OFF
-	// At the same time the last tile this Horde was on is EXITING this Trigger
-	// the tile that is EXITING has to be TURNED ON
-	
-//	void OnTriggerEnter2D(Collider2D coll){
-//		if (coll.gameObject.tag == "Tile") {
-//			BoxCollider2D currTile = coll.gameObject.GetComponent<BoxCollider2D>();
-//			//  is this the same tile as Stored Tile?
-//			if (currTile != storedTileColl){
-//				newTileColl = currTile;
-//				storedTileColl = newTileColl;
-//			}else{
-//
-//			}
-//
-//		}
-//	}
+
 
 
 

@@ -41,7 +41,7 @@ public class TownTile_Properties : MonoBehaviour {
 	void Start () {
 		myTransform = transform;
 
-		storedTag = gameObject.tag;
+		myTag = gameObject.tag;
 
 		mapScript = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();
 		townListCount = mapScript.townTiles.Count;
@@ -53,17 +53,25 @@ public class TownTile_Properties : MonoBehaviour {
 		TownListCheck ();
 
 
-		if (beingAttacked) {
-			gameObject.tag = "Tile Under Attack";
-		} else {
-			gameObject.tag = storedTag;
-		}
+//		if (beingAttacked) {
+//			gameObject.tag = "Tile Under Attack";
+//		} else {
+//			gameObject.tag = storedTag;
+//		}
 	}
 
 	public void TakeDamage(float damage){
+		// tell the map manager im under attack
+		mapScript.CheckForAnAttack (gameObject);
 		tileHitPoints = tileHitPoints - damage;
 		if (tileHitPoints <= 0) {
-			KillTile();
+			// check if I'm a capital
+			if (myTag == "Capital"){
+				Capital capital = GetComponent<Capital>();
+				capital.CallGameOver();
+			}else{
+				KillTile();
+			}
 		}
 	}
 
@@ -88,6 +96,7 @@ public class TownTile_Properties : MonoBehaviour {
 	void KillTile(){
 	
 		if (mapScript != null) {
+			if (tileHasBuilding || tileHasAdvancedBuilding){ KillBuilding(); }
 
 			// create a position for the depleted tile at the same Z as a resource tile (for mouse linecast to work)
 			Vector3 depPos = new Vector3 (myTransform.position.x, myTransform.position.y, -2f);
@@ -110,7 +119,16 @@ public class TownTile_Properties : MonoBehaviour {
 	// to Destroy this tile im going to detect Mouse over and wait for a right click
 	void OnMouseOver(){
 		if (Input.GetMouseButtonDown (1)) {
+			// Do I have a building?
 			KillTile();
+
 		}
+	}
+
+	void KillBuilding(){
+		// find the building
+		Building building = GetComponentInChildren<Building> ();
+		building.SubtractBonuses (building.myBuildingType);
+
 	}
 }

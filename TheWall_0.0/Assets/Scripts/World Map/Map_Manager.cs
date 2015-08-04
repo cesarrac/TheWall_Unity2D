@@ -63,8 +63,15 @@ public class Map_Manager : MonoBehaviour {
 	// an array of Transforms for resource tiles that have been instantiated
 	public Transform[] spawnedTiles;
 
+	// going to set a crude timer to check if any of my town tiles are being attacked
+	// in order to SPAWN A INDICATOR RED ARROW
+	int countTTiles;
+	public GameObject redCombatArrow, spawnedArrow;
 
 	void Start () {
+		// start timer to check for attacks in town tiles
+		countTTiles = townTiles.Count;
+
 		maxTiles = colums * rows;
 
 		myTransform = transform;
@@ -77,7 +84,11 @@ public class Map_Manager : MonoBehaviour {
 	
 
 	void Update () {
-
+//		// check attack
+//		if (townTiles.Count != countTTiles) {
+//			CheckForAnAttack();
+//			countTTiles = townTiles.Count;
+//		}
 //		myCurrentPosition = new Vector3 (myTransform.position.x, myTransform.position.y, 0);
 		//TODO: Add it so you have to use some other control to expand instead of just left click
 		// can only call spawn tiles by expanding IF town has at least 1 XP point
@@ -85,6 +96,32 @@ public class Map_Manager : MonoBehaviour {
 //			SpawnTilesByExpanding (myCurrentPosition);
 //		}
 
+	}
+
+	// The town tile itself can call this saying it's being attacked
+	public void CheckForAnAttack(GameObject tTile){
+		Debug.Log ("Checking for an attack!!!");
+		Vector3 arrowPos = new Vector3((Mathf.Round(myTransform.position.x)) + 4f,(Mathf.Round(myTransform.position.y)) +1f, 0);
+		if (spawnedArrow == null){
+		  	spawnedArrow = Instantiate(redCombatArrow, arrowPos, Quaternion.identity) as GameObject;
+			spawnedArrow.transform.parent = gameObject.transform;
+			// give it the town tile that is under attack
+			CombatIndicator arrow = spawnedArrow.GetComponent<CombatIndicator>();
+			arrow.tileUnderAttack = tTile.transform;
+		}
+
+
+
+//		foreach (GameObject ttile in townTiles) {
+//			bool beingAttacked = ttile.GetComponent<TownTile_Properties>().beingAttacked;
+//			Vector3 arrowPos = new Vector3((Mathf.Round(myTransform.position.x)) + 4f,(Mathf.Round(myTransform.position.y)) + 4f, 0);
+//			if (beingAttacked){
+//				// spawn an arrow in that direction
+//				if (spawnedArrow == null){
+//					spawnedArrow = Instantiate(redCombatArrow, arrowPos, Quaternion.identity) as GameObject;
+//				}
+//			}
+//		}
 	}
 
 	// here we initialize the possible positions for the tiles
@@ -185,7 +222,8 @@ public class Map_Manager : MonoBehaviour {
 				townResourcesScript.xp = townResourcesScript.xp - 1;
 				// and add it to the list of town tiles
 				townTiles.Add (expandedTownTile);
-	
+				// MOVE me to that new Tile
+				myTransform.position = expandedTownTile.transform.position;
 				// inside each town tile a script can store its index in the townTiles list (for easy id)
 				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
 				// since we just added this tile to the list, its index will be count
@@ -215,7 +253,8 @@ public class Map_Manager : MonoBehaviour {
 				townResourcesScript.xp = townResourcesScript.xp - 1;
 				// and add it to the list of town tiles
 				townTiles.Add (expandedTownTile);
-
+				// MOVE me to that new Tile
+				myTransform.position = expandedTownTile.transform.position;
 				// inside each town tile a script can store its index in the townTiles list (for easy id)
 				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
 				// since we just added this tile to the list, its index will be count
@@ -245,7 +284,8 @@ public class Map_Manager : MonoBehaviour {
 				townResourcesScript.xp = townResourcesScript.xp - 1;
 				// and add it to the list of town tiles
 				townTiles.Add (expandedTownTile);
-
+				// MOVE me to that new Tile
+				myTransform.position = expandedTownTile.transform.position;
 				// inside each town tile a script can store its index in the townTiles list (for easy id)
 				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
 				// since we just added this tile to the list, its index will be count
@@ -275,7 +315,8 @@ public class Map_Manager : MonoBehaviour {
 				townResourcesScript.xp = townResourcesScript.xp - 1;
 				// and add it to the list of town tiles
 				townTiles.Add (expandedTownTile);
-
+				// MOVE me to that new Tile
+				myTransform.position = expandedTownTile.transform.position;
 				// inside each town tile a script can store its index in the townTiles list (for easy id)
 				TownTile_Properties tTileProperties = expandedTownTile.GetComponent<TownTile_Properties> ();
 				// since we just added this tile to the list, its index will be count
