@@ -15,7 +15,10 @@ public class Turret : Building {
 	public bool spotted = false;
 	Quaternion myRot;
 
+
 	void Start () {
+		floatBonus1 = 0; // so the building base class doesn't complain at the lack of a bonus
+
 		seekPlayer = true;
 		myTransform = transform;
 		myRot = transform.rotation;
@@ -76,7 +79,8 @@ public class Turret : Building {
 
 	void Shoot(Vector3 target){
 		float z = Mathf.Atan2((target.y - myTransform.position.y), (target.x - myTransform.position.x)) * Mathf.Rad2Deg - 90;		
-		myTransform.eulerAngles = new Vector3 (0,0,z);
+//		myTransform.eulerAngles = new Vector3 (0,0,z);
+		transform.rotation = Quaternion.AngleAxis(z, Vector3.forward);
 		GameObject bullet = Instantiate (bulletFab, sightStart.position, Quaternion.identity) as GameObject;
 		bullet.transform.parent = sightEnd;
 		Bullet bull = bullet.GetComponent<Bullet> ();

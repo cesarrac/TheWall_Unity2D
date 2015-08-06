@@ -10,8 +10,7 @@ public class TownTile_Properties : MonoBehaviour {
 	public int listIndex;
 
 	// bool to tell if this tile has a building on it
-	public bool tileHasBuilding;
-	public bool tileHasAdvancedBuilding;
+	public bool tileHasTier1, tileHasTier2, tileHasTier3;
 
 	// float for tile's Hit Points
 	public float tileHitPoints = 10f;
@@ -36,7 +35,7 @@ public class TownTile_Properties : MonoBehaviour {
 	public int townListCount, startingListCount;
 
 	// storing the old building when Player adds advanced building on this tile
-	public GameObject deactivatedBuilding;
+	public GameObject deactivatedT1, deactivatedT2;
 
 	void Start () {
 		myTransform = transform;
@@ -96,7 +95,7 @@ public class TownTile_Properties : MonoBehaviour {
 	void KillTile(){
 	
 		if (mapScript != null) {
-			if (tileHasBuilding || tileHasAdvancedBuilding){ KillBuilding(); }
+			if (tileHasTier1 || tileHasTier2){ KillBuilding(); } // only do t1 and t2 buildings, t3's don't have bonuses
 
 			// create a position for the depleted tile at the same Z as a resource tile (for mouse linecast to work)
 			Vector3 depPos = new Vector3 (myTransform.position.x, myTransform.position.y, -2f);

@@ -118,6 +118,9 @@ public class Survivor : Unit {
 		mySprite = ssprite;
 		mood = smood;
 		mySurvivorClass = sClass;
+		partOfTown = true;
+		// add the class script to this survivor gameobject
+		AddSurvivorClass (mySurvivorClass);
 	}
 
 	void Start () {
@@ -183,7 +186,7 @@ public class Survivor : Unit {
 	void ApplyBasicBonus(){
 		if (townTile != null) {
 			townTile.tileHitPoints = townTile.tileHitPoints + basicHPBoost;
-			if (townTile.tileHasBuilding || townTile.tileHasBuilding) {
+			if (townTile.tileHasTier1 || townTile.tileHasTier2 || townTile.tileHasTier3) {
 				currBuilding = townTile.GetComponentInChildren<Building> ();
 				CheckBuilding (currBuilding);
 			}
@@ -253,6 +256,21 @@ public class Survivor : Unit {
 	void OnTriggerStay2D(Collider2D coll){
 		if (coll.gameObject.tag == "Town_Tile") {
 			townTile = coll.gameObject.GetComponent<TownTile_Properties>();
+		}
+	}
+
+	// ADD SURVIVOR CLASS: this is called when the Survivor is spawned by the player
+	void AddSurvivorClass(SurvivorClass survivorClass){
+		switch (survivorClass) {
+		case SurvivorClass.farmer:
+			gameObject.AddComponent<Farmer>();
+			break;
+		case SurvivorClass.soldier:
+			gameObject.AddComponent<Soldier>();
+			break;
+		default:
+			print ("This surivor ain't got no class!");
+			break;
 		}
 	}
 }

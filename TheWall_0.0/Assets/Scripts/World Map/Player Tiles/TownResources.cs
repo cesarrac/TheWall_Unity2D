@@ -47,7 +47,8 @@ public class TownResources : MonoBehaviour {
 			stone = stone + quantityToAdd;
 			break;
 		case "xp":
-			xp = Mathf.Round(xp + (float)quantityToAdd);
+			float xpCalc = xp + (float)quantityToAdd;
+			xp = Mathf.Round(xpCalc);
 			break;
 		default:
 			print ("Cant find that resource type!");

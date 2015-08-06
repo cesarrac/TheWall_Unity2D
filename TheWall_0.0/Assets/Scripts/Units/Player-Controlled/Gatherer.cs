@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class Gatherer : Unit {
 	// Gatherers are placed on resource tiles by the Player in order to extract an ammount of resources of that type
 
+		//GATHERING:
 	// Ammount this unit can gather per turn, this can be upgraded later
 	public int gatherAmmount = 2; 
 
@@ -17,6 +18,10 @@ public class Gatherer : Unit {
 
 	// true when gathering
 	public bool gathering;
+
+		// SALVAGING:
+	public bool salvaging;
+	public float salvageTime;
 
 	// My transform and stored position
 	Transform myTransform;
@@ -58,8 +63,11 @@ public class Gatherer : Unit {
 		if (beingMoved) {
 			FollowMouse ();
 		} else {
-			if (!gathering){
-				StartCoroutine (GatherTime (currGatherTime, currentTile.resourceType));
+			if (!gathering && currTileObj != null){	// WHEN IT'S TIME TO GATHER
+				StartCoroutine (GatherTime (currGatherTime, false, currentTile.resourceType));
+			}
+			if (salvaging){		// WHEN IT'S TIME TO SALVAGE (ON A DEPLETED TILE)
+				StartCoroutine (GatherTime (salvageTime, true));
 			}
 		}
 	}
@@ -69,8 +77,10 @@ public class Gatherer : Unit {
 		myTransform.position = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), -2f);
 //		myTransform.position = new Vector3 (m.x, m.y, -2f);
 
-		if (Input.GetMouseButtonUp (0)) {
-			TileCheck(); // check what type of tile this gatherer was place on
+		if (Input.GetMouseButtonUp (0) && !salvaging) {
+			TileCheck (); // check what type of tile this gatherer was place on
+			beingMoved = false;
+		} else if (salvaging) {
 			beingMoved = false;
 		}
 	}
@@ -128,12 +138,16 @@ public class Gatherer : Unit {
 		}
 	}
 
-	IEnumerator GatherTime(float time, string tileType){
+	IEnumerator GatherTime(float time, bool trueIfSalvaging, string tileType = "none"){
 		print ("Counting down gather time.");
 		gathering = true;
+		salvaging = false;
 		yield return new WaitForSeconds(time);
-		Gather (tileType, currentTileIndex);
-
+		if (trueIfSalvaging) {
+			Salvage();
+		} else {
+			Gather (tileType, currentTileIndex);
+		}
 	}
 
 	void Gather(string tileType, int tileIndex){
@@ -168,8 +182,39 @@ public class Gatherer : Unit {
 	void OnTriggerStay2D(Collider2D coll){
 		if (coll.gameObject.CompareTag ("Tile")) {
 			currTileObj = coll.gameObject;
-		} else {
+		} 
+		else {
 			currTileObj = null;
 		}
+	}
+	void OnTriggerEnter2D(Collider2D coll){
+
+		if (coll.gameObject.CompareTag ("Depleted")) {
+			salvaging = true;
+		}
+	}
+	void OnTriggerExit2D(Collider2D coll){
+		if (coll.gameObject.CompareTag ("Depleted")) {
+			salvaging = false;
+		}
+	}
+
+	// SALVAGE allows the gatherer to search a field (a Depleted tile) and get random resources
+	void Salvage(){
+		Debug.Log ("Look ma! I'm salvaging!");
+		int resourceSelect = Random.Range (0, 20);
+		if (resourceSelect <= 4) {
+			//get resource
+			townResources.AddResource ("grain", 1);
+		} else if (resourceSelect <= 8) {
+			townResources.AddResource ("grain", 2);
+		} else if (resourceSelect <= 12) {
+			townResources.AddResource ("grain", 3);
+		} else if (resourceSelect <= 16) {
+			townResources.AddResource ("grain", 4);
+		} else if (resourceSelect <= 20) {
+			townResources.AddResource ("grain", 5);
+		}
+		salvaging = true;
 	}
 }

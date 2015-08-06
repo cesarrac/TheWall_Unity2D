@@ -28,6 +28,7 @@ public class Building : MonoBehaviour {
 		workshop,
 		house,
 		defense,
+		weapon,
 		food
 	}
 	public BuildingType myBuildingType;
@@ -65,7 +66,7 @@ public class Building : MonoBehaviour {
 			townCentral.maxGatherers = townCentral.maxGatherers - intBonus1;
 			break;
 		default:
-			print ("Building not Identified!");
+			print ("Building has no bonus!");
 			break;
 		}
 	}
