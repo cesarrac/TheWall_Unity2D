@@ -101,7 +101,7 @@ public class Map_Manager : MonoBehaviour {
 	// The town tile itself can call this saying it's being attacked
 	public void CheckForAnAttack(GameObject tTile){
 		Debug.Log ("Checking for an attack!!!");
-		Vector3 arrowPos = new Vector3((Mathf.Round(myTransform.position.x)) + 4f,(Mathf.Round(myTransform.position.y)) +1f, 0);
+		Vector3 arrowPos = new Vector3(myTransform.position.x, myTransform.position.y, 0);
 		if (spawnedArrow == null){
 		  	spawnedArrow = Instantiate(redCombatArrow, arrowPos, Quaternion.identity) as GameObject;
 			spawnedArrow.transform.parent = gameObject.transform;
