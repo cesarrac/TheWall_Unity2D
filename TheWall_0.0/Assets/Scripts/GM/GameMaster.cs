@@ -53,6 +53,9 @@ public class GameMaster : MonoBehaviour {
 	public int numberOfTurns = 0;
 	public Text survivedText;
 
+	// STARTING PLAYER POSITION
+	public Vector3 startingPlayerPos;
+
 	void Awake () {
 //		SpawnCaptains ();
 		DontDestroyOnLoad (this.gameObject);
@@ -61,6 +64,7 @@ public class GameMaster : MonoBehaviour {
 		battleStarted = false;
 		if (Application.loadedLevel == 0) {
 			mapScript = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();
+			startingPlayerPos = mapScript.gameObject.transform.position;
 			mapPositions = mapScript.InitGridPositionsList ();
 			newTurn = true;
 		} else if (Application.loadedLevel == 2) {
@@ -280,39 +284,59 @@ public class GameMaster : MonoBehaviour {
 		// wait
 		yield return new WaitForSeconds (turnTime);
 		// move the hordes
-		MoveTheHordes ();
+//		MoveTheHordes ();
 		CheckFoodForXP ();
-
+		HarvestFromFarms ();
 		// every time a turn passes, count it
 		numberOfTurns++;
 	
 	}
 
-	public void MoveTheHordes(){
-		GameObject[] hordes = GameObject.FindGameObjectsWithTag ("Badge"); // Finds all Badges on the map
-		print ("hordes out there: " + hordes.Length);
-		foreach (GameObject horde in hordes) { // assign a random direction
-			// first make sure they are not next to player wall
-			Horde hScript = horde.gameObject.GetComponent<Horde>();
-			// before moving each one we need to make sure they are moving to a legal position
-			Vector3 hPos = horde.gameObject.GetComponent<Transform>().transform.position;
-
-			if (!hScript.nextToTownTile){
-				int randomDir = Random.Range(0,5);
-				if (randomDir == 1){ // up
-					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y + 1, -2f))) ? new Vector3(hPos.x, hPos.y + 1, 0) : horde.transform.position;
-				}else if(randomDir == 2){ //down
-					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y - 1, -2f))) ? new Vector3(hPos.x, hPos.y - 1, 0) : horde.transform.position;
-				}else if (randomDir == 3){ // left
-					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x - 1, hPos.y, -2f))) ? new Vector3(hPos.x - 1, hPos.y, 0) : horde.transform.position;
-				}else if (randomDir == 4){ // right
-					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x + 1, hPos.y, -2f))) ? new Vector3(hPos.x + 1, hPos.y, 0) : horde.transform.position;
+	void HarvestFromFarms(){
+		// access Farms from Town Central and call their harvest function
+		if (townCentral != null) {
+			if (townCentral.farms.Count > 0){
+				for (int x =0; x < townCentral.farms.Count; x++) {
+					if (townCentral.farms[x].gameObject != null){
+						townCentral.farms[x].Harvest();
+					}else{
+						townCentral.farms.RemoveAt(x);
+					}
 				}
-			}	
+			}
 		}
-		// new turn true
-		newTurn = true;
+				// new turn true
+				newTurn = true;
 	}
+
+//	public void MoveTheHordes(){
+//		GameObject[] hordes = GameObject.FindGameObjectsWithTag ("Badge"); // Finds all Badges on the map
+//		print ("hordes out there: " + hordes.Length);
+//		foreach (GameObject horde in hordes) { // assign a random direction
+//			// first make sure they are not next to player wall
+//			Horde hScript = horde.gameObject.GetComponent<Horde>();
+//			// before moving each one we need to make sure they are moving to a legal position
+//			Vector3 hPos = horde.gameObject.GetComponent<Transform>().transform.position;
+//
+//			if (!hScript.nextToTownTile){
+//				int randomDir = Random.Range(0,5);
+//				if (randomDir == 1){ // up
+//
+//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y + 1, -2f))) ? new Vector3(hPos.x, hPos.y + 1, 0) : horde.transform.position;
+//				}else if(randomDir == 2){ //down
+//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y - 1, -2f))) ? new Vector3(hPos.x, hPos.y - 1, 0) : horde.transform.position;
+//				}else if (randomDir == 3){ // left
+//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x - 1, hPos.y, -2f))) ? new Vector3(hPos.x - 1, hPos.y, 0) : horde.transform.position;
+//				}else if (randomDir == 4){ // right
+//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x + 1, hPos.y, -2f))) ? new Vector3(hPos.x + 1, hPos.y, 0) : horde.transform.position;
+//				}
+//			}	
+//		}
+//		// new turn true
+//		newTurn = true;
+//	}
+
+
 
 	bool CheckLegalPosition(Vector3 newPos){
 		foreach (Vector3 position in mapPositions){

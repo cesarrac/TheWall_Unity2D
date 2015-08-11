@@ -4,7 +4,10 @@ using System.Collections.Generic;
 
 public class Horde : MonoBehaviour {
 //	public List<AI_Enemy> hordeMembers = new List<AI_Enemy>();
-	public List<Unit_Data> hordeMembers = new List<Unit_Data> ();
+//	public List<Unit_Data> hordeMembers = new List<Unit_Data> ();
+
+	// one unit Horde
+	public Unit_Data hordeUnit;
 
 //	public GameObject unitToSpawn; // this public GameObject is blank except for the components needed for a Battle Unit
 //	SpriteRenderer sr;
@@ -31,10 +34,19 @@ public class Horde : MonoBehaviour {
 
 	Transform myTransform;
 
+	Rigidbody2D rb;
+
+	// Player Capital Vector 3 position
+	Vector3 capitalPosition;
 
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
 		townCentral = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<Town_Central> ();
+
+		// get the Position of the Player's capital (so we can move the Rigidbody towards it)
+		capitalPosition = gmScript.startingPlayerPos;
+		rb = GetComponent<Rigidbody2D> ();
+
 		// TEST: create 5 AI elite units
 //		for (int x = 0; x <= 5; x++) {
 //			hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.high, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
@@ -63,12 +75,38 @@ public class Horde : MonoBehaviour {
 			nextToTownTile = false;
 		}
 
-
+		if (!nextToTownTile) {
+			MoveToCapital(capitalPosition);
+		}
 		SwitchColliderUnderneathOnOff ();
 //		if (tileColl != null) {
 //			SwitchColliderUnderneath(0);
 //		}
 	}
+
+	public void MoveToCapital(Vector3 capitalPosition){
+		float speed = hordeUnit.mySpeed;
+
+		if (myTransform.position.y > capitalPosition.y){
+			rb.transform.position += Vector3.down * speed * Time.deltaTime;
+		}
+		if (myTransform.position.y < capitalPosition.y){
+			rb.transform.position += Vector3.up * speed * Time.deltaTime;
+			
+		}
+		if (myTransform.position.x >capitalPosition.x){
+			rb.transform.position += Vector3.left * speed * Time.deltaTime;
+			
+		}
+		if (myTransform.position.x < capitalPosition.x){
+			rb.transform.position += Vector3.right * speed * Time.deltaTime;
+			
+		}
+//		myTransform.position = Vector3.MoveTowards (myTransform.position, capitalPosition, speed * Time.deltaTime);
+
+	}
+
+
 
 	 //need a way to turn off the resource tile under a Horde so it doens't interfere with our Raycast
 	void SwitchColliderUnderneathOnOff(){
@@ -101,16 +139,28 @@ public class Horde : MonoBehaviour {
 		canHitTile = false;
 		yield return new WaitForSeconds(2);
 		print ("Horde is waiting to do damage");
-		DamageTile (hordeMembers[0].shortDamage);
+		if (townTile != null) {
+//			CalcDamage (hordeMembers [0].attackRating, hordeMembers [0].shortDamage, townTile);
+			CalcDamage (hordeUnit.attackRating, hordeUnit.shortDamage, townTile);
+		}
 	}
 
-	void DamageTile(float damage){
-		print ("Horde hits tile");
-		if (townTile != null) {
-			townTile.TakeDamage (damage);
+	
+	void CalcDamage(int ar, float dmg, TownTile_Properties tile){
+		int defense = tile.defenseRating;
+		int dmgRoll = (Random.Range (0, ar) + 1) - defense;
+		Debug.Log ("HORDE rolls: " + dmgRoll);
+		tile.beingAttacked = true;
+		if (dmgRoll > 0) {
+			float damage = (float)dmgRoll;
+			tile.TakeDamage (damage);
+		} else {
+			print ("Miss!");
 		}
 		canHitTile = true;
 	}
+
+
 
 	// Instead of letting MouseControl handle the hit to this collider, we'll use this internally
 	void OnMouseOver(){
@@ -127,13 +177,20 @@ public class Horde : MonoBehaviour {
 
 	// This next function takes care of damaging the Horde once its clicked (called by Mouse_Control)
 	public void TakeDamage(float damage){
-
-		hordeMembers [0].hitPoints = hordeMembers [0].hitPoints - damage;
-		print (this.gameObject.name + " takes " + damage + " damage!");
-		if (hordeMembers [0].hitPoints <= 0) {
 		
+		hordeUnit.hitPoints = hordeUnit.hitPoints - damage;
+		print (this.gameObject.name + " takes " + damage + " damage!");
+		if (hordeUnit.hitPoints <= 0) {
+			
 			Die();
 		}
+//
+//		hordeMembers [0].hitPoints = hordeMembers [0].hitPoints - damage;
+//		print (this.gameObject.name + " takes " + damage + " damage!");
+//		if (hordeMembers [0].hitPoints <= 0) {
+//		
+//			Die();
+//		}
 
 	}
 

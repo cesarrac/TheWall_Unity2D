@@ -10,23 +10,28 @@ public class TownBuilding : MonoBehaviour {
 	public Map_Manager mapScript;
 	Transform myTransform;
 	Vector3 lastPos;
+
 	// buttons
-	public Button firstBuildBtn, secondBuildBtn, thirdBuidBtn;
+	public Button buildControlBttn;
+	public Button firstBuildBtn, secondBuildBtn, thirdBuidBtn, fourthBuildBtn;
 
 	//TIER 1: 
 	//sprites
-	public Sprite houseSprite, basicDefenseSprite, slaughterSprite, workSprite;
+	public Sprite houseSprite, basicDefenseSprite, slaughterSprite, workSprite, farmSprite;
 	//prefabs
-	public GameObject houseFab, basicDefenseFab, slaughterHouseFab, workshopFab;
+	public GameObject houseFab, basicDefenseFab, slaughterHouseFab, workshopFab, farmFab;
 	//costs
 	public int[] houseCost = new int[3];
 	public int[] basicDefenseCost = new int[3];
 	public int[] workshopCost= new int[3];
+	public int[] farmCost= new int[3];
 	//TIER 2:
 	// sprites
 	public Sprite stoneHouseSprite, metalHouseSprite, stoneDefenseSprite, metalDefenseSprite, stoneWorkSprite, metalWorkSprite;
+	public Sprite stoneFarmSprite, metalFarmSprite;
 	// prefabs
 	public GameObject stoneHouseFab, metalHouseFab, stoneDefenseFab, metalDefenseFab, stoneWorkFab, metalWorkFab;
+	public GameObject stoneFarmFab, metalFarmFab;
 	// costs
 	public int[] stoneHouseCost = new int[3];
 	public int[]metalHouseCost = new int[3];
@@ -38,6 +43,10 @@ public class TownBuilding : MonoBehaviour {
 	// workshop costs
 	public int[] metalWorkshopCost= new int[3];
 	public int[] stoneWorkshopCost= new int[3];
+	// farm costs
+	public int[] stoneFarmCost= new int[3];
+	public int[] metalFarmCost= new int[3];
+
 	//TIER 3:
 	//sprites:
 	public Sprite autoCannonSprite, throwerSprite, catapultSprite;
@@ -57,7 +66,8 @@ public class TownBuilding : MonoBehaviour {
 	GameObject storedTile;
 
 	// button Text
-	Text firstText, secondText, thirdText;
+	Text firstText, secondText, thirdText, fourthText;
+	Text buildControlText;
 
 	// bool turns true if this tile has a building
 	public bool hasBuildingT1, hasBuildingT2, hasBuildingT3;
@@ -72,33 +82,70 @@ public class TownBuilding : MonoBehaviour {
 	// Layer mask so we dont hit ourselves
 	public LayerMask mask;
 
+	bool showBuildButtons;
+
+	// to control tile/ui ray selection
+	Mouse_Controls mouseControls;
+	// my own bool to store and give a value to mouse control's bool
+	bool stopMouse;
+
 	void Awake () {
 		mapScript = GetComponent<Map_Manager> ();
+		mouseControls = GetComponent<Mouse_Controls> ();
+		stopMouse = mouseControls.stopSelecting;
 	}
 
 	void Start(){
 		myTransform = transform;
 		lastPos = myTransform.position; // record this position
 
-		firstText = firstBuildBtn.GetComponentInChildren<Text>();
-		secondText = secondBuildBtn.GetComponentInChildren<Text>();
-		thirdText = thirdBuidBtn.GetComponentInChildren<Text>();
+
+		buildControlText = buildControlBttn.GetComponentInChildren<Text> ();
 
 //		townTile = mapScript.GetTownTile ();
 //		ShowBasicBuildings();
 
 		townResources = townRes.GetComponent<TownResources> ();
 
-		CheckWhatTile ();
-
+//		CheckWhatTile ();
+		// INSTEAD OF CHECKING TILE AT THE BEGINNING, CHECK TILE WHEN PLAYER PRESSES BUILD CONTROL BUTTON
+		buildControlBttn.image.sprite = emptyButtonSprite;
+		buildControlText.text = "BUILD";
 	}
 
 	void Update () {
-		// if I've moved, check tile
-		if (myTransform.position != lastPos){
-			CheckWhatTile ();
-			lastPos = myTransform.position;
+		if (mouseControls != null) {
+			mouseControls.stopSelecting = stopMouse;
 		}
+
+		// if I've moved,destroy unwanted tiles and stop showing build buttons
+		if (myTransform.position != lastPos){
+			DestroyUnwantedTiles ();
+			lastPos = myTransform.position;
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			fourthBuildBtn.gameObject.SetActive (false);
+			showBuildButtons = false;
+		}
+	}
+
+	public void CallBuild(){	// called when Build Control button is pressed
+		showBuildButtons = !showBuildButtons;
+		// toggle build buttons
+		if (showBuildButtons) {
+			CheckWhatTile ();
+			// stop mouse from selecting tiles
+			stopMouse = true;
+		} else {
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			fourthBuildBtn.gameObject.SetActive (false);
+
+			stopMouse = false;
+		}
+
 	}
 
 	// raycast from this position to check what town tile we are on
@@ -109,22 +156,33 @@ public class TownBuilding : MonoBehaviour {
 
 		if (hit.collider != null) {
 //			print ("Camera hits " + hit.collider.name);
-			if (hit.collider.CompareTag("Town_Tile")){
+			if (hit.collider.CompareTag ("Town_Tile")) {
 				townTile = hit.collider.gameObject; // grab the gameobject the camera is detecting
-				GetOptionsToShow(townTile);// SHOW BUILD OPTIONS
+				GetOptionsToShow (townTile);// SHOW BUILD OPTIONS
 
-			}else if(hit.collider.CompareTag("Tile")){
-				//destroy this, this is under a town tile
-//				Destroy(hit.collider.gameObject);
-				mapScript.ClearResourceTilesUnderTown(myTransform.position, hit.collider.gameObject);
-				CheckWhatTile();
-		
 			}else if(hit.collider.CompareTag("Capital")){
 				// show empty buttons
 				ShowNone();
+			}
+		}
+	}
+
+	public void DestroyUnwantedTiles(){
+		
+		//		RaycastHit2D hit = Physics2D.Linecast (new Vector2 (myTransform.position.x, myTransform.position.y), -Vector2.up, mask.value);
+		RaycastHit2D hit = Physics2D.Raycast(new Vector2(myTransform.position.x, myTransform.position.y), -Vector2.up, 100, mask.value);  
+		
+		if (hit.collider != null) {
+			//			print ("Camera hits " + hit.collider.name);
+			if(hit.collider.CompareTag("Tile") || hit.collider.CompareTag("Food Source") ){
+				//destroy this, this is under a town tile
+				//				Destroy(hit.collider.gameObject);
+				mapScript.ClearResourceTilesUnderTown(myTransform.position, hit.collider.gameObject);
+//				CheckWhatTile();
+				
 			}else if(hit.collider.CompareTag("Tile Under Attack")){
 				// moves the player out of that tile so you cant access it
-//				myTransform.position = new Vector3(myTransform.position.x + 1f, myTransform.position.y, myTransform.position.z);
+				//				myTransform.position = new Vector3(myTransform.position.x + 1f, myTransform.position.y, myTransform.position.z);
 			}else if (hit.collider.CompareTag("Destroyed Town")){
 				Destroy(hit.collider.gameObject);
 			}else if (hit.collider.CompareTag("Depleted")){
@@ -152,22 +210,41 @@ public class TownBuilding : MonoBehaviour {
 	}
 
 	void ShowNone(){
-//		firstBuildBtn.enabled = false;
-//		secondBuildBtn.enabled = false;
-//		thirdBuidBtn.enabled = false;
+		firstBuildBtn.gameObject.SetActive (true);
+		secondBuildBtn.gameObject.SetActive (true);
+		thirdBuidBtn.gameObject.SetActive (true);
+		fourthBuildBtn.gameObject.SetActive (true);
+		firstText = firstBuildBtn.GetComponentInChildren<Text>();
+		secondText = secondBuildBtn.GetComponentInChildren<Text>();
+		thirdText = thirdBuidBtn.GetComponentInChildren<Text>();
+		fourthText = fourthBuildBtn.GetComponentInChildren<Text> ();
 
 		firstBuildBtn.image.sprite = emptyButtonSprite;
 		secondBuildBtn.image.sprite = emptyButtonSprite;
 		thirdBuidBtn.image.sprite = emptyButtonSprite;
+		fourthBuildBtn.image.sprite = emptyButtonSprite;
 
 		firstText.text = "Can't Build";
 		secondText.text = "Can't Build";
 		thirdText.text = "Can't Build";
+		fourthText.text = "Can't Build";
+
 	}
 
 	void ShowTier1Builds(){
+		firstBuildBtn.gameObject.SetActive (true);
+		secondBuildBtn.gameObject.SetActive (true);
+		thirdBuidBtn.gameObject.SetActive (true);
+		fourthBuildBtn.gameObject.SetActive (true);
+		firstText = firstBuildBtn.GetComponentInChildren<Text>();
+		secondText = secondBuildBtn.GetComponentInChildren<Text>();
+		thirdText = thirdBuidBtn.GetComponentInChildren<Text>();
+		fourthText = fourthBuildBtn.GetComponentInChildren<Text> ();
+
 		firstBuildBtn.enabled = true;
 		secondBuildBtn.enabled = true;
+		thirdBuidBtn.enabled = true;
+
 		// show basic buildings
 		firstBuildBtn.image.sprite = houseSprite;
 		// get the text
@@ -179,15 +256,29 @@ public class TownBuilding : MonoBehaviour {
 		secondText.text = defenseText;
 
 		thirdBuidBtn.image.sprite = workSprite ;
-		string slaughterText = "Workshop";
-		thirdText.text = slaughterText;
+		string workText = "Workshop";
+		thirdText.text = workText;
+
+		fourthBuildBtn.image.sprite = workSprite ;
+		string farmText = "Farm";
+		fourthText.text = farmText;
 	}
 
 	// to show the right Advanced building options, I need to get the name of the building on this town tile
 	void ShowTier2Builds(string buildingName){
 		string destroyText = "Destroy";
+		firstBuildBtn.gameObject.SetActive (true);
+		secondBuildBtn.gameObject.SetActive (true);
+		thirdBuidBtn.gameObject.SetActive (true);
+		fourthBuildBtn.gameObject.SetActive (true);
+		firstText = firstBuildBtn.GetComponentInChildren<Text>();
+		secondText = secondBuildBtn.GetComponentInChildren<Text>();
+		thirdText = thirdBuidBtn.GetComponentInChildren<Text>();
+		fourthText = fourthBuildBtn.GetComponentInChildren<Text> ();
+
 		firstBuildBtn.enabled = true;
 		secondBuildBtn.enabled = true;
+		thirdBuidBtn.enabled = true;
 		switch (buildingName) {
 		case "House":
 			// show upgrades for house
@@ -200,11 +291,11 @@ public class TownBuilding : MonoBehaviour {
 			// get the text
 			string metalHouseText = "Metal House";
 			secondText.text = metalHouseText;
-			// as third show option for Destroy
+		
 			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
-
 			thirdText.text = destroyText;
+			// dont show 4th button
+			fourthBuildBtn.gameObject.SetActive(false);
 			break;
 		case "Basic Defense":
 			firstBuildBtn.image.sprite = stoneDefenseSprite;
@@ -215,10 +306,10 @@ public class TownBuilding : MonoBehaviour {
 			string metalDefenseText = "Metal Defense";
 			secondText.text = metalDefenseText;
 
-			// as third show option for Destroy
 			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
 			thirdText.text = destroyText;
+			// dont show 4th button
+			fourthBuildBtn.gameObject.SetActive(false);
 			break;
 		case "Workshop":
 			firstBuildBtn.image.sprite = stoneWorkSprite;
@@ -229,10 +320,25 @@ public class TownBuilding : MonoBehaviour {
 			string metalWorkText = "Metal Workshop";
 			secondText.text = metalWorkText;
 			
-			// as third show option for Destroy
 			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
 			thirdText.text = destroyText;
+			// dont show 4th button
+			fourthBuildBtn.gameObject.SetActive(false);
+			break;
+		case "Farm":
+			firstBuildBtn.image.sprite = stoneFarmSprite;
+			string stoneFarmT = "Stone Farm";
+			firstText.text = stoneFarmT;
+			
+			secondBuildBtn.image.sprite = metalFarmSprite;
+			string metalFarmT = "Metal Farm";
+			secondText.text = metalFarmT;
+			
+			thirdBuidBtn.image.sprite = cancelSprite;
+			thirdText.text = destroyText;
+			// dont show 4th button
+			fourthBuildBtn.gameObject.SetActive(false);
+
 			break;
 		default:
 			print ("No advanced options for this building found!");
@@ -243,38 +349,57 @@ public class TownBuilding : MonoBehaviour {
 	void ShowTier3Builds(string buildingName){
 		string destroyText = "Destroy";
 		string noUpgradeText = "No Upgrades";
+		firstBuildBtn.gameObject.SetActive (true);
+		secondBuildBtn.gameObject.SetActive (true);
+		thirdBuidBtn.gameObject.SetActive (true);
+		fourthBuildBtn.gameObject.SetActive (true);	
+		firstText = firstBuildBtn.GetComponentInChildren<Text>();
+		secondText = secondBuildBtn.GetComponentInChildren<Text>();
+		thirdText = thirdBuidBtn.GetComponentInChildren<Text>();
+		fourthText = fourthBuildBtn.GetComponentInChildren<Text> ();
+
 		firstBuildBtn.enabled = true;
 		secondBuildBtn.enabled = true;
 		switch (buildingName) {
 		case "Stone House":
-			// show no upgrades for a house
-			firstBuildBtn.image.sprite = emptyButtonSprite;
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+//			// show no upgrades for a house
+//			firstBuildBtn.image.sprite = emptyButtonSprite;
+//			// get the text
+//			firstText.text = noUpgradeText;
+//			//			
+//			secondBuildBtn.image.sprite = emptyButtonSprite;
+//			// get the text
+//			secondText.text = noUpgradeText;
+//			
+//			thirdBuidBtn.image.sprite = emptyButtonSprite;
+//			thirdText.text = noUpgradeText;
+			// as fourth show option for Destroy
+			fourthBuildBtn.image.sprite = cancelSprite;
 			// get the text
-			firstText.text = noUpgradeText;
-			//			
-			secondBuildBtn.image.sprite = emptyButtonSprite;
-			// get the text
-			secondText.text = noUpgradeText;
-			
-			// as third show option for Destroy
-			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
-			thirdText.text = destroyText;
+			fourthText.text = destroyText;
 			break;
 		case "Metal House":
-			// show no upgrades for a house
-			firstBuildBtn.image.sprite = emptyButtonSprite;
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+//			// show no upgrades for a house
+//			firstBuildBtn.image.sprite = emptyButtonSprite;
+//			// get the text
+//			firstText.text = noUpgradeText;
+////			
+//			secondBuildBtn.image.sprite = emptyButtonSprite;
+//			// get the text
+//			secondText.text = noUpgradeText;
+//
+//			thirdBuidBtn.image.sprite = emptyButtonSprite;
+//			thirdText.text = noUpgradeText;
+			// as fourth show option for Destroy
+			fourthBuildBtn.image.sprite = cancelSprite;
 			// get the text
-			firstText.text = noUpgradeText;
-//			
-			secondBuildBtn.image.sprite = emptyButtonSprite;
-			// get the text
-			secondText.text = noUpgradeText;
-
-			// as third show option for Destroy
-			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
-			thirdText.text = destroyText;
+			fourthText.text = destroyText;
 			break;
 		case "Stone Defense":
 			firstBuildBtn.image.sprite = throwerSprite;
@@ -285,10 +410,10 @@ public class TownBuilding : MonoBehaviour {
 			string metalDefenseText = "Metal Defense";
 			secondText.text = metalDefenseText;
 //			
-			// as third show option for Destroy
 			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
 			thirdText.text = destroyText;
+			// dont show 4th button
+			fourthBuildBtn.gameObject.SetActive(false);
 			break;
 		case "Metal Defense":
 			firstBuildBtn.image.sprite = autoCannonSprite;
@@ -299,40 +424,46 @@ public class TownBuilding : MonoBehaviour {
 			string stoneDefenseText = "Stone Defense";
 			secondText.text = stoneDefenseText;
 			
-			// as third show option for Destroy
 			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
 			thirdText.text = destroyText;
+			// dont show 4th button
+			fourthBuildBtn.gameObject.SetActive(false);
 			break;
 		case "Stone Workshop":
-			// show no upgrades
-			firstBuildBtn.image.sprite = emptyButtonSprite;
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			// as fourth show option for Destroy
+			fourthBuildBtn.image.sprite = cancelSprite;
 			// get the text
-			firstText.text = noUpgradeText;
-			//			
-			secondBuildBtn.image.sprite = emptyButtonSprite;
-			// get the text
-			secondText.text = noUpgradeText;
-			
-			// as third show option for Destroy
-			thirdBuidBtn.image.sprite = cancelSprite;
-			// get the text
-			thirdText.text = destroyText;
+			fourthText.text = destroyText;
 			break;
 		case "Metal Workshop":
-			// show no upgrades
-			firstBuildBtn.image.sprite = emptyButtonSprite;
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			// as fourth show option for Destroy
+			fourthBuildBtn.image.sprite = cancelSprite;
 			// get the text
-			firstText.text = noUpgradeText;
-			//			
-			secondBuildBtn.image.sprite = emptyButtonSprite;
+			fourthText.text = destroyText;
+			break;
+		case "Stone Farm":
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			// as fourth show option for Destroy
+			fourthBuildBtn.image.sprite = cancelSprite;
 			// get the text
-			secondText.text = noUpgradeText;
-			
-			// as third show option for Destroy
-			thirdBuidBtn.image.sprite = cancelSprite;
+			fourthText.text = destroyText;
+			break;
+		case "Metal Farm":
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			// as fourth show option for Destroy
+			fourthBuildBtn.image.sprite = cancelSprite;
 			// get the text
-			thirdText.text = destroyText;
+			fourthText.text = destroyText;
 			break;
 		default:
 			print ("No advanced options for this building found!");
@@ -341,21 +472,33 @@ public class TownBuilding : MonoBehaviour {
 	}
 
 	void ShowOnlyDestroyed(){
+		string destroyText = "Destroy";
 		firstBuildBtn.enabled = false;
 
 		secondBuildBtn.enabled = false;
 		
-		// as third show option for Destroy
-		thirdBuidBtn.image.sprite = cancelSprite;
+		thirdBuidBtn.image.sprite = emptyButtonSprite;
+		thirdBuidBtn.enabled = false;
+		fourthBuildBtn.gameObject.SetActive (true);
+		// as fourth show option for Destroy
+		fourthBuildBtn.image.sprite = cancelSprite;
 		// get the text
-		string destroyText = "Destroy";
-		thirdText.text = destroyText;
+		fourthText.text = destroyText;
+
 	}
 	
 	public void FirstBuild(){
 		string name = firstText.text;
 		if (townTile != null) {
 			CheckBuildingRecipeAndBuild(name, townTile);
+			// then deActivate build buttons
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			fourthBuildBtn.gameObject.SetActive (false);
+			showBuildButtons = false;
+			// then allow mouse to select again
+			stopMouse = false;
 		}
 
 	}
@@ -364,6 +507,14 @@ public class TownBuilding : MonoBehaviour {
 		string name = secondText.text;
 		if (townTile != null) {
 			CheckBuildingRecipeAndBuild(name, townTile);
+			// then deActivate build buttons
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			fourthBuildBtn.gameObject.SetActive (false);
+			showBuildButtons = false;
+			// then allow mouse to select again
+			stopMouse = false;
 
 		}
 		
@@ -372,8 +523,31 @@ public class TownBuilding : MonoBehaviour {
 	public void ThirdBuild(){
 		string name = thirdText.text;
 		if (townTile != null) {
+			CheckBuildingRecipeAndBuild(name, townTile);
+			// then deActivate build buttons
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			fourthBuildBtn.gameObject.SetActive (false);
+			showBuildButtons = false;
+			// then allow mouse to select again
+			stopMouse = false;
+			
+		}
+	}
+	public void FourthBuild(){
+		string name = fourthText.text;
+		if (townTile != null) {
 			if (name != "Destroy"){
 				CheckBuildingRecipeAndBuild(name, townTile);
+				// then deActivate build buttons
+				firstBuildBtn.gameObject.SetActive (false);
+				secondBuildBtn.gameObject.SetActive (false);
+				thirdBuidBtn.gameObject.SetActive (false);
+				fourthBuildBtn.gameObject.SetActive (false);
+				showBuildButtons = false;
+				// then allow mouse to select again
+				stopMouse = false;
 			}else{
 				DestroyBuilding(townTile);
 			}
@@ -655,6 +829,68 @@ public class TownBuilding : MonoBehaviour {
 				townProps.tileHasTier3 = true; // now has Tier 3 buiding
 			}
 			break;
+		case "Farm":
+			if (CheckResourceCost(wood: farmCost[0], stone: farmCost[1], metal: farmCost[2])){
+				GameObject building = Instantiate (farmFab, myTransform.position, Quaternion.identity) as GameObject;
+				// parent it to the town tile this is on
+				building.transform.parent = towntile.transform;
+				// need to makes sure the new gameobject's name matches my hardcoded names
+				building.name = name;
+				towntile.name = name;
+				//then tell this tile that it has a building
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				townProps.tileHasTier1 = true;
+				GetOptionsToShow(towntile);
+			}
+			break;
+		case "Stone Farm":
+			if (CheckResourceCost(wood: stoneFarmCost[0], stone: stoneFarmCost[1], metal: stoneFarmCost[2])){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				
+				// Need to DESTROY the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedT1 = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+				
+				GameObject building = Instantiate (stoneFarmFab, myTransform.position, Quaternion.identity) as GameObject;
+				// parent it to the town tile this is on
+				building.transform.parent = towntile.transform;
+				// need to makes sure the new gameobject's name matches my hardcoded names
+				building.name = name;
+				towntile.name = name;
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasTier1 = false; // no longer has basic building
+				townProps.tileHasTier2 = true;
+				// CHECK to see what options to show next
+				GetOptionsToShow(towntile);
+			}
+			break;
+		case "Metal Farm":
+			if (CheckResourceCost(wood: metalFarmCost[0], stone: metalFarmCost[1], metal: metalFarmCost[2])){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				// Need to DISABLE the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store the Tier 1 bulding
+				townProps.deactivatedT1 = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				// and turn it off
+				oldBuilding[1].gameObject.SetActive(false);
+				
+				GameObject building = Instantiate (metalFarmFab, myTransform.position, Quaternion.identity) as GameObject;
+				// parent it to the town tile this is on
+				building.transform.parent = towntile.transform;
+				// need to makes sure the new gameobject's name matches my hardcoded names
+				building.name = name;
+				towntile.name = name;
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasTier1 = false; // no longer has basic building
+				townProps.tileHasTier2 = true;
+				// CHECK to see what options to show next
+				GetOptionsToShow(towntile);
+			}
+			break;
 		default:
 			print ("Not enough resources!");
 			break;
@@ -682,14 +918,21 @@ public class TownBuilding : MonoBehaviour {
 						// subtract ALL BONUSES and give back ALL PENALTIES
 		building.SubtractBonuses (building.myBuildingType);
 
+		// IF TILE ONLY HAS 1 BUILDING then when we destroy we need to deactivate build buttons
+
 		if (townProps.tileHasTier1) { // only destroy Tier 1 building
 			Destroy (children [1].gameObject);
 			// Change parent name to something else
 			townTile.name = "Town X";
 			townProps.tileHasTier1 = false;
-//			print ("Children: " + children.Length);
-			// CHECK to see what options to show next
-			GetOptionsToShow(town);
+			//		// then deActivate build buttons
+			firstBuildBtn.gameObject.SetActive (false);
+			secondBuildBtn.gameObject.SetActive (false);
+			thirdBuidBtn.gameObject.SetActive (false);
+			fourthBuildBtn.gameObject.SetActive (false);
+			showBuildButtons = false;
+			// then allow mouse to select again
+			stopMouse = false;
 		}else if (townProps.tileHasTier2){
 			Destroy(children [1].gameObject); // destroy the Tier 2 building
 			if (townProps.deactivatedT1 != null){

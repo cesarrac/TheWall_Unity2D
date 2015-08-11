@@ -24,6 +24,7 @@ public class Unit_Data {
 	public int rateOfFire;
 	public float shortDamage, midDamage, longDamage;
 
+	public float mySpeed;
 
 	public enum Quality
 	{
@@ -36,7 +37,7 @@ public class Unit_Data {
 		monster,
 		captain
 	}
-	public Unit_Data(string description, Allegiance allegiance, Quality quality, int fireRate, float sDamage, float mDamage, float lDamage){
+	public Unit_Data(string description, Allegiance allegiance, Quality quality, int fireRate, float sDamage, float mDamage, float lDamage, float speed){
 		myStats = initStats (quality);
 		myName = GetName();
 		myDescription = description;
@@ -52,6 +53,8 @@ public class Unit_Data {
 		hitPoints = myStats [0];
 		attackRating = myStats [1];
 		defenseRating = myStats [2];
+
+		mySpeed = speed;
 	}
 
 
@@ -86,35 +89,35 @@ public class Unit_Data {
 		case Quality.elite:
 			myStats [0] = Random.Range (18, 42); 
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(10, 20);
+				int randomStat = Random.Range(8, 10);
 				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.high:
 			myStats [0] = Random.Range (18, 25); 
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(10, 20);
+				int randomStat = Random.Range(6, 9);
 				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.medium:
 			myStats [0] = Random.Range (10, 22); 
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(10, 20);
+				int randomStat = Random.Range(3, 6);
 				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.low:
 			myStats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(2, 11);
+				int randomStat = Random.Range(1, 3);
 				myStats[x] = randomStat;
 			}
 			break;
 		default:
 			myStats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(2, 11);
+				int randomStat = Random.Range(1, 3);
 				myStats[x] = randomStat;
 			}
 			break;

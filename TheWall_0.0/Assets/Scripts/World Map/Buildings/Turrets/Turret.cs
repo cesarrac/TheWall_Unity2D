@@ -4,29 +4,52 @@ using System.Collections;
 public class Turret : Building {
 
 					// *********** 	BASE TURRET (Automatic weapons that can be built on top of defenses)*******
-	// Turrets don't add bonuses, they pick targets in their range every other turn, and shoot them until someone dies
+// Turrets add Attack Rating and base Damage, they pick targets in their range every other turn, and shoot them until someone dies
 	public GameObject bulletFab;
 	public float fireRate, seekTime;
 	public bool seekPlayer, canShoot;
 	Transform myTransform;
 	public LayerMask mask;
-	public float damage;
+
 	public Transform sightStart, sightEnd;
 	public bool spotted = false;
 	Quaternion myRot;
+	public int attackBoost;
+	public float damageBoost;
 
+	bool tileUnderAttk;
+
+	public bool beingControlled;
+	bool canManualShoot;
 
 	void Start () {
-		floatBonus1 = 0; // so the building base class doesn't complain at the lack of a bonus
+		canManualShoot = true;
+
+		intBonus1 = attackBoost;
+		floatBonus1 = damageBoost;
 
 		seekPlayer = true;
+
+
 		myTransform = transform;
 		myRot = transform.rotation;
+		if (townTProps == null) {
+			townTProps = GetComponentInParent<TownTile_Properties> ();
+			ApplyBonus (attackBoost, damageBoost);
+
+		}
 	}
-	
-	// Update is called once per frame
+
+	void ApplyBonus(int attack, float dmg){
+		townTProps.attackRating = townTProps.attackRating + attack;
+		townTProps.baseDamage = townTProps.baseDamage + dmg;
+	}
+
 	void Update () {
-		if (seekPlayer) {
+//		tileUnderAttk = townTProps.beingAttacked;
+
+
+		if (seekPlayer && !beingControlled) {
 			StartCoroutine (WaitToSeek ());
 		}
 		if (canShoot) {
@@ -78,22 +101,52 @@ public class Turret : Building {
 	}
 
 	void Shoot(Vector3 target){
-		float z = Mathf.Atan2((target.y - myTransform.position.y), (target.x - myTransform.position.x)) * Mathf.Rad2Deg - 90;		
-//		myTransform.eulerAngles = new Vector3 (0,0,z);
-		transform.rotation = Quaternion.AngleAxis(z, Vector3.forward);
+		if (!beingControlled) { // IF NOT BEING CONTROLLED, NEED TO ROTATE TO TARGET
+			float z = Mathf.Atan2((target.y - myTransform.position.y), (target.x - myTransform.position.x)) * Mathf.Rad2Deg - 90;		
+			//		myTransform.eulerAngles = new Vector3 (0,0,z);
+			transform.rotation = Quaternion.AngleAxis(z, Vector3.forward);
+			canShoot = true;
+
+		}
 		GameObject bullet = Instantiate (bulletFab, sightStart.position, Quaternion.identity) as GameObject;
 		bullet.transform.parent = sightEnd;
 		Bullet bull = bullet.GetComponent<Bullet> ();
-		bull.damage = damage;
-		Debug.Log ("BAM!");
+									// GIVE BULLET ABILITY TO CALCULATE DAMAGE
+		bull.Initialize (townTProps.attackRating, townTProps.baseDamage);
 		canShoot = true;
+		canManualShoot = false;
+
 
 	}
 
 	IEnumerator WaitToShoot(){
+
 		canShoot = false;
+
 		yield return new WaitForSeconds(fireRate);
-		PickTarget();
-		
+		if (beingControlled) {
+			canManualShoot = true;		
+		} else {
+			PickTarget();
+		}
+
+	}
+
+	public void ManualControl(Vector3 target){
+
+		beingControlled = true;
+		seekPlayer = false;
+
+
+	
+		if (Input.GetMouseButtonUp (0)) {
+	
+			if (canManualShoot) {
+				Shoot (sightEnd.transform.position);
+			}
+		} else if (Input.GetMouseButton (0)) {
+			float z = Mathf.Atan2((target.y - myTransform.position.y), (target.x - myTransform.position.x)) * Mathf.Rad2Deg - 90;		
+			myTransform.eulerAngles = new Vector3 (0,0,z);
+		} 
 	}
 }

@@ -24,6 +24,13 @@ public class TownTile_Properties : MonoBehaviour {
 	// bool to know if this tile is being attacked (this will impede the player from moving to this tile)
 	public bool beingAttacked;
 
+	//TODO: Attacking Horde TARGET (passed to the Turret to shoot em down)
+
+	// Combat properties
+	public int attackRating = 1;
+	public int defenseRating = 1;
+	public float baseDamage;
+
 	//string to manipulate gameobject tag
 	string myTag;
 	public string storedTag;
@@ -36,6 +43,9 @@ public class TownTile_Properties : MonoBehaviour {
 
 	// storing the old building when Player adds advanced building on this tile
 	public GameObject deactivatedT1, deactivatedT2;
+
+	// turn true when this tile has a survivor (for special building functions)
+	public bool hasASurvivor;
 
 	void Start () {
 		myTransform = transform;
@@ -60,6 +70,7 @@ public class TownTile_Properties : MonoBehaviour {
 	}
 
 	public void TakeDamage(float damage){
+		if (!beingAttacked)beingAttacked = true;
 		// tell the map manager im under attack
 		mapScript.CheckForAnAttack (gameObject);
 		tileHitPoints = tileHitPoints - damage;

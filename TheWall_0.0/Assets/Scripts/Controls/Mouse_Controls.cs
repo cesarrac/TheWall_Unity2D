@@ -41,6 +41,9 @@ public class Mouse_Controls : MonoBehaviour {
 
 	public LayerMask maskForTiles, maskForUnits;
 
+	// a bool that other scripts can use to stop the mouse from selecting tiles
+	public bool stopSelecting;
+
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
 		if (Application.loadedLevel == 0) {
@@ -58,7 +61,7 @@ public class Mouse_Controls : MonoBehaviour {
 	void Update () {
 		if (Input.GetKey (KeyCode.LeftShift)) {
 			AttackRay ();
-		} else {
+		} else if (!stopSelecting) {
 			Select ();
 		}
 
@@ -95,10 +98,10 @@ public class Mouse_Controls : MonoBehaviour {
 					}
 				}
 			
-			} else if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Destroyed Town") || hit.collider.CompareTag ("Depleted")  ) {
+			} else if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Destroyed Town") || hit.collider.CompareTag ("Depleted")|| hit.collider.CompareTag ("Food Source")  ) {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
 					// mouse is not busy, meaning not currently shooting or placing units
-//				mouseIsBusy = false;
+				mouseIsBusy = false;
 			
 				if (Input.GetMouseButtonUp(0) && !mouseIsBusy) {
 				
@@ -134,12 +137,14 @@ public class Mouse_Controls : MonoBehaviour {
 //					}
 
 				}
-			} else if (hit.collider.gameObject.tag == "Gatherer"){
+			} else if (hit.collider.CompareTag("Gatherer")){
+				mouseIsBusy = true;
+			}else if (hit.collider.CompareTag("UI")){
 				mouseIsBusy = true;
 			}
 
-		} else { // hit.collider is null so mouse is definitely NOT busy
-			mouseIsBusy = false;
+		} else { // hit.collider is null so mouse is definitely busy
+			mouseIsBusy = true;
 		} 
 
 		// vvv BATTLEVIEW VVVV

@@ -43,6 +43,12 @@ public class Town_HordeDetect : MonoBehaviour {
 				townTile.beingAttacked = true;
 			}
 		}
+//		if (coll.CompareTag("Survivor")){
+//			Survivor survivor = coll.gameObject.GetComponent<Survivor>();
+//			if (survivor.partOfTown){
+//				townTile.hasASurvivor = true;
+//			}
+//		}
 	}
 	void OnTriggerExit2D (Collider2D coll){
 		if (coll.CompareTag ("Badge")) {

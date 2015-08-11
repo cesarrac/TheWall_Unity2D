@@ -11,6 +11,8 @@ public class Defense : Building {
 	// how much HP to boost, determined by the defense type below
 	float hitPointsBoost;
 
+	int defenseRatingBoost;
+
 	void Start () {
 		if (townCentral == null) {
 			townCentral = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<Town_Central> ();
@@ -30,22 +32,34 @@ public class Defense : Building {
 		case BuildMaterialType.basic:
 			hitPointsBoost = 10f;
 			floatBonus1 = hitPointsBoost;
+			defenseRatingBoost = 1;
+			intBonus1 = defenseRatingBoost;
 			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
+			townTProps.defenseRating = townTProps.defenseRating + defenseRatingBoost;
 			break;
 		case BuildMaterialType.stone:
 			hitPointsBoost = 20f;
 			floatBonus1 = hitPointsBoost;
+			defenseRatingBoost = 2;
+			intBonus1 = defenseRatingBoost;
 			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
+			townTProps.defenseRating = townTProps.defenseRating + defenseRatingBoost;
 			break;
 		case BuildMaterialType.metal:
 			hitPointsBoost = 30f;
 			floatBonus1 = hitPointsBoost;
+			defenseRatingBoost = 3;
+			intBonus1 = defenseRatingBoost;
 			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
+			townTProps.defenseRating = townTProps.defenseRating + defenseRatingBoost;
 			break;
 		default:
 			hitPointsBoost = 10f;
 			floatBonus1 = hitPointsBoost;
+			defenseRatingBoost = 1;
+			intBonus1 = defenseRatingBoost;
 			townTProps.tileHitPoints = townTProps.tileHitPoints + hitPointsBoost;
+			townTProps.defenseRating = townTProps.defenseRating + defenseRatingBoost;
 			break;
 		}
 

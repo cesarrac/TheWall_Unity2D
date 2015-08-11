@@ -43,6 +43,7 @@ public class Gatherer : Unit {
 	// current tile as GameObject
 	public GameObject currTileObj;
 
+	Mouse_Controls mouse; // to tell it to stop selecting
 
 
 	void Start () {
@@ -55,13 +56,19 @@ public class Gatherer : Unit {
 		town = GameObject.FindGameObjectWithTag ("Town_Central");
 		townResources = town.GetComponent<TownResources> ();
 		townCentral = town.GetComponent<Town_Central> ();
-		mapManager = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();
+		GameObject map = GameObject.FindGameObjectWithTag ("Map_Manager");
+		mapManager = map.GetComponent<Map_Manager> ();
+		mouse = map.GetComponent <Mouse_Controls> ();
+
 		gathering = true;
 	}
 	
 	void Update () {
 		if (beingMoved) {
 			FollowMouse ();
+			if (mouse != null){
+				mouse.mouseIsBusy = true;
+			}
 		} else {
 			if (!gathering && currTileObj != null){	// WHEN IT'S TIME TO GATHER
 				StartCoroutine (GatherTime (currGatherTime, false, currentTile.resourceType));
@@ -69,6 +76,7 @@ public class Gatherer : Unit {
 			if (salvaging){		// WHEN IT'S TIME TO SALVAGE (ON A DEPLETED TILE)
 				StartCoroutine (GatherTime (salvageTime, true));
 			}
+
 		}
 	}
 
@@ -80,8 +88,14 @@ public class Gatherer : Unit {
 		if (Input.GetMouseButtonUp (0) && !salvaging) {
 			TileCheck (); // check what type of tile this gatherer was place on
 			beingMoved = false;
+			if (mouse != null){
+				mouse.mouseIsBusy= false;
+			}
 		} else if (salvaging) {
 			beingMoved = false;
+			if (mouse != null){
+				mouse.mouseIsBusy = false;
+			}
 		}
 	}
 
@@ -177,10 +191,14 @@ public class Gatherer : Unit {
 	void GathererDestroy(){
 		Destroy (this.gameObject);
 		townCentral.spawnedGatherers--;
+		townCentral.availableGatherers++;
 	}
 
 	void OnTriggerStay2D(Collider2D coll){
 		if (coll.gameObject.CompareTag ("Tile")) {
+			currTileObj = coll.gameObject;
+		} 
+		if (coll.gameObject.CompareTag ("Food Source")) {
 			currTileObj = coll.gameObject;
 		} 
 		else {

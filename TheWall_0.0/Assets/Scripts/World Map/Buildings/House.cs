@@ -11,27 +11,23 @@ public class House : Building {
 	public float hpLoss;
 
 	void Start () {
-		if (townCentral == null) {
-			townCentral = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<Town_Central> ();
-		}
-		if (townTProps == null) {
-			townTProps = GetComponentInParent<TownTile_Properties> ();
-		}
 
-		if (townCentral != null && townTProps != null) {
+		if (townCentral == null || townTProps == null) {
+			townCentral = GameObject.FindGameObjectWithTag ("Town_Central").GetComponent<Town_Central> ();
+			townTProps = GetComponentInParent<TownTile_Properties> ();
 			myBuildMaterial = myBuildMaterial;
 			ApplyBonus(myBuildMaterial);
 		}
 	}
 
-
+	// NOW HOUSES ADD TO HOUSING NOT VACANCY(this will make survivors more comfortable)
 	void ApplyBonus(BuildMaterialType type){
 		switch (type) {
 		case BuildMaterialType.basic:
 			Debug.Log("Adding House bonuses!!");
 			maxHabitants = 1;
 			intBonus1 = maxHabitants;
-			townCentral.survivorVacancies = townCentral.survivorVacancies + maxHabitants;
+			townCentral.housingCount = townCentral.housingCount + maxHabitants;
 			hpLoss = 5f;
 			floatPenalty1 = hpLoss;
 			townTProps.tileHitPoints = townTProps.tileHitPoints - hpLoss;
@@ -39,7 +35,7 @@ public class House : Building {
 		case BuildMaterialType.stone:
 			maxHabitants = 2;
 			intBonus1 = maxHabitants;
-			townCentral.survivorVacancies = townCentral.survivorVacancies + maxHabitants;
+			townCentral.housingCount = townCentral.housingCount + maxHabitants;
 			hpLoss = 3f;
 			floatPenalty1 = hpLoss;
 			townTProps.tileHitPoints = townTProps.tileHitPoints - hpLoss;			
@@ -47,7 +43,7 @@ public class House : Building {
 		case BuildMaterialType.metal:
 			maxHabitants = 3;
 			intBonus1 = maxHabitants;
-			townCentral.survivorVacancies = townCentral.survivorVacancies + maxHabitants;
+			townCentral.housingCount = townCentral.housingCount + maxHabitants;
 			hpLoss = 1f;
 			floatPenalty1 = hpLoss;
 			townTProps.tileHitPoints = townTProps.tileHitPoints - hpLoss;			
@@ -55,7 +51,7 @@ public class House : Building {
 		default:
 			maxHabitants = 1;
 			intBonus1 = maxHabitants;
-			townCentral.survivorVacancies = townCentral.survivorVacancies + maxHabitants;
+			townCentral.housingCount = townCentral.housingCount + maxHabitants;
 			hpLoss = 5f;
 			floatPenalty1 = hpLoss;
 			townTProps.tileHitPoints = townTProps.tileHitPoints - hpLoss;			

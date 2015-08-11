@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class Town_Central : MonoBehaviour {
 
 	// max and available number of Gatherers
-	public int maxGatherers = 2;
+	public int maxGatherers = 2, firstMax;
 	public int availableGatherers = 2;
 	public int spawnedGatherers;
 	// prefab Gatherer
@@ -27,9 +27,11 @@ public class Town_Central : MonoBehaviour {
 	public int gatherAmntGen;
 
 	// Survivors
-	// # of survivor vacancies are determined by how many houses * by that house maxCapacity 
-	public int survivorVacancies;
-	int currVacancies; //keep track of vacancies
+//	// # of survivor vacancies are determined by how many houses * by that house maxCapacity 
+//	public int survivorVacancies;
+//	int currVacancies; //keep track of vacancies
+	public int housingCount;
+	public int survivorCount, currSurvivorCount;
 	// Access to the UI Panel that shows Survivor Portraits
 	public GameObject survivorPanel;
 	//Button / Survivor Slot (represents the survivor's in town)
@@ -45,58 +47,83 @@ public class Town_Central : MonoBehaviour {
 	public GameObject survivorFab;
 	Survivor newSurvivor;
 
+
+	// number of Farms made
+	public List<Farm> farms = new List<Farm>();
+
 	void Start () {
 		availableGatherers = maxGatherers;
-		currVacancies = survivorVacancies;
+		firstMax = maxGatherers;
+//		currVacancies = survivorVacancies;
+		currSurvivorCount = survivorCount;
 	}
 	
 
 	void Update () {
-		// Track VACANCIES here
-		TrackSurvivorVacancy ();
+		// Track SURVIVORS here
+//		TrackSurvivorCount ();
+		survivorCount = survivorsInTown.Count;
 
 		// Track GATHERERS available and display it as Text under Gatherer Button
-		availableGatherers = maxGatherers;
-		int calc = availableGatherers - spawnedGatherers;
-		availableText.text = "Available: " + calc;
-
-	}
-
-	void TrackSurvivorVacancy(){
-		Vector2 corners = new Vector2(0.5f, 1);
-		if (survivorVacancies > currVacancies) {// # of vacancies is larger so ADD a new survivor slot
-			// calculate how much it increased
-			int calc = survivorVacancies - currVacancies;
-			// then add that many slots
-			for (int x = 1; x <= calc; x++){
-				CreateButton(survivorSlotBttn, survivorPanel, corners, corners, bttnPos);
-			} 
-			currVacancies = survivorVacancies;
-		} else if (survivorVacancies < currVacancies) {
-			// # of vacancies is less so SUBSTRACT a survivor slot
-				// difference b/w them
-			int calc = currVacancies - survivorVacancies;
-			for (int x = 1; x <= calc; x++){
-				if (slotBttnCount > 1){// check there is only ONE slot left
-					// get the position of the button created before the one being removed
-					// using the slotBttnCount -1 to determine the list index
-					bttnPos = slots[slotBttnCount - 2].position; // count -1 would give me the index of this button, -2 gives me the last
-					// then destroy the last button created
-					Destroy(slots[slotBttnCount-1].gameObject);
-					slots.RemoveAt(slotBttnCount-1);
-					currVacancies = survivorVacancies;
-					slotBttnCount--;
-				}else{ // only one slot left
-					Destroy(slots[slotBttnCount-1].gameObject);
-					currVacancies = survivorVacancies;
-					slots.Clear();
-					slotBttnCount--;
-				}
-			} 
+		if (maxGatherers > firstMax) {
+			int diff = maxGatherers - firstMax;
+			availableGatherers = availableGatherers + diff;
 		}
+
+		if (availableGatherers >= 0) {
+			availableText.text = "Available: " + availableGatherers;
+		} else {
+			availableText.text = "Available: " + 0;
+		}
+	
+
+
 	}
 
-	public void CreateButton (Button buttonPrefab, GameObject panel, Vector2 cornerTopR, Vector2 cornerBottL, Vector3 position){
+	// Track how many survivors have joined in order to create a new button
+
+//	void TrackSurvivorCount(){
+//		Vector2 corners = new Vector2(0.5f, 1);
+//
+//
+//		// instead of tracking here the button that I would need to destroy, the survivor can store and destroy
+//		// its own button/slot
+//
+////		if (survivorVacancies > currVacancies) {// # of vacancies is larger so ADD a new survivor slot
+////			// calculate how much it increased
+////			int calc = survivorVacancies - currVacancies;
+////			// then add that many slots
+////			for (int x = 1; x <= calc; x++){
+////				CreateButton(survivorSlotBttn, survivorPanel, corners, corners, bttnPos);
+////			} 
+////			currVacancies = survivorVacancies;
+////		} else if (survivorVacancies < currVacancies) {
+////			// # of vacancies is less so SUBSTRACT a survivor slot
+////				// difference b/w them
+////			int calc = currVacancies - survivorVacancies;
+////			for (int x = 1; x <= calc; x++){
+////				if (slotBttnCount > 1){// check there is only ONE slot left
+////					// get the position of the button created before the one being removed
+////					// using the slotBttnCount -1 to determine the list index
+////					bttnPos = slots[slotBttnCount - 2].position; // count -1 would give me the index of this button, -2 gives me the last
+////					// then destroy the last button created
+////					Destroy(slots[slotBttnCount-1].gameObject);
+////					slots.RemoveAt(slotBttnCount-1);
+////					currVacancies = survivorVacancies;
+////					slotBttnCount--;
+////				}else{ // only one slot left
+////					Destroy(slots[slotBttnCount-1].gameObject);
+////					currVacancies = survivorVacancies;
+////					slots.Clear();
+////					slotBttnCount--;
+////				}
+////			} 
+////		}
+//	}
+
+
+
+	public void CreateButton (Button buttonPrefab, GameObject panel, Vector2 cornerTopR, Vector2 cornerBottL, Vector3 position, Sprite sprite, string name, float mood){
 		Button survivorSlot = Instantiate (buttonPrefab, Vector3.zero, Quaternion.identity) as Button;
 		RectTransform rectTransform = survivorSlot.GetComponent<RectTransform> ();
 		slots.Add (rectTransform); // ADD TO LIST OF BUTTONS
@@ -123,15 +150,24 @@ public class Town_Central : MonoBehaviour {
 			slotBttnCount++;
 			print ("First Survivor Slot created!");
 		}
-		survivorSlot.onClick.AddListener (() => SpawnSurvivor(survivorSlot));
+		survivorSlot.onClick.AddListener (() => SpawnSurvivor(rectTransform, survivorSlot));
+
+		// fill up the button
+		Text txt = survivorSlot.gameObject.GetComponentInChildren<Text> ();//Get the slot's text component
+		Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
+		survivorSlot.image.sprite = sprite; // Fill Sprite
+		Color newColor = AdaptSurvivorMood(mood);
+		moodBub.color = newColor; // Fill Mood Bubble with Color
+		txt.text = name;// Fill the text with the name
 
 	}
 
-	public void SpawnSurvivor(Button bttn){
+
+	public void SpawnSurvivor(RectTransform slot, Button bttn){
 		int count = 0;
 		// these Survivor slots should have the same list index that each survivorInTown does
 		for (int x =0; x < slots.Count; x++) {
-			if (slots[x].gameObject == bttn.gameObject){
+			if (slots[x].gameObject == slot.gameObject){
 				count = x;
 				Debug.Log(count);
 				break;
@@ -142,7 +178,7 @@ public class Town_Central : MonoBehaviour {
 		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);// get the mouse position
 		GameObject survivorSpwn = Instantiate(survivorFab, new Vector3 (Mathf.Round(m.x), Mathf.Round(m.y)-2f), Quaternion.identity) as GameObject;// instantiate survivor prefab at mouse position
 		Survivor emptySurvivor = survivorSpwn.GetComponent<Survivor> ();// add the survivor component
-		emptySurvivor.ForcedStart (survivorsInTown [count].myName, survivorsInTown [count].mySprite, survivorsInTown [count].myMood, (Survivor.SurvivorClass)survivorsInTown [count].myClass);
+		emptySurvivor.ForcedStart (survivorsInTown [count].myName, survivorsInTown [count].mySprite, survivorsInTown [count].myMood, (Survivor.SurvivorClass)survivorsInTown [count].myClass, survivorsInTown[count].myID);
 
 		SpriteRenderer sr = survivorSpwn.GetComponent<SpriteRenderer> ();// add the right sprite
 		sr.sprite = emptySurvivor.mySprite;
@@ -151,7 +187,7 @@ public class Town_Central : MonoBehaviour {
 
 		emptySurvivor.beingMoved = true; // make being moved true so it follows the mouse
 		// give the survivor the slot it came from so it can enable it when not spawned
-		emptySurvivor.mySurvivorSlot = bttn;
+		emptySurvivor.mySurvivorSlot = slot;
 		bttn.enabled = false;// make bttn disabled
 	
 	}
@@ -163,6 +199,8 @@ public class Town_Central : MonoBehaviour {
 			GameObject gathererToSpwn = Instantiate (gatherer, new Vector3 (Mathf.Round(m.x), Mathf.Round(m.y), -2f), Quaternion.identity) as GameObject;
 			//take one out of available
 			spawnedGatherers ++;
+
+			availableGatherers = availableGatherers - 1;
 
 			Gatherer currGatherer = gathererToSpwn.GetComponent<Gatherer>();
 			// give it any boosts available
@@ -188,32 +226,42 @@ public class Town_Central : MonoBehaviour {
 	}
 
 	public void AddSurvivor(Sprite sprite, string name, Survivor thisSurvivor){
+		// instead of Checking for vacancies, this will just ADD a new survivor slot every time a Survivor Joins
+		// Create Survivor Slot / Button && Fill the button with Sprite, Name, and Mood Color
+		Vector2 corners = new Vector2(0.5f, 1);
+		CreateButton(survivorSlotBttn, survivorPanel, corners, corners, bttnPos, sprite, name, thisSurvivor.mood);
+						//Store & Destroy
+		StoreSurvivor(thisSurvivor);
+		Destroy(thisSurvivor.gameObject); // Destroy the gameobject in the scene
 
-		// Are there any slots available?
-		if (slots.Count > 0) {
-			foreach (RectTransform slot in slots) { 	// Which slot is tagged empty?
-				if (slot.gameObject.tag == "Empty Slot") {
-					Button btn = slot.gameObject.GetComponent<Button> ();// Fill up the slots img
-					Text txt = btn.gameObject.GetComponentInChildren<Text> ();//Get the slot's text component
-					Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
-					btn.image.sprite = sprite; // Fill Sprite
-					Color newColor = AdaptSurvivorMood(thisSurvivor.mood);
-					moodBub.color = newColor; // Fill Mood Bubble with Color
-					txt.text = name;// Fill the text with the name
-					slot.gameObject.tag = "Full Slot";// Change this button's tag to Full Slot
-					StoreSurvivor(thisSurvivor);
-					Destroy(thisSurvivor.gameObject); // Destroy the gameobject in the scene
-					break;
-				}
-			}
-		} else {
-			print ("Build Houses to Add more survivors!");
-		}
+
+
+//		// Are there any slots available?
+//		if (slots.Count > 0) {
+//			foreach (RectTransform slot in slots) { 	// Which slot is tagged empty?
+//				if (slot.gameObject.tag == "Empty Slot") {
+//					Button btn = slot.gameObject.GetComponent<Button> ();// Fill up the slots img
+//					Text txt = btn.gameObject.GetComponentInChildren<Text> ();//Get the slot's text component
+//					Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
+//					btn.image.sprite = sprite; // Fill Sprite
+//					Color newColor = AdaptSurvivorMood(thisSurvivor.mood);
+//					moodBub.color = newColor; // Fill Mood Bubble with Color
+//					txt.text = name;// Fill the text with the name
+//					slot.gameObject.tag = "Full Slot";// Change this button's tag to Full Slot
+//					StoreSurvivor(thisSurvivor);
+//					Destroy(thisSurvivor.gameObject); // Destroy the gameobject in the scene
+//					break;
+//				}
+//			}
+//		} else {
+//			print ("Build Houses to Add more survivors!");
+//		}
 	
 	}
 
 	void StoreSurvivor(Survivor surv){ // Add this Survivor to the list
-		survivorsInTown.Add (new Survivor_Data (surv.name, surv.mySprite, surv.mood, (Survivor_Data.SurvivorClass)surv.mySurvivorClass));
+		// when adding a NEW survivor it will need a new id (using the list count as ID)
+		survivorsInTown.Add (new Survivor_Data (surv.name, surv.mySprite, surv.mood, (Survivor_Data.SurvivorClass)surv.mySurvivorClass, id: survivorsInTown.Count));
 	}
 
 	Color AdaptSurvivorMood(float mood){
@@ -299,6 +347,38 @@ public class Town_Central : MonoBehaviour {
 			Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
 			Color newColor = AdaptSurvivorMood(newMood);
 			moodBub.color = newColor; // Fill Mood Bubble with Color
+		}
+	}
+
+	public void ClearDeadSurvivor(int id){
+		// check the list of Survivors in town against this id
+		for (int x =0; x < survivorsInTown.Count; x++) {
+			if (survivorsInTown[x].myID == id){
+				survivorsInTown.RemoveAt(x);
+			}
+		}
+	}
+	public void RemoveSurvivorSlot (float yPosOfSlotToRemove, GameObject slotObj){
+		// we compare slotToRemove with the list of slots and store it
+		for (int x =0; x < slots.Count; x++) {
+			if (slots[x].position.y == yPosOfSlotToRemove){ // comparing the Y position of the slot
+				slots.RemoveAt(x);
+				Destroy(slotObj.gameObject);
+				slotBttnCount--;
+				// if there's more than one slot left they need to be moved up
+				if (slots.Count > 0){
+					MoveButtons(x);
+				}
+			}
+		}
+		// we Remove it from List and destroy the slotToRemove
+		// then all slots that have a higher count on the list than the slot removed get moved up
+	}
+	
+	void MoveButtons(int index){
+		for (int x= index; x < slots.Count; x++) {
+			// move them up
+			slots[x].position = new Vector3(slots[x].position.x, slots[x].position.y + 70f, 0);
 		}
 	}
 }

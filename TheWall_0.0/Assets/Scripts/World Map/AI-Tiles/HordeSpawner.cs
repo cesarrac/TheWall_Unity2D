@@ -107,20 +107,28 @@ public class HordeSpawner : MonoBehaviour {
 		// check what level this spawn is, and spawn the right kind of horde
 		switch (myLevel) {
 		case HordeLevel.Low:
-			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.low, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
+			hordeScript.hordeUnit = new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.low, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f, speed: 0.5f);
+//			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.low, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
 			break;
 		case HordeLevel.Medium:
-			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.medium, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
+			hordeScript.hordeUnit = new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.medium, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f, speed: 0.3f);
+//			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.medium, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
 			break;
 		case HordeLevel.High:
-			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.high, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
+			hordeScript.hordeUnit = new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.high, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f, speed: 0.1f);
+
+//			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.high, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
 			break;
 		case HordeLevel.Elite:
-			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.elite, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
+			hordeScript.hordeUnit = new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.elite, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f, speed: 0.1f);
+
+//			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.elite, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
 			break;
 		default:
 			// default to low
-			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.low, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
+			hordeScript.hordeUnit = new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.low, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f, speed: 0.5f);
+
+//			hordeScript.hordeMembers.Add(new Unit_Data(description: "Some description.", allegiance: Unit_Data.Allegiance.monster, quality: Unit_Data.Quality.low, fireRate: 1, sDamage: 2f, mDamage: 3f, lDamage: 5f));
 			break;
 		}
 	}
