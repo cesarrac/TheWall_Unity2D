@@ -40,13 +40,15 @@ public class Town_Central : MonoBehaviour {
 	Vector3 bttnPos; // keep track of button/slots positions in Panel
 	public List<RectTransform> slots = new List<RectTransform>();
 
-	// Store the Survivors
+	// Store the Survivors as Survivor Data
 	public List<Survivor_Data> survivorsInTown = new List<Survivor_Data>();
+	// and as Survivor 
+	public List<Survivor> survivorsSpawned = new List<Survivor> ();
+
 	Button currBtn; 
-// Survivor to spawn
+	// Survivor to spawn
 	public GameObject survivorFab;
 	Survivor newSurvivor;
-
 
 	// number of Farms made
 	public List<Farm> farms = new List<Farm>();
@@ -68,6 +70,7 @@ public class Town_Central : MonoBehaviour {
 		if (maxGatherers > firstMax) {
 			int diff = maxGatherers - firstMax;
 			availableGatherers = availableGatherers + diff;
+			firstMax = maxGatherers;
 		}
 
 		if (availableGatherers >= 0) {
@@ -123,7 +126,7 @@ public class Town_Central : MonoBehaviour {
 
 
 
-	public void CreateButton (Button buttonPrefab, GameObject panel, Vector2 cornerTopR, Vector2 cornerBottL, Vector3 position, Sprite sprite, string name, float mood){
+	public void CreateButton (Button buttonPrefab, GameObject panel, Vector2 cornerTopR, Vector2 cornerBottL, Vector3 position, Survivor mySurvivor){
 		Button survivorSlot = Instantiate (buttonPrefab, Vector3.zero, Quaternion.identity) as Button;
 		RectTransform rectTransform = survivorSlot.GetComponent<RectTransform> ();
 		slots.Add (rectTransform); // ADD TO LIST OF BUTTONS
@@ -155,14 +158,23 @@ public class Town_Central : MonoBehaviour {
 		// fill up the button
 		Text txt = survivorSlot.gameObject.GetComponentInChildren<Text> ();//Get the slot's text component
 		Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
-		survivorSlot.image.sprite = sprite; // Fill Sprite
-		Color newColor = AdaptSurvivorMood(mood);
+		survivorSlot.image.sprite = mySurvivor.mySprite; // Fill Sprite
+		Color newColor = AdaptSurvivorMood(mySurvivor.mood);
 		moodBub.color = newColor; // Fill Mood Bubble with Color
-		txt.text = name;// Fill the text with the name
+		txt.text = mySurvivor.name;// Fill the text with the name
 
 	}
 
-
+	public void AddSurvivor(Sprite sprite, string name, Survivor thisSurvivor){
+		// instead of Checking for vacancies, this will just ADD a new survivor slot every time a Survivor Joins
+		// Create Survivor Slot / Button && Fill the button with Sprite, Name, and Mood Color
+		Vector2 corners = new Vector2(0.5f, 1);
+		CreateButton(survivorSlotBttn, survivorPanel, corners, corners, bttnPos, thisSurvivor);
+		//Store & Destroy
+		StoreSurvivor(thisSurvivor);
+		Destroy(thisSurvivor.gameObject); // Destroy the gameobject in the scene
+	
+	}
 	public void SpawnSurvivor(RectTransform slot, Button bttn){
 		int count = 0;
 		// these Survivor slots should have the same list index that each survivorInTown does
@@ -188,7 +200,12 @@ public class Town_Central : MonoBehaviour {
 		emptySurvivor.beingMoved = true; // make being moved true so it follows the mouse
 		// give the survivor the slot it came from so it can enable it when not spawned
 		emptySurvivor.mySurvivorSlot = slot;
+		// and the slot as a button
+		emptySurvivor.mySurvivorButton = bttn;
 		bttn.enabled = false;// make bttn disabled
+
+		// store this spawned survivor
+		StoreSurvivorSpawn (emptySurvivor);
 	
 	}
 
@@ -225,43 +242,15 @@ public class Town_Central : MonoBehaviour {
 		gatherer.gatherAmmount = gatherer.gatherAmmount + gatherAmntGen;
 	}
 
-	public void AddSurvivor(Sprite sprite, string name, Survivor thisSurvivor){
-		// instead of Checking for vacancies, this will just ADD a new survivor slot every time a Survivor Joins
-		// Create Survivor Slot / Button && Fill the button with Sprite, Name, and Mood Color
-		Vector2 corners = new Vector2(0.5f, 1);
-		CreateButton(survivorSlotBttn, survivorPanel, corners, corners, bttnPos, sprite, name, thisSurvivor.mood);
-						//Store & Destroy
-		StoreSurvivor(thisSurvivor);
-		Destroy(thisSurvivor.gameObject); // Destroy the gameobject in the scene
 
-
-
-//		// Are there any slots available?
-//		if (slots.Count > 0) {
-//			foreach (RectTransform slot in slots) { 	// Which slot is tagged empty?
-//				if (slot.gameObject.tag == "Empty Slot") {
-//					Button btn = slot.gameObject.GetComponent<Button> ();// Fill up the slots img
-//					Text txt = btn.gameObject.GetComponentInChildren<Text> ();//Get the slot's text component
-//					Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
-//					btn.image.sprite = sprite; // Fill Sprite
-//					Color newColor = AdaptSurvivorMood(thisSurvivor.mood);
-//					moodBub.color = newColor; // Fill Mood Bubble with Color
-//					txt.text = name;// Fill the text with the name
-//					slot.gameObject.tag = "Full Slot";// Change this button's tag to Full Slot
-//					StoreSurvivor(thisSurvivor);
-//					Destroy(thisSurvivor.gameObject); // Destroy the gameobject in the scene
-//					break;
-//				}
-//			}
-//		} else {
-//			print ("Build Houses to Add more survivors!");
-//		}
-	
-	}
 
 	void StoreSurvivor(Survivor surv){ // Add this Survivor to the list
 		// when adding a NEW survivor it will need a new id (using the list count as ID)
 		survivorsInTown.Add (new Survivor_Data (surv.name, surv.mySprite, surv.mood, (Survivor_Data.SurvivorClass)surv.mySurvivorClass, id: survivorsInTown.Count));
+	}
+
+	void StoreSurvivorSpawn(Survivor surv){
+		survivorsSpawned.Add (surv);
 	}
 
 	Color AdaptSurvivorMood(float mood){
@@ -306,30 +295,38 @@ public class Town_Central : MonoBehaviour {
 				if (survivorD.myMood < 10){
 					survivorD.myMood = survivorD.myMood + change;
 					MoodBubbleChange(survivorD.myMood);
+					// change spawned Survivor's mood according to ID
+					MoodChangeForSpawnedSurvivors(survivorD.myID, survivorD.myMood);
 				}
 			}else{
 				if (survivorD.myMood > -10f){
 					survivorD.myMood = survivorD.myMood + change;
 					MoodBubbleChange(survivorD.myMood);
+					// change spawned Survivor's mood according to ID
+					MoodChangeForSpawnedSurvivors(survivorD.myID, survivorD.myMood);
 				}
 			}
 		}
 	}
 
-	// change Mood to SPECIFIC slot / survivor in town BY NAME
-	public void MoodChange(float change, string name){
+	// change Mood to SPECIFIC slot / survivor in town BY ID
+	public void MoodChange(float change, int id){
 		if (survivorsInTown.Count > 0) {
 			foreach (Survivor_Data survivorD in survivorsInTown) {
-				if (survivorD.myName == name) {
-					if (change > 0) {
+				if (survivorD.myID == id) {
+					if (change > 0) {				// Positive Mood change
 						if (survivorD.myMood < 10){
 							survivorD.myMood = survivorD.myMood + change;
 							MoodBubbleChange(survivorD.myMood);
+							// change spawned Survivor's mood according to ID
+							MoodChangeForSpawnedSurvivors(survivorD.myID, survivorD.myMood);
 						}
-					} else {
+					} else {						// Negative Mood change
 						if (survivorD.myMood > -10f){
 							survivorD.myMood = survivorD.myMood + change;
 							MoodBubbleChange(survivorD.myMood);
+							// change spawned Survivor's mood according to ID
+							MoodChangeForSpawnedSurvivors(survivorD.myID, survivorD.myMood);
 						}
 					}
 				}
@@ -340,14 +337,30 @@ public class Town_Central : MonoBehaviour {
 
 	}
 
-	void MoodBubbleChange(float newMood){
-		foreach (RectTransform slot in slots) {
-			Button btn = slot.gameObject.GetComponent<Button> ();// Fill up the slots img
-			Text txt = btn.gameObject.GetComponentInChildren<Text> ();//Get the slot's text component
-			Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
-			Color newColor = AdaptSurvivorMood(newMood);
-			moodBub.color = newColor; // Fill Mood Bubble with Color
+	void MoodChangeForSpawnedSurvivors(int id, float newMood){
+		Debug.Log ("changing spwned survivor. ID: " + id + " new mood: " + newMood);
+		foreach (Survivor spwnedSurvivor in survivorsSpawned) {
+			if (spwnedSurvivor.id == id){
+//				Survivor survScript = spwnedSurvivor.gameObject.GetComponent<Survivor>();
+//				survScript.mood = newMood;
+				spwnedSurvivor.mood = newMood;
+				Debug.Log("Found matching ID! Mood Changed.");
+				break;
+			}
 		}
+	}
+
+	void MoodBubbleChange(float newMood){
+		if (survivorPanel.activeSelf && slots.Count > 0) { // if panel is not active DONT change the bubble now, update when active
+			foreach (RectTransform slot in slots) {
+				Button btn = slot.gameObject.GetComponent<Button> ();// Fill up the slots img
+				Text txt = btn.gameObject.GetComponentInChildren<Text> ();//Get the slot's text component
+				Image moodBub = txt.gameObject.GetComponentInChildren<Image>();
+				Color newColor = AdaptSurvivorMood(newMood);
+				moodBub.color = newColor; // Fill Mood Bubble with Color
+			}
+		}
+
 	}
 
 	public void ClearDeadSurvivor(int id){
@@ -355,9 +368,40 @@ public class Town_Central : MonoBehaviour {
 		for (int x =0; x < survivorsInTown.Count; x++) {
 			if (survivorsInTown[x].myID == id){
 				survivorsInTown.RemoveAt(x);
+				break;
+			}
+		}
+		for (int y= 0; y < survivorsSpawned.Count; y++) {
+			if (survivorsSpawned[y].id == id){
+				survivorsSpawned.RemoveAt(y);
+				break;
 			}
 		}
 	}
+
+	public void ClearForGoHome(int id){
+		for (int y= 0; y < survivorsSpawned.Count; y++) {
+			if (survivorsSpawned[y].id == id){
+				survivorsSpawned.RemoveAt(y);
+				break;
+			}
+		}
+	}
+
+		// This clears TRAITORS who have not been spawned (they just leave town)
+	void ClearTraitorFromList(int id){
+//		foreach (RectTransform slot in slots) {
+//			Survivor surv = slot.gameObject.GetComponent<Survivor>();
+//		}
+//		for (int x =0; x < survivorsInTown.Count; x++) {
+//			if (survivorsInTown[x].myID == id){
+//
+//				survivorsInTown.RemoveAt(x);
+//				break;
+//			}
+//		}
+	}
+
 	public void RemoveSurvivorSlot (float yPosOfSlotToRemove, GameObject slotObj){
 		// we compare slotToRemove with the list of slots and store it
 		for (int x =0; x < slots.Count; x++) {

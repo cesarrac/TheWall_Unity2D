@@ -45,7 +45,7 @@ public class Building : MonoBehaviour {
 //		}
 //	}
 
-	public void SubtractBonuses(BuildingType myType){
+	public void SubtractBonuses(BuildingType myType, GameObject buildingObj){
 		switch (myType) {
 		case BuildingType.defense:
 			townTProps.tileHitPoints = townTProps.tileHitPoints - floatBonus1;
@@ -69,6 +69,14 @@ public class Building : MonoBehaviour {
 			townCentral.gatherAmntGen = townCentral.gatherAmntGen - intBonus2;
 
 			townCentral.maxGatherers = townCentral.maxGatherers - intBonus1;
+			break;
+		case BuildingType.food:
+			Farm myFarm = buildingObj.GetComponent<Farm>();
+			for (int x =0; x< townCentral.farms.Count; x++){
+				if (townCentral.farms[x].farmListID == myFarm.farmListID){
+					townCentral.farms.RemoveAt(x);
+				}
+			}
 			break;
 		default:
 			print ("Building has no bonus!");

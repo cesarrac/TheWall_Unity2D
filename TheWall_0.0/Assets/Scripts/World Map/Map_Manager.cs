@@ -61,7 +61,9 @@ public class Map_Manager : MonoBehaviour {
 	int resourceTileIndex;
 
 	// an array of Transforms for resource tiles that have been instantiated
-	public Transform[] spawnedTiles;
+//	public Transform[] spawnedTiles;
+
+	public List<Transform> spawnedTiles = new List<Transform>();
 
 	// going to set a crude timer to check if any of my town tiles are being attacked
 	// in order to SPAWN A INDICATOR RED ARROW
@@ -173,6 +175,8 @@ public class Map_Manager : MonoBehaviour {
 							GameObject spawnedTile = Instantiate(tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
 							// attach to holder
 							spawnedTile.transform.parent = tileHolder;
+
+							spawnedTiles.Add(spawnedTile.transform); // add the tile to the list
 							break;
 						}
 					}
@@ -189,7 +193,7 @@ public class Map_Manager : MonoBehaviour {
 
 		myStoredPosition = position;
 
-		spawnedTiles = tileHolder.GetComponentsInChildren<Transform> (); 
+//		spawnedTiles = tileHolder.GetComponentsInChildren<Transform> (); 
 	}
 
 	// This is called right now by Mouse Controls everytime the Player clicks on a tile
@@ -204,12 +208,14 @@ public class Map_Manager : MonoBehaviour {
 //		// clear resource tile under this new town tile
 //		ClearResourceTilesUnderTown (centerPosition, resourceTile);
 
-		// get the Transforms of the tiles that already exist
-		spawnedTiles = tileHolder.GetComponentsInChildren<Transform> (); 
+//		// get the Transforms of the tiles that already exist
+//		spawnedTiles = tileHolder.GetComponentsInChildren<Transform> (); 
+
 		// SPAWNED TILE CHECK LOGIC: 
 		//if we are expanding to the RIGHT or the LEFT we need to get what # in spawntiles[]
 		// is the Transformm that is below myStoredPosition.x on the grid
 		//if expanding UP or DOWN we need the Transform to the right of myStoredPosition.x on the grid
+		// Then ADD TO SPAWNED TILES LIST
 		float xp = Mathf.Round(townResourcesScript.xp);
 	
 		if ( xp  >= 1) { // must check if we have any XP left to expand with
@@ -240,6 +246,7 @@ public class Map_Manager : MonoBehaviour {
 								if (tile.gridPosition == tilePos) {
 									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
 									spawnedTile.transform.parent = tileHolder;
+									CheckSpawnedTilesList(spawnedTile.transform); // add the tile to the list
 									break;
 								}
 							}
@@ -271,6 +278,7 @@ public class Map_Manager : MonoBehaviour {
 								if (tile.gridPosition == tilePos) {
 									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
 									spawnedTile.transform.parent = tileHolder;
+									CheckSpawnedTilesList(spawnedTile.transform); // add the tile to the list
 									break;
 								}
 							}
@@ -302,6 +310,7 @@ public class Map_Manager : MonoBehaviour {
 								if (tile.gridPosition == tilePos) {
 									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
 									spawnedTile.transform.parent = tileHolder;
+									CheckSpawnedTilesList(spawnedTile.transform); // add the tile to the list
 									break;
 								}
 							}
@@ -334,6 +343,7 @@ public class Map_Manager : MonoBehaviour {
 								if (tile.gridPosition == tilePos) {
 									GameObject spawnedTile = Instantiate (tile.tileGameObject, tilePos, Quaternion.identity) as GameObject;
 									spawnedTile.transform.parent = tileHolder;
+									CheckSpawnedTilesList(spawnedTile.transform); // add the tile to the list
 									break;
 								}
 							}
@@ -346,6 +356,17 @@ public class Map_Manager : MonoBehaviour {
 		}
 		myStoredPosition = centerPosition; // STORE THE NEW POSITION (right now this is always the new created town tile)
 
+	}
+
+	void CheckSpawnedTilesList(Transform spawnedTile){
+		// check for missing or null tiles
+//		for (int x = 0; x < spawnedTiles.Count; x++){
+//			if (spawnedTiles[x].gameObject == null){
+//				spawnedTiles.RemoveAt(x);
+//			}
+//		}
+		// add the new tile
+		spawnedTiles.Add (spawnedTile);
 	}
 
 //	void FindTileOnGrid(Vector3 centerPos, Vector3 storedPos, Transform[] spawnedT){
@@ -372,11 +393,16 @@ public class Map_Manager : MonoBehaviour {
 //	}
 
 	bool CheckIfTileExists(Vector3 newTilePos){
-		foreach (Transform trans in spawnedTiles) {
-			if (trans.position == newTilePos){
-				return true;
+		for (int x = 0; x < spawnedTiles.Count; x++){
+			if (spawnedTiles[x] != null){
+				if (spawnedTiles[x].transform.position == newTilePos){
+					return true;
+				}
+			}else{
+				spawnedTiles.RemoveAt(x);
 			}
 		}
+
 		return false;
 	}
 
@@ -492,9 +518,6 @@ public class Map_Manager : MonoBehaviour {
 	// Accesing the postion of the tile was not working so I'm just going to get the Pos from the gatherer that calls this
 	public bool CheckResourceQuantity(Tile tile){
 		if (tile.maxResourceQuantity <= 0) {
-			// first we need to store the position of this tile
-//			Vector3 depletedTilePos = new Vector3(tileDataList[index].gridPosition.x, tileDataList[index].gridPosition.y, tileDataList[index].gridPosition.z);
-			//then remove
 
 			return false;
 		} else {
@@ -502,13 +525,35 @@ public class Map_Manager : MonoBehaviour {
 		}
 	}
 
-	public void SpawnDepletedTile(Vector3 position, int index, GameObject tileObj){
-		//then remove from list
-		tileDataList.RemoveAt(index);
-		Destroy(tileObj); // & Destroy it
+	public void SpawnDepletedTile(Vector3 position, int index){
+
+
+				// find this tile in list of tiles to remove and destroy the gameobject
+		for (int x = 0; x < spawnedTiles.Count; x++) {
+			if (spawnedTiles[x] != null){
+				if (spawnedTiles[x].transform.position == position){
+					//Destroy and remove from list
+					Destroy(spawnedTiles[x].gameObject);
+					spawnedTiles.RemoveAt(x);
+					break;
+				}
+			}
+		}
+//		foreach (Transform tile in spawnedTiles) {
+//			if (tileDataList[index] != null){
+//				if (position == tile.transform.position){
+//					Destroy(tile.gameObject);
+//					break;
+//				}
+//			}
+//		}
+
 		// then it its former position, spawn an empty tile tagged tile
 		GameObject replacementTile = Instantiate (depletedTile, position, Quaternion.identity) as GameObject;
 		replacementTile.transform.parent = tileHolder;
+
+		//then remove from list
+//		tileDataList.RemoveAt(index);
 	}
 
 	//call this each time player expands

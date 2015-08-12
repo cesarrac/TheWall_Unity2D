@@ -138,7 +138,7 @@ public class TownTile_Properties : MonoBehaviour {
 	void KillBuilding(){
 		// find the building
 		Building building = GetComponentInChildren<Building> ();
-		building.SubtractBonuses (building.myBuildingType);
+		building.SubtractBonuses (building.myBuildingType, building.gameObject);
 
 	}
 }

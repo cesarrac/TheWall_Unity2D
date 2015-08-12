@@ -259,7 +259,7 @@ public class TownBuilding : MonoBehaviour {
 		string workText = "Workshop";
 		thirdText.text = workText;
 
-		fourthBuildBtn.image.sprite = workSprite ;
+		fourthBuildBtn.image.sprite = farmSprite ;
 		string farmText = "Farm";
 		fourthText.text = farmText;
 	}
@@ -523,16 +523,19 @@ public class TownBuilding : MonoBehaviour {
 	public void ThirdBuild(){
 		string name = thirdText.text;
 		if (townTile != null) {
-			CheckBuildingRecipeAndBuild(name, townTile);
-			// then deActivate build buttons
-			firstBuildBtn.gameObject.SetActive (false);
-			secondBuildBtn.gameObject.SetActive (false);
-			thirdBuidBtn.gameObject.SetActive (false);
-			fourthBuildBtn.gameObject.SetActive (false);
-			showBuildButtons = false;
-			// then allow mouse to select again
-			stopMouse = false;
-			
+			if (name != "Destroy"){
+				CheckBuildingRecipeAndBuild(name, townTile);
+				// then deActivate build buttons
+				firstBuildBtn.gameObject.SetActive (false);
+				secondBuildBtn.gameObject.SetActive (false);
+				thirdBuidBtn.gameObject.SetActive (false);
+				fourthBuildBtn.gameObject.SetActive (false);
+				showBuildButtons = false;
+				// then allow mouse to select again
+				stopMouse = false;
+			}else{
+				DestroyBuilding(townTile);
+			}
 		}
 	}
 	public void FourthBuild(){
@@ -916,7 +919,7 @@ public class TownBuilding : MonoBehaviour {
 		Building building = town.GetComponentInChildren<Building> ();
 
 						// subtract ALL BONUSES and give back ALL PENALTIES
-		building.SubtractBonuses (building.myBuildingType);
+		building.SubtractBonuses (building.myBuildingType, building.gameObject);
 
 		// IF TILE ONLY HAS 1 BUILDING then when we destroy we need to deactivate build buttons
 

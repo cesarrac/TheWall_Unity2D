@@ -43,22 +43,29 @@ public class Soldier : MonoBehaviour {
 	public void AbilityOne(){	// sniper mode (damage buff)
 		boostDamage = true;
 		// deactivate ability buttons
-		uiMaster.abilityBttn1.gameObject.SetActive (false);
-		uiMaster.abilityBttn2.gameObject.SetActive (false);
+		Destroy(uiMaster.abBttn1.gameObject);
+		Destroy(uiMaster.abBttn2.gameObject);
 		Debug.Log ("Soldier ability 1 activated!!!!!");
 	}
 
 	public void AbilityTwo(){
-		if (mySurvivor.townTile != null) {
-			if (mySurvivor.townTile.tileHasTier3){
-				myTurret = mySurvivor.townTile.GetComponentInChildren<Turret>();
-				controllingTurret = true;
+		if (myTurret != null) {
+			controllingTurret = true;
+		} else {
+			if (mySurvivor.townTile != null) {
+				if (mySurvivor.townTile.tileHasTier3){
+					myTurret = mySurvivor.townTile.GetComponentInChildren<Turret>();
+					controllingTurret = true;
+				}else{
+					print ("No turret on this wall!");
+				}
 			}
 		}
 
+
 		// deactivate ability buttons
-		uiMaster.abilityBttn1.gameObject.SetActive (false);
-		uiMaster.abilityBttn2.gameObject.SetActive (false);
+		Destroy(uiMaster.abBttn1.gameObject);
+		Destroy(uiMaster.abBttn2.gameObject);
 		Debug.Log ("Soldier ability 2 activated!!!!!");
 	}
 
@@ -80,9 +87,17 @@ public class Soldier : MonoBehaviour {
 	void OnMouseOver(){
 		if (Input.GetMouseButtonDown (0)) {
 			if (uiMaster != null) {
-				AbilityButtons ();
+				if (uiMaster.abBttn1 != null && uiMaster.abBttn2 != null){
+					Destroy(uiMaster.abBttn1.gameObject);
+					Destroy(uiMaster.abBttn2.gameObject);
+//					AbilityButtons ();
+				}else{
+					AbilityButtons ();
+				}
+
 			}
 		}
+
 	}
 
 	IEnumerator DamageBuffTimer(){

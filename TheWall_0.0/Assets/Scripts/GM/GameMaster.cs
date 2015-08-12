@@ -285,89 +285,69 @@ public class GameMaster : MonoBehaviour {
 		yield return new WaitForSeconds (turnTime);
 		// move the hordes
 //		MoveTheHordes ();
-		CheckFoodForXP ();
-		HarvestFromFarms ();
+//		CheckFoodForXP ();
+		CheckEnoughFoodForSurvivors ();
+//		HarvestFromFarms ();
+
 		// every time a turn passes, count it
 		numberOfTurns++;
-	
+		Debug.Log ("Turn: " + numberOfTurns);
 	}
 
-	void HarvestFromFarms(){
-		// access Farms from Town Central and call their harvest function
+//	void HarvestFromFarms(){
+//		// access Farms from Town Central and call their harvest function
+//		if (townCentral != null) {
+//			if (townCentral.farms.Count > 0){
+//				for (int x =0; x < townCentral.farms.Count; x++) {
+//					if (townCentral.farms[x].gameObject != null){
+//						townCentral.farms[x].Harvest();			// HARVEST FOOD FROM ALL FARMS
+//					}else{
+//						townCentral.farms.RemoveAt(x);
+//					}
+//				}
+//			}
+//		}
+//				// new turn true
+//				newTurn = true;
+//	}
+
+	// this check if Town has enough food to get XP (you cant get more XP unless you have enough food)
+//	void CheckFoodForXP(){
+//		int foodCost = (mapScript.townTiles.Count / 2) * grainCostRate; // this is how much food is need to get XP
+//		if (townResourceScript.grain >= foodCost) {
+//			// town has enough food, so give them XP
+//			townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
+//			// then charge the town the foodcost
+//			townResourceScript.grain = townResourceScript.grain - foodCost;
+//
+//			// we have enough food so Mood does not change
+//
+//		} else {
+//			print ("Not enough food to expand!");
+//			// not enough food so Mood has to go down
+//			ChangeMoods(-0.1f);
+//		}
+//	}
+
+	void CheckEnoughFoodForSurvivors(){
 		if (townCentral != null) {
-			if (townCentral.farms.Count > 0){
-				for (int x =0; x < townCentral.farms.Count; x++) {
-					if (townCentral.farms[x].gameObject != null){
-						townCentral.farms[x].Harvest();
-					}else{
-						townCentral.farms.RemoveAt(x);
-					}
+			int foodCount = townCentral.survivorsInTown.Count; // # of Survivors in Town
+			if (townResourceScript != null){
+				if (townResourceScript.grain >= foodCount){
+					townResourceScript.grain = townResourceScript.grain - foodCount; // they eat food
+				}else{
+					print ("Not enough food to feed your population!");
+					// not enough food so Mood has to go down
+					ChangeMoods(-2f);
 				}
 			}
 		}
-				// new turn true
-				newTurn = true;
-	}
-
-//	public void MoveTheHordes(){
-//		GameObject[] hordes = GameObject.FindGameObjectsWithTag ("Badge"); // Finds all Badges on the map
-//		print ("hordes out there: " + hordes.Length);
-//		foreach (GameObject horde in hordes) { // assign a random direction
-//			// first make sure they are not next to player wall
-//			Horde hScript = horde.gameObject.GetComponent<Horde>();
-//			// before moving each one we need to make sure they are moving to a legal position
-//			Vector3 hPos = horde.gameObject.GetComponent<Transform>().transform.position;
-//
-//			if (!hScript.nextToTownTile){
-//				int randomDir = Random.Range(0,5);
-//				if (randomDir == 1){ // up
-//
-//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y + 1, -2f))) ? new Vector3(hPos.x, hPos.y + 1, 0) : horde.transform.position;
-//				}else if(randomDir == 2){ //down
-//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y - 1, -2f))) ? new Vector3(hPos.x, hPos.y - 1, 0) : horde.transform.position;
-//				}else if (randomDir == 3){ // left
-//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x - 1, hPos.y, -2f))) ? new Vector3(hPos.x - 1, hPos.y, 0) : horde.transform.position;
-//				}else if (randomDir == 4){ // right
-//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x + 1, hPos.y, -2f))) ? new Vector3(hPos.x + 1, hPos.y, 0) : horde.transform.position;
-//				}
-//			}	
-//		}
-//		// new turn true
-//		newTurn = true;
-//	}
-
-
-
-	bool CheckLegalPosition(Vector3 newPos){
-		foreach (Vector3 position in mapPositions){
-			if (newPos == position){
-				return true;
-				break;
-				print ("New Position is legal. " + newPos);
-			}
-		}
-		return false;
-	}
-
-	// this check if Town has enough food to get XP (you cant get more XP unless you have enough food)
-	void CheckFoodForXP(){
-		int foodCost = (mapScript.townTiles.Count / 2) * grainCostRate; // this is how much food is need to get XP
-		if (townResourceScript.grain >= foodCost) {
-			// town has enough food, so give them XP
-			townResourceScript.xp = townResourceScript.xp + townResourceScript.xpGainRate;
-			// then charge the town the foodcost
-			townResourceScript.grain = townResourceScript.grain - foodCost;
-
-			// we have enough food so Mood does not change
-
-		} else {
-			print ("Not enough food to expand!");
-			// not enough food so Mood has to go down
-			ChangeMoods(-0.1f);
-		}
+		// new turn true
+		newTurn = true;
 	}
 
 	void ChangeMoods(float change){
+		Debug.Log ("Survivors moods change");
 		// changing the moods here for testing with a hardcoded mood change
 		townCentral.MoodChange (change);
 	}
@@ -379,5 +359,43 @@ public class GameMaster : MonoBehaviour {
 	void GameOverText(int numTurns){
 		survivedText.text = "You survived " + numTurns + " turns.";
 		stopGame = true;
+	}
+
+										// *****OLD HORDE MOVEMENT****
+	//	public void MoveTheHordes(){
+	//		GameObject[] hordes = GameObject.FindGameObjectsWithTag ("Badge"); // Finds all Badges on the map
+	//		print ("hordes out there: " + hordes.Length);
+	//		foreach (GameObject horde in hordes) { // assign a random direction
+	//			// first make sure they are not next to player wall
+	//			Horde hScript = horde.gameObject.GetComponent<Horde>();
+	//			// before moving each one we need to make sure they are moving to a legal position
+	//			Vector3 hPos = horde.gameObject.GetComponent<Transform>().transform.position;
+	//
+	//			if (!hScript.nextToTownTile){
+	//				int randomDir = Random.Range(0,5);
+	//				if (randomDir == 1){ // up
+	//
+	//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y + 1, -2f))) ? new Vector3(hPos.x, hPos.y + 1, 0) : horde.transform.position;
+	//				}else if(randomDir == 2){ //down
+	//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x, hPos.y - 1, -2f))) ? new Vector3(hPos.x, hPos.y - 1, 0) : horde.transform.position;
+	//				}else if (randomDir == 3){ // left
+	//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x - 1, hPos.y, -2f))) ? new Vector3(hPos.x - 1, hPos.y, 0) : horde.transform.position;
+	//				}else if (randomDir == 4){ // right
+	//					horde.transform.position = (CheckLegalPosition(new Vector3(hPos.x + 1, hPos.y, -2f))) ? new Vector3(hPos.x + 1, hPos.y, 0) : horde.transform.position;
+	//				}
+	//			}	
+	//		}
+	//		// new turn true
+	//		newTurn = true;
+	//	}
+	
+	bool CheckLegalPosition(Vector3 newPos){
+		foreach (Vector3 position in mapPositions){
+			if (position == newPos){
+				return true;
+				break;
+			}
+		}
+		return false;
 	}
 }

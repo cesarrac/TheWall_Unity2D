@@ -95,6 +95,7 @@ public class Survivor : Unit {
 	GameObject[] answerBttns;
 	public GameObject survivorPanel; // to make it pop-up when the dialogue window is up
 	public RectTransform mySurvivorSlot;
+	public Button mySurvivorButton;
 
 	// Access to Town Central
 	public Town_Central townCentral;
@@ -172,6 +173,9 @@ public class Survivor : Unit {
 
 		if (townTile != null) {
 			CheckIfDead ();
+			if (mood <= traitor){	// IF MOOD IS REALLY LOW, this Survivor will act out
+				TraitorAction();			// Violently...
+			}
 		}
 	}
 
@@ -222,16 +226,34 @@ public class Survivor : Unit {
 	}
 
 	void KillSurvivor(){
-		// identify & remove this survivor in Town Central's survivors in town list
+		// identify & remove this survivor in Town Central's survivors in town list & survivorsSpawned List
 		townCentral.ClearDeadSurvivor (id);
 		// remove it from Survivor slots
 		townCentral.RemoveSurvivorSlot (mySurvivorSlot.position.y, mySurvivorSlot.gameObject);
 		// add the name to the Book of Dead
 		uiMaster.AddDeadSurvivor (name);
+		if (townTile != null) {
+			townTile.hasASurvivor = false;
+		}
 		// then destroy this gameObject
 		Destroy (gameObject);
 
 	}
+						// GO HOME: spawned survivor goes back to its slot
+	public void GoHome(){
+		// identify and remove from Town Central's spawned survivors
+		townCentral.ClearForGoHome (id);
+		// activate this survivor's button so it can be spawned again
+		mySurvivorButton.enabled = true;
+		// tell the tile I was on it no longer has a survivor
+		if (townTile != null) {
+			townTile.hasASurvivor = false;
+		}
+		// then destroy this object
+		Destroy (gameObject);
+	}
+
+
 	public void CheckBuilding(Building building){
 		Building.BuildingType bType = building.myBuildingType;
 		switch (bType) {
@@ -249,7 +271,7 @@ public class Survivor : Unit {
 			break;
 		case Building.BuildingType.workshop:
 
-			AddSurvivorClass(SurvivorClass.mechanic);
+			AddSurvivorClass(SurvivorClass.scientist);
 			break;
 		default:
 			print("Building of this type NOT FOUND!");
@@ -333,9 +355,25 @@ public class Survivor : Unit {
 			name = name + " the " + mySurvivorClass;
 			gameObject.name = name;
 			break;
+		case SurvivorClass.scientist:
+			gameObject.AddComponent<Scientist>();
+			mySurvivorClass = SurvivorClass.scientist;
+			// change name
+			name = name + " the " + mySurvivorClass;
+			gameObject.name = name;
+			break;
 		default:
 			print ("This surivor ain't got no class!");
 			break;
 		}
+	}
+
+	void TraitorAction(){
+		print (name + " has become a TRAITOR!!!");
+	
+		townTile.TakeDamage(townTile.tileHitPoints);
+		Debug.Log("Destroying " + townTile.name);
+		KillSurvivor ();
+
 	}
 }

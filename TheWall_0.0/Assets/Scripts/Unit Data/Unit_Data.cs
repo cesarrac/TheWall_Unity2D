@@ -89,35 +89,35 @@ public class Unit_Data {
 		case Quality.elite:
 			myStats [0] = Random.Range (18, 42); 
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(8, 10);
+				int randomStat = Random.Range(10, 20);
 				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.high:
 			myStats [0] = Random.Range (18, 25); 
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(6, 9);
+				int randomStat = Random.Range(8, 12);
 				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.medium:
 			myStats [0] = Random.Range (10, 22); 
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(3, 6);
+				int randomStat = Random.Range(4, 9);
 				myStats[x] = randomStat;
 			}
 			break;
 		case Quality.low:
 			myStats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(1, 3);
+				int randomStat = Random.Range(3, 7);
 				myStats[x] = randomStat;
 			}
 			break;
 		default:
 			myStats [0] = Random.Range (9, 22); // added this to make sure HP is between 9-22
 			for (int x =1; x< myStats.Length; x++) {
-				int randomStat = Random.Range(1, 3);
+				int randomStat = Random.Range(3, 7);
 				myStats[x] = randomStat;
 			}
 			break;

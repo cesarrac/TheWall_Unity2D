@@ -61,7 +61,7 @@ public class Turret : Building {
 		// seek
 		// wait
 		// stop seeking
-		Debug.Log ("Counting");
+
 
 		Patrol ();
 		seekPlayer = false;

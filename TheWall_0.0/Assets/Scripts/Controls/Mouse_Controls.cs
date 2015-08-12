@@ -56,14 +56,16 @@ public class Mouse_Controls : MonoBehaviour {
 		// FOR NOW im going to spawn a selection box here to be able to see what town tile i have selected
 		GameObject tileSelectBox = Instantiate (selectionBox, myTransform.position, Quaternion.identity) as GameObject;
 		tileSelectBox.transform.parent = myTransform;
+		stopSelecting = false;
 	}
 	
 	void Update () {
 		if (Input.GetKey (KeyCode.LeftShift)) {
 			AttackRay ();
-		} else if (!stopSelecting) {
+		} else if (!stopSelecting){
 			Select ();
 		}
+
 
 //		if (selectedUnit != null) {
 //			Captain cpn = selectedUnit.GetComponent<Captain> ();
@@ -144,7 +146,7 @@ public class Mouse_Controls : MonoBehaviour {
 			}
 
 		} else { // hit.collider is null so mouse is definitely busy
-			mouseIsBusy = true;
+			mouseIsBusy = false;
 		} 
 
 		// vvv BATTLEVIEW VVVV

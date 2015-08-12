@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 [System.Serializable]
 public class Survivor_Data {
@@ -29,6 +30,8 @@ public class Survivor_Data {
 		myID = id;
 	}
 
+	public Image myMoodBubble;
+	public Button mySlot;
 
 
 }
