@@ -9,13 +9,14 @@ public class TileType {
 		wood,
 		stone,
 		metal,
+		buildable,
 		empty
 	}
 
 	public Types tileType;
 
-	[HideInInspector]
-	public bool hasBeenSpawned;
+
+	public bool hasBeenSpawned = false;
 
 	public int maxResourceQuantity;
 	public Vector3 gridPosition;

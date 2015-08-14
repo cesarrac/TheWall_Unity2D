@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 //using System;
@@ -19,14 +18,11 @@ public class ResourceGrid : MonoBehaviour{
 	TileType.Types tTypes;
 	int[,] tiles;
 	public GameObject[,] spawnedTiles;
-	//prefab Resource tiles for instantiate
-	public GameObject emptyTile, woodTile, stoneTile, grainTile, metalTile;
 
 	// rows and colums determined by level
 	public int mapSizeX;
 	public int mapSizeY;
-
-	public Vector3 playerSpawnPos;
+	
 
 	public int level;
 
@@ -34,7 +30,11 @@ public class ResourceGrid : MonoBehaviour{
 
 	public GameObject discoverTileFab; // fab for grey discover tile with discover tile script
 
-	public PlayerControls selectedUnit;
+	public GameObject unitOnPath;
+
+	public GameObject playerUnit;
+
+	public int playerSpawnX, playerSpawnY;
 
 	// PATHFINDING VARS:
 	Node[,] graph;
@@ -50,18 +50,19 @@ public class ResourceGrid : MonoBehaviour{
 	
 	}
 	void Start () {
-		// Initialize selected Unit's vars
-		if (selectedUnit != null) {
-			selectedUnit.posX = (int)selectedUnit.transform.position.x;
-			selectedUnit.posY = (int)selectedUnit.transform.position.y;
-			selectedUnit.resourceGrid = this;
+		// For now I'll initialize the PLAYER VARS here.
+		// Later I can initialize these vars from whatever spawn's this player unit
+		if (playerUnit != null) {
+			playerUnit.GetComponent<SelectedUnit_MoveHandler>().posX = (int)playerUnit.transform.position.x;
+			playerUnit.GetComponent<SelectedUnit_MoveHandler>().posY = (int)playerUnit.transform.position.y;
+			playerUnit.GetComponent<SelectedUnit_MoveHandler>().resourceGrid = this;
 		}
 
 //		InitVisualGrid (mapSizeX, mapSizeY, level, playerSpawnPos);
 		tiles = new int[mapSizeX, mapSizeY];
 		spawnedTiles = new GameObject[mapSizeX, mapSizeY];
 		InitGrid ();
-//		InitVisualGrid ();
+		InitVisualGrid ();
 		InitPathFindingGraph ();
 	}
 	
@@ -73,37 +74,70 @@ public class ResourceGrid : MonoBehaviour{
 	void InitGrid(){
 		for (int x = 0; x < mapSizeX; x++) {
 			for (int y = 0; y < mapSizeY; y++) {
-				tiles[x,y]= 0;
+				if (x > 0 && y > 0){
+					tiles[x,y]= SimpleTileSelection(tiles[x-1,y-1]); // default to empty tile
+
+				}else{
+					if (x != playerSpawnX && y != playerSpawnY)
+						tiles[x,y] = 5;
+				}
 			}
 		}
-		tiles[6,5]=4;
-		tiles[6,4]=4;
-		tiles[6,3]=4;
-		tiles[7,3]=4;
-		tiles[8,3]=4;
-		tiles[8,4]=4;
-		tiles[8,5]=4;
+//		//First build tiles
+//		tiles[6,5]=4;
+//		tiles[6,4]=4;
+//		tiles[6,3]=4;
+//		tiles[7,3]=4;
+//		tiles[8,3]=4;
+//		tiles[8,4]=4;
+//		tiles[8,5]=4;
+//
+//		//first visible tiles
+//		tiles[5,1]=3;
+//		tiles[5,4]=2;
+//		tiles[5,3]=0;
+//		tiles[7,2]=0;
+//		tiles[8,2]=0;
+//		tiles[8,4]=2;
+//		tiles[8,5]=2;
+//
+//		tiles[3,3]=3;
+//		tiles[3,2]=3;
+//		tiles[3,4]=3;
+//		tiles[4,4]=3;
+//		tiles[4,5]=3;
+//		tiles[4,6]=3;
+	}
 
-		tiles[3,3]=3;
-		tiles[3,2]=3;
-		tiles[3,4]=3;
-		tiles[4,4]=3;
-		tiles[4,5]=3;
-		tiles[4,6]=3;
+	int SimpleTileSelection(int lastValue){
+		int randomT = Random.Range (0, 5);
+		int randomRepeat = Random.Range (0, 2);
+		if (randomT == lastValue) {
+			if (randomRepeat >= 1) {
+				return lastValue;
+			} else {
+				return SimpleTileSelection (lastValue);
+			}
+		} else {
+			return randomT;
+		}
 	}
 
 	void InitVisualGrid(){
 		for (int x = 0; x < mapSizeX; x++) {
 			for (int y = 0; y < mapSizeY; y++) {
-				if (tiles[x,y]==0){
-					SpawnDiscoverTile(tileTypes[0].tileAsGObj, new Vector3(x, y, 0.0f), tileTypes[0].tileType); 
-				}else if (tiles[x,y]==1){
-					SpawnDiscoverTile(tileTypes[1].tileAsGObj, new Vector3(x, y, 0.0f), tileTypes[1].tileType); 
-				}else if (tiles[x,y]==2){
-					SpawnDiscoverTile(tileTypes[2].tileAsGObj, new Vector3(x, y, 0.0f), tileTypes[2].tileType); 
-				}else if (tiles[x,y]==3){
-					SpawnDiscoverTile(tileTypes[3].tileAsGObj, new Vector3(x, y, 0.0f),tileTypes[3].tileType); 
-				}else if (tiles[x,y]==4){
+//				if (tiles[x,y]==0){
+//					SpawnDiscoverTile(tileTypes[0].tileAsGObj, new Vector3(x, y, 0.0f), tileTypes[0].tileType); 
+//				}else if (tiles[x,y]==1){
+//					SpawnDiscoverTile(tileTypes[1].tileAsGObj, new Vector3(x, y, 0.0f), tileTypes[1].tileType); 
+//				}else if (tiles[x,y]==2){
+//					SpawnDiscoverTile(tileTypes[2].tileAsGObj, new Vector3(x, y, 0.0f), tileTypes[2].tileType); 
+//				}else if (tiles[x,y]==3){
+//					SpawnDiscoverTile(tileTypes[3].tileAsGObj, new Vector3(x, y, 0.0f),tileTypes[3].tileType); 
+//				}else if (tiles[x,y]==4){
+//					SpawnDiscoverTile(tileTypes[4].tileAsGObj, new Vector3(x, y, 0.0f),tileTypes[4].tileType); 
+//				}
+				if (tiles[x,y]==4){
 					SpawnDiscoverTile(tileTypes[4].tileAsGObj, new Vector3(x, y, 0.0f),tileTypes[4].tileType); 
 				}
 				
@@ -112,82 +146,20 @@ public class ResourceGrid : MonoBehaviour{
 	}
 
 
-//	void InitVisualGrid(int colums, int rows, int level, Vector3 playerspawnPos){
-//		for (int x = 0; x < colums; x++) {
-//			for (int y = 0; y < rows; y++){
-//				// to populate this list we need to create tiles using the tile class
-//				// Tiles need a type: (Empty, Wood, Stone, Metal, Grain)
-//
-//				Vector3 tilePos = new Vector3(x, y, 0);
-//				if (tilePos != playerspawnPos){			// Dont create a resource tile on the player spawn
-//					int tileTypePick = SelectTiles(level);
-//					resourceTiles.Add(new Tile(tileTypePick, 10, new Vector3(x, y,  0.0f), tileGameObj: TileType(tileTypePick)));
-//				}
-//			}
-//		}
-//	}
-
-//	int SelectTiles(int level){
-//		int levelCalc = (level+1) * 10;
-//		int tileTypePick = UnityEngine.Random.Range(0, levelCalc);
-//		if (tileTypePick < levelCalc - (levelCalc /2)) {
-//			return 2; // grain
-//		} else if (tileTypePick < levelCalc - 4) {
-//			return 1; // wood
-//		} else if (tileTypePick < levelCalc - 3) {
-//			return 4; // stone
-//		} else if (tileTypePick < levelCalc - 1) {
-//			return 5; //empty
-//		} else {
-//			return 3; // metal
-//		}
-//	}
-
-
-	GameObject TileType(int type){
-		GameObject tile;
-		switch (type) {
-		case 1:
-			tile = woodTile;
-			break;
-		case 2:
-			tile = grainTile;
-			break;
-		case 3:
-			tile = metalTile;
-			break;
-		case 4:
-			tile = stoneTile;
-			break;
-		case 5:
-			tile = emptyTile;
-			break;
-		default:
-			tile = emptyTile;
-			break;
-		}
-		return tile;
-	}
-
 	public void DiscoverTile(int x, int y){
-		if (spawnedTiles [x, y] != null) {
-			TileClick_Handler tC = spawnedTiles [x, y].GetComponent<TileClick_Handler> ();
-			if (tiles [x, y] != 4) { // if not an empty tile
-				tC.isWalkable = true;
+		if (spawnedTiles [x, y] == null) { // if it's null it means it hasn't been spawned
+			//Dont Spawn a tile if the type is Empty
+			// the space will still be walkable because it will still be mapped on the Node Graph
+			
+			if (tileTypes [tiles [x, y]].tileType != TileType.Types.empty) {
+				SpawnDiscoverTile (tileTypes [tiles [x, y]].tileAsGObj, new Vector3 (x, y, 0.0f), tileTypes[tiles[x,y]].tileType);
+				// set it so it knows it has been spawned
+				tileTypes[tiles [x, y]].hasBeenSpawned = true;
 			}
-		} else {
-			SpawnDiscoverTile (tileTypes [tiles [x, y]].tileAsGObj, new Vector3 (x, y, 0.0f), tileTypes[tiles[x,y]].tileType);
-
 		}
 
+		
 
-		// Here we make this tile a walkable tile
-
-		// We know that when a Player clicks on a Tile there HAS to BE a GAMEOBJECT instantiated
-		// So when we Spawn a tile give its Clickable tile script its grid PosX and PosY
-		// and store it in an Array of int[,] in this script, called spawnedTiles[]
-		// When Pathfinding asks if the next tile is walkable it Gets Component from spawnedTiles[x,y]
-		// and checks if it is walkable
 
 	}
 
@@ -212,7 +184,7 @@ public class ResourceGrid : MonoBehaviour{
 		GameObject discoverTile = Instantiate (discoverTileFab, position, Quaternion.identity) as GameObject;
 		DiscoverTile dTile = discoverTile.GetComponent<DiscoverTile> ();
 		if (dTile != null) {
-			dTile.TileToDiscover(newTile: tileObj, mapPosX: (int) position.x , mapPosY: (int)position.y, tileHolder: tileHolder, grid: this, selectedUnit: selectedUnit, tileType: type);
+			dTile.TileToDiscover(newTile: tileObj, mapPosX: (int) position.x , mapPosY: (int)position.y, tileHolder: tileHolder, grid: this, selectedUnit: playerUnit, tileType: type);
 		}
 	}
 
@@ -247,13 +219,6 @@ public class ResourceGrid : MonoBehaviour{
 			for (int y =0; y < mapSizeY; y++){
 
 				// grab the neighbors on this node
-//				if (x ==0 && y ==0){
-//					graph[x,y].neighbors.Add(graph[x, y + 1]);
-//					graph[x,y].neighbors.Add(graph[x+1, y + 1]);
-//					graph[x,y].neighbors.Add(graph[x+1, y]);
-//
-//				}
-					
 				if (x > 0){
 					// to our left
 					graph[x,y].neighbors.Add(graph[x-1, y]);
@@ -309,19 +274,33 @@ public class ResourceGrid : MonoBehaviour{
 	}
 
 	public bool UnitCanEnterTile(int x, int y){
-//		return tileTypes[tiles[x,y]].isWalkable;
-		// Instead of returning from tileTypes, lets return from actual spawnedTiles data
-		if (spawnedTiles [x, y] != null) {
-			bool iswalk = spawnedTiles [x, y].GetComponent<TileClick_Handler> ().isWalkable;
-			return iswalk;
-		} else {
-			return false; // we return false because if null then it hasnt been spawned
-		}
+		return tileTypes[tiles[x,y]].isWalkable;
+
+//		if (spawnedTiles [x, y] != null) {
+//			bool iswalk = spawnedTiles [x, y].GetComponent<TileClick_Handler> ().isWalkable;
+//			return iswalk;
+//		} else {
+//			if (tileTypes[tiles[x,y]].tileType == TileType.Types.empty){
+//				return true;
+//			}else{
+//				return false; // we return false because if null then it hasnt been spawned
+//			}
+//		}
 	}
 
-	public void GenerateWalkPath(int x, int y){
+	public void GenerateWalkPath(int x, int y, bool trueIfPlayerUnit){
+		int unitPosX;
+		int unitPosY;
 		// Clear out selected unit's old path
-		selectedUnit.currentPath = null;
+		if (trueIfPlayerUnit) {
+			unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().currentPath = null;
+			unitPosX = unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().posX;
+			unitPosY = unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().posY;
+		} else {
+			unitOnPath.GetComponent<Enemy_SpawnHandler> ().currentPath = null;
+			unitPosX = unitOnPath.GetComponent<Enemy_SpawnHandler> ().posX;
+			unitPosY = unitOnPath.GetComponent<Enemy_SpawnHandler> ().posY;
+		}
 
 //		if (UnitCanEnterTile(x,y)== false){ // STOPS from pathfinding to an unwalkable tile
 //			return;
@@ -335,8 +314,8 @@ public class ResourceGrid : MonoBehaviour{
 		Dictionary<Node, Node> prev = new Dictionary<Node, Node> ();
 
 		Node source = graph [
-		                     selectedUnit.GetComponent<PlayerControls> ().posX, 
-		                     selectedUnit.GetComponent<PlayerControls> ().posY
+		                     unitPosX, 
+		                     unitPosY
 		                     ];
 		Node target = graph [
 		                     x, 
@@ -401,8 +380,13 @@ public class ResourceGrid : MonoBehaviour{
 		// This route is right now from our target to our source, so we need to invert it to move the Unit
 		currentPath.Reverse ();
 
+		// Give the unit it's NEW PATH!
+		if (trueIfPlayerUnit) {
+			unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().currentPath = currentPath;
+		} else {
+			unitOnPath.GetComponent<Enemy_SpawnHandler> ().currentPath = currentPath;
+		}
 
-		selectedUnit.currentPath = currentPath;
 
 
 	}// end Movetarget

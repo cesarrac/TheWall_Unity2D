@@ -22,6 +22,7 @@ public class PlayerControls : MonoBehaviour {
 	// This stores this unit's pathe
 	public List<Node>currentPath = null;
 
+	private Vector3 velocity = Vector3.zero;
 
 	void Start () {
 		myTransform = transform;
@@ -43,6 +44,13 @@ public class PlayerControls : MonoBehaviour {
 			}
 		}
 
+		// Have we moved close enough to the target tile that we can move to next tile in current path?
+		if (Vector3.Distance (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY)) < 0.1f) {
+			MoveToNextTile();
+		}
+		// This MOVEMENT will animate towards the next position
+//		transform.position = Vector3.Lerp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), 5f * Time.deltaTime);
+		transform.position = Vector3.SmoothDamp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), ref velocity,10f * Time.deltaTime);
 	}
 
 	void ClickToDiscover(){
@@ -69,7 +77,12 @@ public class PlayerControls : MonoBehaviour {
 		// Move to the next Node position in path
 		posX = currentPath [0].x;
 		posY = currentPath [0].y;
-		transform.position = resourceGrid.TileCoordToWorldCoord (currentPath [0].x, currentPath [0].y);
+		// This MOVEMENT will just TELEPORT the unit to the next position in case we didn't make it
+//		transform.position = resourceGrid.TileCoordToWorldCoord (currentPath [0].x, currentPath [0].y);
+//		transform.position = resourceGrid.TileCoordToWorldCoord (posX, posY);
+
+	
+
 
 		// We are on the tile that is our DESTINATION, 
 		// CLEAR PATH

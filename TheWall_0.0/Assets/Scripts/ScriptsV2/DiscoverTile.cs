@@ -50,15 +50,15 @@ public class DiscoverTile : MonoBehaviour {
 	void Die(){
 		// before dying make sure to turn on the tileToSpawn's box collider so the player can interact with it
 		if (tileToSpawn != null) {
-			BoxCollider2D coll = tileToSpawn.GetComponent<BoxCollider2D> ();
-			coll.enabled = true;
+//			BoxCollider2D coll = tileToSpawn.GetComponent<BoxCollider2D> ();
+//			coll.enabled = true;
 			Destroy (this.gameObject);
 		} else {
 			Destroy (this.gameObject);
 		}
 	}
 
-	public void TileToDiscover(GameObject newTile, int mapPosX, int mapPosY, Transform tileHolder, ResourceGrid grid, PlayerControls selectedUnit, TileType.Types tileType){		// this is called by Resource grid with the proper tile obj
+	public void TileToDiscover(GameObject newTile, int mapPosX, int mapPosY, Transform tileHolder, ResourceGrid grid, GameObject selectedUnit, TileType.Types tileType){		// this is called by Resource grid with the proper tile obj
 		tileToSpawn = Instantiate (newTile, transform.position, Quaternion.identity) as GameObject;
 		tileToSpawn.transform.parent = tileHolder;
 		// Give the Tile position relative to the grid map
@@ -66,8 +66,9 @@ public class DiscoverTile : MonoBehaviour {
 		tc.mapPosX = mapPosX;
 		tc.mapPosY = mapPosY;
 		tc.resourceGrid = grid;
-		tc.selectedUnit = selectedUnit;
-		if (tileType == TileType.Types.empty) {
+		tc.playerUnit = selectedUnit;
+				// ONLY buildable tiles will NOT BE WALKABLE
+		if (tileType == TileType.Types.buildable) {
 			tc.isWalkable = false;
 		} else {
 			tc.isWalkable = true;
