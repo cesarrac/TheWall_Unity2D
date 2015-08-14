@@ -12,6 +12,9 @@ public class Building : MonoBehaviour {
 	public int intPenalty1;
 	public float floatPenalty1;
 
+	// store here any object that is on the building or part of it, that needs to be destroyed
+	public GameObject attachedObject;
+
 	// The variables affected by these bonuses are in either TownTileProperties or Town Central scripts
 	public Town_Central townCentral;
 	public TownTile_Properties townTProps;
@@ -54,6 +57,7 @@ public class Building : MonoBehaviour {
 		case BuildingType.weapon:
 			townTProps.baseDamage = townTProps.baseDamage - floatBonus1;
 			townTProps.attackRating = townTProps.attackRating - intBonus1;
+			if (attachedObject != null) Destroy(attachedObject);
 			break;
 		case BuildingType.house:
 //			townCentral.survivorVacancies = townCentral.survivorVacancies - intBonus1;

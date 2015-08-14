@@ -12,10 +12,10 @@ public class Horde : MonoBehaviour {
 //	public GameObject unitToSpawn; // this public GameObject is blank except for the components needed for a Battle Unit
 //	SpriteRenderer sr;
 
-	//this bool will be true when this horde is next to a town tile
-	public bool nextToTownTile;
+	//this bool will be true when this Horde is not stopped by town tile or Drone
+	public bool nextToEnemy;
 
-	bool canHitTile = true;
+	bool canHit = true;
 
 	// GM script access needed to call on the battle view load
 	GameMaster gmScript;
@@ -38,6 +38,10 @@ public class Horde : MonoBehaviour {
 
 	// Player Capital Vector 3 position
 	Vector3 capitalPosition;
+
+	// for fighting Drone
+	public Drone myDrone;
+
 
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag ("GM").GetComponent<GameMaster> ();
@@ -67,15 +71,19 @@ public class Horde : MonoBehaviour {
 	void Update () {
 
 	
-		if (nextToTownTile && townTile != null) {
-			if (canHitTile) {
+		if (nextToEnemy && townTile != null) {
+			if (canHit) {
+				StartCoroutine (TileHit ());
+			}
+		} else if (nextToEnemy && myDrone != null) {
+			if (canHit) {
 				StartCoroutine (TileHit ());
 			}
 		} else {
-			nextToTownTile = false;
+			nextToEnemy = false;
 		}
 
-		if (!nextToTownTile) {
+		if (!nextToEnemy) {
 			MoveToCapital(capitalPosition);
 		}
 		SwitchColliderUnderneathOnOff ();
@@ -136,12 +144,14 @@ public class Horde : MonoBehaviour {
 
 	// If next to tile do damage
 	IEnumerator TileHit(){
-		canHitTile = false;
+		canHit = false;
 		yield return new WaitForSeconds(2);
 		print ("Horde is waiting to do damage");
 		if (townTile != null) {
 //			CalcDamage (hordeMembers [0].attackRating, hordeMembers [0].shortDamage, townTile);
 			CalcDamage (hordeUnit.attackRating, hordeUnit.shortDamage, townTile);
+		} else if (myDrone != null) {
+			CalcDamage(hordeUnit.shortDamage, myDrone);
 		}
 	}
 
@@ -157,7 +167,10 @@ public class Horde : MonoBehaviour {
 		} else {
 			print ("Miss!");
 		}
-		canHitTile = true;
+		canHit = true;
+	}
+	void CalcDamage(float dmg, Drone drone){
+		drone.TakeDamage (dmg);
 	}
 
 
@@ -165,7 +178,7 @@ public class Horde : MonoBehaviour {
 	// Instead of letting MouseControl handle the hit to this collider, we'll use this internally
 	void OnMouseOver(){
 		print ("Mouse over horde");
-		if (nextToTownTile) {	 // can only take damage when next to a town tile
+		if (nextToEnemy) {	 // can only take damage when next to a town tile
 			if (Input.GetMouseButtonDown (0)) {
 				TakeDamage(townCentral.shortRangeDamage);
 			}

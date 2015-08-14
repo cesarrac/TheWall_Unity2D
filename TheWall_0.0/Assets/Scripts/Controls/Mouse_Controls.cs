@@ -181,7 +181,7 @@ public class Mouse_Controls : MonoBehaviour {
 				mouseIsBusy = true;
 				print ("Hit the Horde!!");
 				Horde horde = hit.collider.gameObject.GetComponent<Horde>();
-				if (horde.nextToTownTile && Input.GetMouseButtonDown(0)){
+				if (horde.nextToEnemy && Input.GetMouseButtonDown(0)){
 					// spawn a spark over the horde for the player to see their hit
 					float randomZ =(float) Random.Range (0, 180);
 					GameObject spark = Instantiate (hitSparkFab, mouseRounded, Quaternion.Euler(new Vector3(0, 0, randomZ))) as GameObject;

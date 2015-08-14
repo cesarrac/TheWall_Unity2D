@@ -30,6 +30,41 @@ public class Tile {
 		}
 		return type;
 	}
+
+	public enum tileType
+	{
+		grain,
+		stone,
+		wood,
+		metal,
+		empty
+	}
+	public tileType myType;
+
+	public tileType rType (int resourceID){
+		tileType type;
+		switch (resourceID) {
+		case 1:
+			type = tileType.wood;
+			break;
+		case 2:
+			type = tileType.grain;
+			break;
+		case 3:
+			type = tileType.metal;
+			break;
+		case 4:
+			type = tileType.stone;
+			break;
+		case 5:
+			type = tileType.empty;
+			break;
+		default:
+			type = tileType.empty;
+			break;
+		}
+		return type;
+	}
 //	public string resourceQuantityType;
 	public int maxResourceQuantity;
 	public Vector3 gridPosition;
@@ -39,6 +74,12 @@ public class Tile {
 		maxResourceQuantity = maxQuantity;
 		gridPosition = position;
 		tileGameObject = tileGameObj;
+		myType = rType (id);
+		if (myType == tileType.empty)
+			movementCost = 10000;
 	}
+
+	public bool hasBeenSpawned;
+	public int movementCost = 1;
 
 }

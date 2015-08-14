@@ -48,12 +48,24 @@ public class TownBuilding : MonoBehaviour {
 	public int[] metalFarmCost= new int[3];
 
 	//TIER 3:
+
+		// Turrets:
 	//sprites:
 	public Sprite autoCannonSprite, throwerSprite, catapultSprite;
 	//prefabs:
 	public GameObject autoCanFab, throwFab, catapFab;
 	//costs:
-	public int[] autoCannonCost, throwerCost, catapultCost;
+	public int[] autoCannonCost= new int[3];
+	public int[]throwerCost= new int[3];
+	public int[]catapultCost= new int[3];
+		// Drone Towers:
+	//sprites:
+	public Sprite droneTowSprite;
+	//prefabs:
+	public GameObject droneTowFab;
+	//costs:
+	public int[] droneTowCost= new int[3];
+
 
 	//destroy / cancel building image
 	public Sprite cancelSprite;
@@ -319,11 +331,15 @@ public class TownBuilding : MonoBehaviour {
 			secondBuildBtn.image.sprite = metalWorkSprite;
 			string metalWorkText = "Metal Workshop";
 			secondText.text = metalWorkText;
-			
-			thirdBuidBtn.image.sprite = cancelSprite;
-			thirdText.text = destroyText;
-			// dont show 4th button
-			fourthBuildBtn.gameObject.SetActive(false);
+															// Drone Tower
+			thirdBuidBtn.image.sprite = droneTowSprite;
+			string droneTowText = "Drone Tower";
+			thirdText.text = droneTowText;
+
+			fourthBuildBtn.image.sprite = cancelSprite;
+			fourthText.text = destroyText;
+
+
 			break;
 		case "Farm":
 			firstBuildBtn.image.sprite = stoneFarmSprite;
@@ -882,6 +898,30 @@ public class TownBuilding : MonoBehaviour {
 				oldBuilding[1].gameObject.SetActive(false);
 				
 				GameObject building = Instantiate (metalFarmFab, myTransform.position, Quaternion.identity) as GameObject;
+				// parent it to the town tile this is on
+				building.transform.parent = towntile.transform;
+				// need to makes sure the new gameobject's name matches my hardcoded names
+				building.name = name;
+				towntile.name = name;
+				//then tell this tile that it has an Advanced building
+				townProps.tileHasTier1 = false; // no longer has basic building
+				townProps.tileHasTier2 = true;
+				// CHECK to see what options to show next
+				GetOptionsToShow(towntile);
+			}
+			break;
+		case "Drone Tower":
+			if (CheckResourceCost(wood: droneTowCost[0], stone: droneTowCost[1], metal: droneTowCost[2])){
+				TownTile_Properties townProps = towntile.GetComponent<TownTile_Properties>();
+				
+				// Need to DESTROY the old house in this towntile (use an array to get the child)
+				Transform[] oldBuilding = towntile.GetComponentsInChildren<Transform>();
+				// store this oldBuilding in this town tile
+				townProps.deactivatedT1 = oldBuilding[1].gameObject;
+				// since the first Transform of the array is always the parent, access the second item
+				oldBuilding[1].gameObject.SetActive(false);
+				
+				GameObject building = Instantiate (droneTowFab, myTransform.position, Quaternion.identity) as GameObject;
 				// parent it to the town tile this is on
 				building.transform.parent = towntile.transform;
 				// need to makes sure the new gameobject's name matches my hardcoded names

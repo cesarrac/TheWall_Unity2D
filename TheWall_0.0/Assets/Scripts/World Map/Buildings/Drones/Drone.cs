@@ -2,53 +2,62 @@
 using System.Collections;
 
 public class Drone : MonoBehaviour {
-	/// <summary>
-	/// Drones spawn near a Control Tower. The tower has an area of effect (circle collider) that detects hordes.
-	/// If it detects a Horde it sends a message to all Drones to move to the Horde.
-	/// When a Drone touches a Horde it HITS it.
-	/// 
-	/// Drone needs:
-	/// Rigidbody to collide with Hordes and cause a bit of bounce.
-	/// Circle collider tight around their sprite (trigger for getting hit by a horde)
-	/// ^ OnTriggerEnter2D if a Horde enters stop moving and do some damage
-	/// </summary>
+	public float damage;
+	
+	public float hitPoints;
+	
+	void OnTriggerEnter2D(Collider2D coll) {
+		if (coll.gameObject.CompareTag("Badge")) {
+			Horde horde = coll.gameObject.GetComponent<Horde>();
+			if (!horde.nextToEnemy) {
+				horde.myDrone = GetComponent<Drone>();
+				horde.nextToEnemy = true;
+			}
+			horde.TakeDamage(damage: 5f);
+			Debug.Log("Hit for damage: " + damage);
+		}
+		
+	}
 
-//	Rigidbody2D rb;
-//
-//	Vector3 target;
-
-
-
-	void Start () {
-//		rb = GetComponent<Rigidbody2D> ();
+	void OnTriggerStay2D(Collider2D coll) {
+		if (coll.gameObject.CompareTag("Badge")) {
+			Horde horde = coll.gameObject.GetComponent<Horde>();
+			if (!horde.nextToEnemy) {
+				horde.myDrone = GetComponent<Drone>();
+				horde.nextToEnemy = true;
+			}
+			horde.TakeDamage(damage: 5f);
+			Debug.Log("Hit for damage: " + damage);
+		}
+		
 	}
 	
-	// Update is called once per frame
-	void Update () {
-//		if (Input.GetMouseButton (0)) {
-//			target = SelectTarget();
-////			Debug.Log(target);
-//		}
+	public void TakeDamage(float damage){
+		hitPoints = hitPoints - damage;
+		if (hitPoints <= 0) {
+			Die();
+		}
 	}
-
-//	void FixedUpdate(){
-//		if (target != Vector3.zero) {
-//			MoveToTarget (target);
+	
+	void Die(){
+		Destroy (gameObject);
+	}
+//	void OnMouseOver(){
+//		if (Input.GetMouseButtonDown (0)) {
+//			DroneController dC = GetComponentInParent<DroneController>();
+//			if (!dC.attacking && !dC.selectingSpawnPoint){
+//				dC.selectingSpawnPoint = true;
+//			}
 //		}
 //	}
 
-//	Vector3 SelectTarget(){
-//		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
-//		Vector3 direction = (transform.position - m);
-//		return direction.normalized;
-//	}
+//	void OnTriggerExit2D (Collider2D coll){
+//		if (coll.CompareTag ("Badge")) {
+//			Horde horde = coll.GetComponent<Horde>();
+//			horde.nextToEnemy = false;
 //
-//	void MoveToTarget(Vector3 newTarget){
-//		Vector2 t = new Vector2 (-newTarget.x * 10, -newTarget.y * 10);
-////		Debug.Log ("new t: " + t);
-//		rb.AddForce (t, ForceMode2D.Impulse);
-//		target = Vector3.zero;
+//		}
+//		
 //	}
-
 
 }
