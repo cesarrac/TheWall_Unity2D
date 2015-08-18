@@ -10,7 +10,8 @@ public class TileType {
 		stone,
 		metal,
 		buildable,
-		empty
+		empty,
+		building
 	}
 
 	public Types tileType;

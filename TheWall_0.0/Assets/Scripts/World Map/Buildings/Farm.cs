@@ -77,7 +77,7 @@ public class Farm : Building {
 
 	void Harvest(){
 		if (townResources != null) {
-			townResources.grain = townResources.grain + harvestAmmount;
+			townResources.food = townResources.food + harvestAmmount;
 			print ("Harvested " + harvestAmmount + " food!!");
 		}
 		harvesting = true;

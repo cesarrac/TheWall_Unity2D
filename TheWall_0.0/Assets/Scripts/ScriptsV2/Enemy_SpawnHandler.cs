@@ -16,7 +16,10 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 	public List<Node>currentPath = null;
 
 	void Start () {
-
+		if (resourceGrid != null) {
+			targetPosX = resourceGrid.capitalSpawnX;
+			targetPosY = resourceGrid.capitalSpawnY;
+		}
 
 	}
 	public void CreateEnemyPath(){
@@ -35,6 +38,8 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 		newEnemy.GetComponent<Enemy_MoveHandler> ().posX = posX;
 		newEnemy.GetComponent<Enemy_MoveHandler> ().posY = posY;
 		newEnemy.GetComponent<Enemy_MoveHandler>().resourceGrid = resourceGrid;
+		newEnemy.GetComponent<Enemy_AttackHandler> ().mySpawnHandler = this;
+		newEnemy.GetComponent<Enemy_AttackHandler> ().resourceGrid = resourceGrid;
 		// Once the new Enemy is spawned it will need a new path
 		// give it the path this Spawner has already calculated
 		if (currentPath != null){

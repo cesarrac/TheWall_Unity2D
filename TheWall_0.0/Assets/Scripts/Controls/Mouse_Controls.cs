@@ -110,20 +110,20 @@ public class Mouse_Controls : MonoBehaviour {
 					print ("You clicked on a tile");
 					Vector2 mouseRounded = new Vector2 (Mathf.Round (m.x), Mathf.Round (m.y));
 					Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
-				
-					if (mouseRounded.x == myPosRounded.x - 1 && mouseRounded.y == myPosRounded.y) { // left
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					} else if (mouseRounded.x == myPosRounded.x + 1 && mouseRounded.y == myPosRounded.y) { // right
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					} else if (mouseRounded.y == myPosRounded.y + 1 && mouseRounded.x == myPosRounded.x) { // up
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					} else if (mouseRounded.y == myPosRounded.y - 1 && mouseRounded.x == myPosRounded.x) { // down
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					}
+//				
+//					if (mouseRounded.x == myPosRounded.x - 1 && mouseRounded.y == myPosRounded.y) { // left
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					} else if (mouseRounded.x == myPosRounded.x + 1 && mouseRounded.y == myPosRounded.y) { // right
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					} else if (mouseRounded.y == myPosRounded.y + 1 && mouseRounded.x == myPosRounded.x) { // up
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					} else if (mouseRounded.y == myPosRounded.y - 1 && mouseRounded.x == myPosRounded.x) { // down
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					}
 
 					// vvvvvv THIS CODE BELOW ACTUALLY MOVES THE GAMEOBJECT WITH THIS SCRIPT WHEN EXPANDING vvvv
 

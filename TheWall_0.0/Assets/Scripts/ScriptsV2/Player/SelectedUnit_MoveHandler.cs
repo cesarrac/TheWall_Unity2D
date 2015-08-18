@@ -19,6 +19,12 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 	// I could have there an array that keeps track of the player units and just sends the mouse coordinates
 	// to see if we clicked on a player unit's last known position, or a building, etc.
 
+	void Awake(){
+		// When this unit is spawned it sets its own coordinates
+		posX = (int)transform.position.x;
+		posY = (int)transform.position.y; 
+	}
+
 	void OnMouseOver(){
 		if (Input.GetMouseButtonDown (0)) {
 			Debug.Log(gameObject.name + " Unit selected!");
@@ -84,18 +90,18 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 			MoveToNextTile();
 		}
 		// This MOVEMENT will animate towards the next position
-		//		transform.position = Vector3.Lerp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), 5f * Time.deltaTime);
-		transform.position = Vector3.SmoothDamp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), ref velocity,10f * Time.deltaTime);
+		transform.position = Vector3.Lerp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), 3f * Time.deltaTime);
+//		transform.position = Vector3.SmoothDamp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), ref velocity,10f * Time.deltaTime);
 	}
 	
-	void ClickToDiscover(){
-		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
-		Vector3 mouseRounded = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), 0.0f);
-		
-		
-		resourceGrid.DiscoverTile ((int)mouseRounded.x,(int) mouseRounded.y);
-		
-	}
+//	void ClickToDiscover(){
+//		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
+//		Vector3 mouseRounded = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), 0.0f);
+//		
+//		
+//		resourceGrid.DiscoverTile ((int)mouseRounded.x,(int) mouseRounded.y);
+//		
+//	}
 	
 	public void MoveToNextTile(){
 		if (currentPath == null) {
@@ -107,9 +113,9 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 		
 		// Check if the next tile is a UNWAKABLE tile, if it is: DISCOVER TILE & clear path
 		if (resourceGrid.UnitCanEnterTile (currentPath [0].x, currentPath [0].y) == true) {
-			resourceGrid.DiscoverTile (currentPath [0].x, currentPath [0].y);
+			resourceGrid.DiscoverTile (currentPath [0].x, currentPath [0].y, false);
 		} else {
-			resourceGrid.DiscoverTile(currentPath[0].x, currentPath[0].y);
+			resourceGrid.DiscoverTile(currentPath[0].x, currentPath[0].y, false);
 			// check again, now that it has been discovered
 			if (resourceGrid.UnitCanEnterTile (currentPath [0].x, currentPath [0].y) == false){
 				currentPath = null;

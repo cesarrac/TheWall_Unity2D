@@ -58,21 +58,33 @@ public class DiscoverTile : MonoBehaviour {
 		}
 	}
 
-	public void TileToDiscover(GameObject newTile, int mapPosX, int mapPosY, Transform tileHolder, ResourceGrid grid, GameObject selectedUnit, TileType.Types tileType){		// this is called by Resource grid with the proper tile obj
+	public void TileToDiscover(GameObject newTile, int mapPosX, int mapPosY, Transform tileHolder, ResourceGrid grid,  TileData.Types tileType, GameObject playerCapital){		// this is called by Resource grid with the proper tile obj
 		tileToSpawn = Instantiate (newTile, transform.position, Quaternion.identity) as GameObject;
 		tileToSpawn.transform.parent = tileHolder;
 		// Give the Tile position relative to the grid map
-		TileClick_Handler tc = tileToSpawn.GetComponent<TileClick_Handler> ();
-		tc.mapPosX = mapPosX;
-		tc.mapPosY = mapPosY;
-		tc.resourceGrid = grid;
-		tc.playerUnit = selectedUnit;
-				// ONLY buildable tiles will NOT BE WALKABLE
-		if (tileType == TileType.Types.buildable) {
-			tc.isWalkable = false;
-		} else {
-			tc.isWalkable = true;
-		}
+//		TileClick_Handler tc = tileToSpawn.GetComponent<TileClick_Handler> ();
+//		tc.mapPosX = mapPosX;
+//		tc.mapPosY = mapPosY;
+//		tc.resourceGrid = grid;
+//		tc.playerUnit = selectedUnit;
+
+//		// IF TILE IS NOT A ROCK OR EMPTY, IT'S A BUILDING,
+		// so it will have a Building Click Handler that needs its pos X and pos Y
+		if (tileType != TileData.Types.rock && tileType != TileData.Types.empty) {
+			tileToSpawn.GetComponent<Building_ClickHandler> ().mapPosX = mapPosX;
+			tileToSpawn.GetComponent<Building_ClickHandler> ().mapPosY = mapPosY;
+			tileToSpawn.GetComponent<Building_ClickHandler> ().resourceGrid = grid;
+
+		} 
+		if (tileType == TileData.Types.sextractor || tileType == TileData.Types.mextractor 
+		           || tileType == TileData.Types.lextractor) {
+			// IF IT'S AN EXTRACTOR it will ALSO need the extractor variables
+			tileToSpawn.GetComponent<Extractor> ().mapPosX = mapPosX;
+			tileToSpawn.GetComponent<Extractor> ().mapPosY = mapPosY;
+			tileToSpawn.GetComponent<Extractor> ().resourceGrid = grid;
+			tileToSpawn.GetComponent<Extractor> ().playerResources = playerCapital.GetComponent<Player_ResourceManager>();
+		} 
+
 		// ADD this tile to the Grid's spawnedTiles array
 		grid.spawnedTiles [mapPosX, mapPosY] = tileToSpawn;
 	}

@@ -3,53 +3,43 @@ using System.Collections;
 using UnityEngine.UI;
 
 public class TownResources : MonoBehaviour {
+	public int ore;
+	public int food;
+	public int credits;
+
+	// OLD RESOURCES SO THINGS DONT BREAK
 	public int wood;
 	public int metal;
-	public int grain;
 	public int stone;
-	public float xp = 2;
-
-	// rate at which xp is gained each turn
-	public float xpGainRate = 1;
+	public int xp;
 
 	//Text components to display resource ammounts
-	public Text woodText;
-	public Text metalText;
-	public Text grainText;
-	public Text stoneText;
-	public Text xpText;
+	public Text oreText;
+	public Text foodText;
+	public Text creditText;
 
 
 	void Update(){
-		woodText.text = "WOOD: " + wood;
-		metalText.text = "METAL: " + metal;
-		grainText.text = "GRAIN: " + grain;
-		stoneText.text = "STONE: " + stone;
-		if (xp >= 1) {
-			xpText.text = "XP: " + xp;
-		} else {
-			xpText.text = "XP: " + 0;
-		}
+		oreText.text = "ORE: " + ore;
+		foodText.text = "FOOD: " + food;
+		creditText.text = "CREDITS: " + credits;
 	}
 
 	public void AddResource (string id, int quantityToAdd){
 		switch (id) {
-		case "wood":
-			wood = wood + quantityToAdd;
+		case "Ore":
+			ore = ore + quantityToAdd;
 			break;
-		case "metal":
-			metal = metal + quantityToAdd;
+		case "Food":
+			food = food + quantityToAdd;
 			break;
-		case "grain":
-			grain = grain + quantityToAdd;
+		case "Credits":
+			credits = credits + quantityToAdd;
 			break;
-		case "stone":
-			stone = stone + quantityToAdd;
-			break;
-		case "xp":
-			float xpCalc = xp + (float)quantityToAdd;
-			xp = Mathf.Round(xpCalc);
-			break;
+//		case "xp":
+//			float xpCalc = xp + (float)quantityToAdd;
+//			xp = Mathf.Round(xpCalc);
+//			break;
 		default:
 			print ("Cant find that resource type!");
 			break;

@@ -333,8 +333,8 @@ public class GameMaster : MonoBehaviour {
 		if (townCentral != null) {
 			int foodCount = townCentral.survivorsInTown.Count; // # of Survivors in Town
 			if (townResourceScript != null){
-				if (townResourceScript.grain >= foodCount){
-					townResourceScript.grain = townResourceScript.grain - foodCount; // they eat food
+				if (townResourceScript.food >= foodCount){
+					townResourceScript.food = townResourceScript.food - foodCount; // they eat food
 				}else{
 					print ("Not enough food to feed your population!");
 					// not enough food so Mood has to go down
