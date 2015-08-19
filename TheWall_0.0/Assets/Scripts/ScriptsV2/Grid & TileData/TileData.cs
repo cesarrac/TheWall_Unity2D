@@ -34,7 +34,7 @@ public class TileData  {
 	
 	public bool isWalkable = true;
 
-	public float hp = 10, def = 0, attk = 0, shield = 0; 
+	public float hp, def, attk, shield; 
 
 	public TileData(Types type, int resourceQuantity, int moveCost, GameObject tileGameFab, float _hp, float _defence, float _attk, float _shield){
 		tileType = type;

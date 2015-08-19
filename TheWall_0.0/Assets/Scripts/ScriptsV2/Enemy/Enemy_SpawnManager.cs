@@ -12,21 +12,34 @@ public class Enemy_SpawnManager : MonoBehaviour {
 	public int level;
 	public GameObject[] currEnemies; // this array is filled with Spawn_Handlers
 	int maxWaves = 10; // default for level 0 is 20
-	float timeBetweenWaves = 80f;
+	public float timeBetweenWaves = 80f;
 	// a TOTAL OF 5 SPAWN POSITONS!
 	public Vector3[] spawnPositions; // this would need to be filled in by resource manager, for now just manually
 	bool canSpawn;
 	// ENEMY SPAWNER PREFABS:
 	public GameObject easyBasic, easyThieves, easyPythons, easyMixed;
+	// Names of Prefabs
+	string eBasicName, eThvsName, ePythName, eMixName;
 	int spawnCount =0;
 
+	public ResourceGrid resourceGrid;
+
+	public ObjectPool objPool;
+
 	void Start () {
+		InitNames ();
 		InitLevelCount ();
 		InitWaveTime ();
 		InitMaxEnemies ();
 		currEnemies = new GameObject[maxWaves];
 		InitSpawners ();
 		StartCoroutine (WaitToSpawn ());
+	}
+	void InitNames(){
+		eBasicName = easyBasic.name;
+		eThvsName = easyThieves.name;
+		ePythName = easyPythons.name;
+		eMixName = easyMixed.name;
 	}
 
 	int InitLevelCount(){
@@ -50,15 +63,15 @@ public class Enemy_SpawnManager : MonoBehaviour {
 		switch (level) {
 		case 1:
 			currEnemies[0] = easyBasic;
-			currEnemies[1] =  easyBasic;
-			currEnemies[2] =  easyBasic;
-			currEnemies[3] =  easyBasic;
-			currEnemies[4] =  easyThieves;
-			currEnemies[5] =  easyThieves;
-			currEnemies[6] =  easyBasic;
-			currEnemies[7] =  easyMixed;
-			currEnemies[8] = easyMixed;
-			currEnemies[9] = easyPythons;
+//			currEnemies[1] =  easyBasic;
+//			currEnemies[2] =  easyBasic;
+//			currEnemies[3] =  easyBasic;
+//			currEnemies[4] =  easyThieves;
+//			currEnemies[5] =  easyThieves;
+//			currEnemies[6] =  easyBasic;
+//			currEnemies[7] =  easyMixed;
+//			currEnemies[8] = easyMixed;
+//			currEnemies[9] = easyPythons;
 			break;
 		default:
 			currEnemies[0] = easyBasic;
@@ -84,16 +97,23 @@ public class Enemy_SpawnManager : MonoBehaviour {
 		canSpawn = false;
 		yield return new WaitForSeconds (timeBetweenWaves);
 		spawnCount++;
-		SpawnTheSpawners (spawnCount);
+		SpawnFromPool (spawnCount);
 	}
 
-	void SpawnTheSpawners (int count) {
+	void SpawnFromPool(int count){
 		//TOTAL OF 5 SPAWN POSITONS!
 		int randomPos = Random.Range (0, spawnPositions.Length - 1);
-		if (spawnCount <= currEnemies.Length) {
-			GameObject e = Instantiate (currEnemies [spawnCount - 1], spawnPositions [randomPos], Quaternion.identity) as GameObject; 
+		if (count <= currEnemies.Length && currEnemies[count -1] != null) {
+			GameObject e = objPool.GetObjectForType(eBasicName, true);
+			if (e != null){
+				e.transform.position = spawnPositions[randomPos];
+				e.GetComponent<Enemy_SpawnHandler>().resourceGrid = resourceGrid;
+				e.GetComponent<Enemy_SpawnHandler>().objPool = objPool;
+				canSpawn = true;
+			}
 		} else {
 			// GAME OVER! YOU WON!!
+			Debug.Log("No more enemies to spawn!");
 		}
-	}
+	}	
 }

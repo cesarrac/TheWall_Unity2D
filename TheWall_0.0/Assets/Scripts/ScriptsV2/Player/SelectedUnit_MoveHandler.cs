@@ -11,18 +11,24 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 	// This stores this unit's pathe
 	public List<Node>currentPath = null;
 	
+//	private Vector2 velocity = Vector2.zero;
 	private Vector3 velocity = Vector3.zero;
 
+	
 	bool isSelected;
 	// PLACING THE CONTROLS FOR UNIT SELECTION here might not be a good idea.
 	// It might be better to have them on the script ( like I mention below ) that controls all selections/controls
 	// I could have there an array that keeps track of the player units and just sends the mouse coordinates
 	// to see if we clicked on a player unit's last known position, or a building, etc.
 
+	public float movementSpeed = 2f;
+	Rigidbody2D rb;
+
 	void Awake(){
+		rb = GetComponent<Rigidbody2D> ();
 		// When this unit is spawned it sets its own coordinates
-		posX = (int)transform.position.x;
-		posY = (int)transform.position.y; 
+		posX = Mathf.FloorToInt( transform.position.x);
+		posY = Mathf.FloorToInt (transform.position.y); 
 	}
 
 	void OnMouseOver(){
@@ -36,8 +42,7 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 			isSelected = true;
 		}
 	}
-	
-	
+
 	void Update () {
 		// I've temporarily placed the DISCOVER TILE CONTROL here.
 		// I need to change this later to the script that handles all Player clicking/controls,
@@ -83,17 +88,27 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 				Debug.DrawLine (start, end, Color.red);
 				currNode++;
 			}
-		} 
+
 		
+		} 
 		// Have we moved close enough to the target tile that we can move to next tile in current path?
-		if (Vector3.Distance (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY)) < 0.1f) {
+		if (Vector3.Distance (new Vector3(posX, posY, 0.0f), resourceGrid.TileCoordToWorldCoord (posX, posY)) < 0.1f) {
 			MoveToNextTile();
 		}
+
 		// This MOVEMENT will animate towards the next position
-		transform.position = Vector3.Lerp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), 3f * Time.deltaTime);
-//		transform.position = Vector3.SmoothDamp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), ref velocity,10f * Time.deltaTime);
+//		transform.position = Vector3.Lerp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY),movementSpeed * Time.deltaTime);
+
+		transform.position = Vector3.SmoothDamp (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY), ref velocity, movementSpeed + Time.deltaTime);
 	}
-	
+
+//	void FixedUpdate(){
+//
+//		rb.MovePosition(new Vector2(resourceGrid.TileCoordToWorldCoord (posX, posY).x,resourceGrid.TileCoordToWorldCoord (posX, posY).y)+ velocity  * Time.deltaTime);
+//		
+//	}
+
+
 //	void ClickToDiscover(){
 //		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 //		Vector3 mouseRounded = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), 0.0f);
@@ -102,7 +117,12 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 //		resourceGrid.DiscoverTile ((int)mouseRounded.x,(int) mouseRounded.y);
 //		
 //	}
-	
+//	void LateUpdate(){
+//		transform.position = new Vector3(Mathf.Lerp(transform.position.x, resourceGrid.TileCoordToWorldCoord (posX, posY).x, movementSpeed * Time.time),
+//		                                 Mathf.Lerp(transform.position.x, resourceGrid.TileCoordToWorldCoord (posX, posY).y, movementSpeed * Time.time) , 0);
+//	}
+
+
 	public void MoveToNextTile(){
 		if (currentPath == null) {
 		

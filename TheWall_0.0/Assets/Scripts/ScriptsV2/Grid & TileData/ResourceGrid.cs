@@ -33,6 +33,7 @@ public class ResourceGrid : MonoBehaviour{
 	public GameObject discoverTileFab; // fab for grey discover tile with discover tile script
 
 	public GameObject unitOnPath;
+	public List<Node>pathToCapital;
 
 //	public GameObject playerUnit;
 
@@ -76,8 +77,8 @@ public class ResourceGrid : MonoBehaviour{
 //	void Update(){
 //		if (Input.GetMouseButtonDown (1)) {
 //			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-//			CreateBuildableTile(Mathf.RoundToInt(m.x),Mathf.RoundToInt( m.y));
 //
+//			Debug.Log("Coords: x: " + Mathf.RoundToInt(m.x) + " y: " + Mathf.RoundToInt(m.y));
 //		}
 //	}
 	
@@ -161,7 +162,14 @@ public class ResourceGrid : MonoBehaviour{
 		}
 	}
 
+	/// <summary>
+	/// Swaps the type of the tile.
+	/// </summary>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	/// <param name="newType">New type.</param>
 	public void SwapTileType(int x, int y, TileData.Types newType){
+
 		// MAKE SURE THIS IS NOT A SPAWNED TILE ALREADY!!! 
 		// So we don't change the grid tile data where we don't want to!
 		if (spawnedTiles [x, y] == null) {
@@ -169,7 +177,7 @@ public class ResourceGrid : MonoBehaviour{
 			// and give it the right GameObject to instantiate
 			switch (newType) {
 			case TileData.Types.sextractor:
-				tiles [x, y] = new TileData (newType, 0, 10000, sExtractFab, 30, 5, 0, 0);
+				tiles [x, y] = new TileData (newType, 0, 10000, sExtractFab, 5, 5, 0, 0);
 				break;
 			case TileData.Types.mextractor:
 				tiles [x, y] = new TileData (newType, 0, 10000, mExtractFab, 30, 5, 0, 0);
@@ -280,43 +288,47 @@ public class ResourceGrid : MonoBehaviour{
 			}
 		}
 	}
-
+	//TODO: Properly check for the tile map coords against world coords, right now this only works b/c map is set to 0,0 in world space
 	public Vector3 TileCoordToWorldCoord(int x, int y){
-		return new Vector3 (x, y, 0.0f);
+		return new Vector3 ((float)x, (float)y, 0.0f);
 	}
 
-	float CheckIfTileisWalkable(int sourceX, int sourceY, int targetX, int targetY){
+	/// <summary>
+	/// Checks the tile move cost,
+	/// adds extra cost to DIAGONAL movement.
+	/// </summary>
+	/// <returns>The tile move cost.</returns>
+	/// <param name="sourceX">Source x.</param>
+	/// <param name="sourceY">Source y.</param>
+	/// <param name="targetX">Target x.</param>
+	/// <param name="targetY">Target y.</param>
+	float CheckTileMoveCost(int sourceX, int sourceY, int targetX, int targetY){
 		float moveCost = (float)tiles[targetX,targetY].movementCost;
-
-//		if (UnitCanEnterTile (targetX, targetY) == false) {
-//			return Mathf.Infinity;
-//		}
-
 		if (sourceX != targetX && sourceY != targetY) {
 			// MOVING Diagonal! change cost so it's more expensive
 			moveCost += 0.001f;
 		}
-
 		return moveCost;
 		// If there is no difference in cost between straight and diagonal, it moves weird
 	}
 
 	public bool UnitCanEnterTile(int x, int y){
 		return tiles[x,y].isWalkable;
-
-//		if (spawnedTiles [x, y] != null) {
-//			bool iswalk = spawnedTiles [x, y].GetComponent<TileClick_Handler> ().isWalkable;
-//			return iswalk;
-//		} else {
-//			if (tileTypes[tiles[x,y]].tileType == TileType.Types.empty){
-//				return true;
-//			}else{
-//				return false; // we return false because if null then it hasnt been spawned
-//			}
-//		}
 	}
 
-	public void GenerateWalkPath(int x, int y, bool trueIfPlayerUnit){
+	/// <summary>
+	/// Generates the walk path for both player-controlled units and enemy AI.
+	/// </summary>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	/// <param name="trueIfPlayerUnit">If set to <c>true</c> 
+	/// Only true if player unit so method can be shared while X and Y coordinates
+	/// are set properly.</param>
+	/// <param name="enemyX">Enemy x.
+	/// Use when enemy, else default is 0</param>
+	/// <param name="enemyY">Enemy y.
+	/// Same as x</param>
+	public void GenerateWalkPath(int x, int y, bool trueIfPlayerUnit, int enemyX = 0, int enemyY = 0){
 		int unitPosX;
 		int unitPosY;
 		// Clear out selected unit's old path
@@ -325,15 +337,12 @@ public class ResourceGrid : MonoBehaviour{
 			unitPosX = unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().posX;
 			unitPosY = unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().posY;
 		} else {
-			unitOnPath.GetComponent<Enemy_SpawnHandler> ().currentPath = null;
-			unitPosX = unitOnPath.GetComponent<Enemy_SpawnHandler> ().posX;
-			unitPosY = unitOnPath.GetComponent<Enemy_SpawnHandler> ().posY;
+			unitPosX = enemyX;
+			unitPosY = enemyY;
+//			unitOnPath.GetComponent<Enemy_MoveHandler> ().currentPath = null;
+//			unitPosX = unitOnPath.GetComponent<Enemy_MoveHandler> ().posX;
+//			unitPosY = unitOnPath.GetComponent<Enemy_MoveHandler> ().posY;
 		}
-
-//		if (UnitCanEnterTile(x,y)== false){ // STOPS from pathfinding to an unwalkable tile
-//			return;
-//		}
-
 
 		// Every Node that hasn't been checked yet
 		List<Node> unvisited = new List<Node> ();
@@ -371,7 +380,6 @@ public class ResourceGrid : MonoBehaviour{
 				}
 			}
 
-
 			if (u == target){
 				break;			// Here we found Target, EXIT while loop
 			}
@@ -381,7 +389,7 @@ public class ResourceGrid : MonoBehaviour{
 			foreach(Node v in u.neighbors){
 //				float alt = dist[u] + u.DistanceTo(v); // distance to move
 //				float alt = dist[u] + CheckIfTileisWalkable(v.x, v.y); // distance to move
-				float alt = dist[u] + CheckIfTileisWalkable(u.x, u.y, v.x, v.y); 
+				float alt = dist[u] + CheckTileMoveCost(u.x, u.y, v.x, v.y); 
 				if(alt < dist[v]){
 					dist[v] = alt;
 					prev[v] = u;
@@ -412,10 +420,9 @@ public class ResourceGrid : MonoBehaviour{
 		if (trueIfPlayerUnit) {
 			unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().currentPath = currentPath;
 		} else {
-			unitOnPath.GetComponent<Enemy_SpawnHandler> ().currentPath = currentPath;
+			pathToCapital = currentPath;
+//			unitOnPath.GetComponent<Enemy_MoveHandler> ().currentPath = currentPath;
 		}
-
-
 
 	}// end Movetarget
 
