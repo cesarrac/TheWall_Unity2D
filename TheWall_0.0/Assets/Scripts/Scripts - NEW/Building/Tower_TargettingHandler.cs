@@ -18,6 +18,8 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	LineRenderer lineR;
 
+	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
+
 	void Start () {
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
@@ -29,8 +31,9 @@ public class Tower_TargettingHandler : Unit_Base {
 
 
 	void FixedUpdate () {
-		if (enemyInRange)
+		if (enemyInRange && !starvedMode){
 			SeekEnemies ();
+		}
 	}
 
 	void SeekEnemies(){
@@ -52,7 +55,7 @@ public class Tower_TargettingHandler : Unit_Base {
 			StartCoroutine(WaitToShoot());
 		}
 //		Debug.DrawLine (sightStart.position, sightEnd.position, Color.magenta);
-		if (!enemyInRange) 
+		if (!enemyInRange && !starvedMode) 
 			sightStart.Rotate (Vector3.forward * 90 * Time.deltaTime);
 	}
 
@@ -97,7 +100,7 @@ public class Tower_TargettingHandler : Unit_Base {
 	void PoolTarget(GameObject target){
 		objPool.PoolObject (target); // Pool the Dead Unit
 		string deathName = "dead";
-		GameObject deadE = objPool.GetObjectForType(deathName, true); // Get the dead unit object
+		GameObject deadE = objPool.GetObjectForType(deathName, false); // Get the dead unit object
 		deadE.GetComponent<FadeToPool> ().objPool = objPool;
 		deadE.transform.position = unitToPool.transform.position;
 		unitToPool = null;

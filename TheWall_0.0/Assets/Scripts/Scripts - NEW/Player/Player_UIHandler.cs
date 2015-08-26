@@ -29,7 +29,10 @@ public class Player_UIHandler : MonoBehaviour {
 		credits =resourceManager.credits;
 		totalFood = resourceManager.totalFoodCost;
 		if (resourceManager.totalFoodCost > 0) {
+			foodCostText.gameObject.SetActive(true);
 			foodCostText.text = "/ - " + resourceManager.totalFoodCost.ToString ();
+		} else {
+			foodCostText.gameObject.SetActive(false);
 		}
 
 	}

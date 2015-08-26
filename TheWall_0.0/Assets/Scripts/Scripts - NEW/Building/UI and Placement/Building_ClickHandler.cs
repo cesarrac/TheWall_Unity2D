@@ -38,8 +38,9 @@ public class Building_ClickHandler : MonoBehaviour {
 
 	public void ActivateBuildingUI(){
 		Vector3 offset = new Vector3 (transform.position.x, transform.position.y + vertExtents);
-		buildingUIhandler.CreateOptionsButtons (offset, CheckTileType(mapPosX, mapPosY), mapPosX, mapPosY);
-		Debug.Log (transform.position);
+		if (!buildingUIhandler.currentlyBuilding)
+			buildingUIhandler.CreateOptionsButtons (offset, CheckTileType(mapPosX, mapPosY), mapPosX, mapPosY);
+
 	}
 
 	TileData.Types CheckTileType(int x, int y){

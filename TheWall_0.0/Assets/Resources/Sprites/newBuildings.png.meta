@@ -1,17 +1,19 @@
 fileFormatVersion: 2
-guid: 93099275f4e77594cb949b953b8af168
-timeCreated: 1440267616
+guid: 671868af51d2f8f4aadd0e0a3c3d9578
+timeCreated: 1440614934
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
-    21300000: Buildings_0
-    21300002: Buildings_1
-    21300004: Buildings_2
-    21300006: Buildings_3
-    21300008: Buildings_4
-    21300010: Buildings_5
-    21300012: Buildings_6
-    21300014: Buildings_7
+    21300000: newBuildings_0
+    21300002: newBuildings_1
+    21300004: newBuildings_2
+    21300006: newBuildings_3
+    21300008: newBuildings_4
+    21300010: newBuildings_5
+    21300012: newBuildings_6
+    21300014: newBuildings_7
+    21300016: newBuildings_8
+    21300018: newBuildings_9
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -48,7 +50,7 @@ TextureImporter:
   spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
-  alignment: 0
+  alignment: 6
   spritePivot: {x: .5, y: .5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 32
@@ -57,85 +59,105 @@ TextureImporter:
   buildTargetSettings: []
   spriteSheet:
     sprites:
-    - name: Buildings_0
+    - name: newBuildings_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 192
+        y: 252
         width: 64
         height: 80
       alignment: 9
       pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: Buildings_1
+    - name: newBuildings_1
       rect:
         serializedVersion: 2
         x: 80
-        y: 192
+        y: 252
         width: 64
         height: 80
       alignment: 9
       pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: Buildings_2
+    - name: newBuildings_2
       rect:
         serializedVersion: 2
         x: 160
-        y: 192
+        y: 252
         width: 64
         height: 80
       alignment: 9
       pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: Buildings_3
+    - name: newBuildings_3
       rect:
         serializedVersion: 2
         x: 0
-        y: 96
+        y: 156
         width: 96
         height: 80
       alignment: 9
       pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: Buildings_4
+    - name: newBuildings_4
       rect:
         serializedVersion: 2
         x: 128
-        y: 96
+        y: 156
         width: 96
         height: 80
       alignment: 9
       pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: Buildings_5
+    - name: newBuildings_5
       rect:
         serializedVersion: 2
         x: 0
-        y: 32
+        y: 92
         width: 64
         height: 48
       alignment: 9
-      pivot: {x: .5, y: .600000024}
+      pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: Buildings_6
+    - name: newBuildings_6
       rect:
         serializedVersion: 2
         x: 80
-        y: 32
+        y: 92
         width: 64
-        height: 48
+        height: 46
       alignment: 9
-      pivot: {x: .5, y: .600000024}
+      pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
-    - name: Buildings_7
+    - name: newBuildings_7
       rect:
         serializedVersion: 2
         x: 160
-        y: 32
+        y: 92
+        width: 64
+        height: 44
+      alignment: 9
+      pivot: {x: .5, y: .300000012}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: newBuildings_8
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 28
         width: 64
         height: 48
       alignment: 9
-      pivot: {x: .5, y: .600000024}
+      pivot: {x: .5, y: .300000012}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: newBuildings_9
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 0
+        width: 64
+        height: 76
+      alignment: 9
+      pivot: {x: .5, y: .300000012}
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
   userData: 

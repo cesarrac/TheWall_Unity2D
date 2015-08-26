@@ -25,10 +25,16 @@ public class Camera_MoveHandler : MonoBehaviour {
 	}
 	// Update is called once per frame
 	void Update () {
+		float inputY = Mathf.Clamp( Input.GetAxis ("Vertical"), bottomBound, topBound);
+		float inputX = Mathf.Clamp(Input.GetAxis ("Horizontal"), leftBound, rightBound);
+		Vector3 move = new Vector3(inputX, inputY, 0);
+		transform.position += move * 8f * Time.deltaTime;
+
+
 		if (Input.GetMouseButton (2)) {
 			Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 			target = m;
-		} else {
+		}else {
 			target = Vector3.zero;
 		}
 

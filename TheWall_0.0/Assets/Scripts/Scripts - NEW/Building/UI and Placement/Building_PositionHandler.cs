@@ -5,9 +5,10 @@ public class Building_PositionHandler : MonoBehaviour {
 
 	/// <summary>
 	/// This is on a building that's about to be built (still following the mouse).
-	/// Every time the mouse is on a different position we check what tile types are around this building,
-	/// if they match this building's gathering resource then the sprite Alpha changes to full and player
-	/// can click to build.
+	/// Every time the mouse is on a different position we check what tile types are around this building.
+	/// BUILDING RULES: (1) Building MUST be on an empty tile, (2) Building MUST have empty tiles 
+	/// at position + 1 in all directions UNLESS, (3) its an extractor, then it MUST have ROCK 
+	/// at any position +1 in all directions.
 	/// </summary>
 
 	// the UI_Handler will feed it the Resource Grid, 
@@ -34,18 +35,15 @@ public class Building_PositionHandler : MonoBehaviour {
 
 	public ObjectPool objPool;
 
-	public FoodCost_Manager foodCostMan;
+	public Building_UIHandler buildingUI;
 
 	void Start () {
 		sr = GetComponent<SpriteRenderer> ();
 		halfColor = sr.color;
-		trueColor = new Color (halfColor.r, halfColor.g, halfColor.b, 255);
-		if (foodCostMan == null) {
-			foodCostMan = GameObject.FindGameObjectWithTag("Capital").GetComponent<FoodCost_Manager>();
-		}
+		trueColor = Color.green;
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
 		if (followMouse) {
 			FollowMouse();
@@ -56,78 +54,92 @@ public class Building_PositionHandler : MonoBehaviour {
 		m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 		mX = Mathf.RoundToInt(m.x);
 		mY = Mathf.RoundToInt(m.y);
-		// Making sure that we are not trying to path outside the BOUNDARIES of the GRID
-		if (mX > resourceGrid.mapSizeX - 1){
-			mX = resourceGrid.mapSizeX - 1;
+		// Making sure that we are not trying to Build outside the BOUNDARIES of the GRID
+		if (mX > resourceGrid.mapSizeX - 3){
+			mX = resourceGrid.mapSizeX - 3;
 		}
-		if (mY > resourceGrid.mapSizeY -1){
-			mY = resourceGrid.mapSizeY - 1;
+		if (mY > resourceGrid.mapSizeY -3){
+			mY = resourceGrid.mapSizeY - 3;
 		}
-		if (mX < 0){
-			mX = 0;
+		if (mX < 3){
+			mX = 3;
 		}
-		if (mY < 0){
-			mY = 0;
+		if (mY < 3){
+			mY = 3;
 		}
 		// Move building with the mouse
 		Vector3 followPos = new Vector3 (mX, mY);
 		transform.position = followPos;
 
-		// IF THIS BUILDING IS AN EXTRACTOR, check the tiles around the building
-		if (tileType == TileData.Types.extractor) {
-			if (CheckForEmpty (mX, mY)) { // making it so you DONT perform the rock check if you are not on an empty tile
-				if (CheckTileType (mX, mY + 1)) { // top
+
+		if (CheckEmptyBeneath (mX, mY)) {
+
+			if (tileType != TileData.Types.extractor) {
+				if (CheckForEmptySides (mX, mY)) {
+						// we are on a legal building position
 					sr.color = trueColor;
 					canBuild = true;
-				} else if (CheckTileType (mX, mY - 1)) { // bottom
-					sr.color = trueColor;
-					canBuild = true;
-				} else if (CheckTileType (mX - 1, mY)) { // left
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckTileType (mX + 1, mY)) { // right
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckTileType (mX - 1, mY + 1)) { // top left
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckTileType (mX + 1, mY + 1)) { // top right
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckTileType (mX - 1, mY - 1)) { // bottom left
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckTileType (mX + 1, mY - 1)) { // bottom right
-					canBuild = true;
-					sr.color = trueColor;
-				} else {
+				} else {// we DO NOT have an empty tile on our sides or beneath
 					sr.color = halfColor;
 					canBuild = false;
 				}
-			} else { // we are NOT on an empty tile
-				sr.color = halfColor;
-				canBuild = false;
+			} else { // THIS building is an EXTRACTOR so it needs to check for Rock
+				if (CheckForRock (mX, mY + 1)) { // top
+					sr.color = trueColor;
+					canBuild = true;
+				} else if (CheckForRock (mX, mY - 1)) { // bottom
+					sr.color = trueColor;
+					canBuild = true;
+				} else if (CheckForRock (mX - 1, mY)) { // left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForRock (mX + 1, mY)) { // right
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForRock (mX - 1, mY + 1)) { // top left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForRock (mX + 1, mY + 1)) { // top right
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForRock (mX - 1, mY - 1)) { // bottom left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForRock (mX + 1, mY - 1)) { // bottom right
+					canBuild = true;
+					sr.color = trueColor;
+				} else {				// NOT ON ROCK
+					sr.color = halfColor;
+					canBuild = false;
+				}
 			}
-		} else {
-			// THIS TILE IS NOT AN EXTRACTOR, so just check for empty
-			if (CheckForEmpty (mX, mY)){
-				canBuild = true;
-			}
+		} else {				// NOT ON EMPTY
+			sr.color = halfColor;
+			canBuild = false;
 		}
+
+
 			// MAKE SURE WE HAVE ENOUGH ORE TO BUILD!
 		if (resourceManager.ore >= currOreCost ) {
 			canAfford = true;
 		}
 		// At this point we KNOW the mouse is NOT over a building or a rock, AND we have found rocks if extractor,
 		if (Input.GetMouseButtonDown (0) && canBuild && canAfford) {			// So LEFT CLICK to BUILD!!
+
 			// Subtract the cost
 			resourceManager.ChangeResource("Ore", -currOreCost);
 			mapPosX = mX;
 			mapPosY = mY;
+
 			// stop following and tell grid to swap this tile to this new building
 			resourceGrid.SwapTileType (mX, mY, tileType);
 			followMouse = false;
-			PoolObject (gameObject); // Pool this because resourceGrid just discovered it for us
+
+			// Right BEFORE pooling this object we tell Building UI that we are NOT currently building anymore
+			this.buildingUI.currentlyBuilding = false;
+
+			// Pool this object
+			PoolObject (gameObject); // Pool this because resourceGrid just discovered the tile/building for us
 
 		}
 	}
@@ -136,18 +148,46 @@ public class Building_PositionHandler : MonoBehaviour {
 		objPool.PoolObject (objToPool);
 	}
 
-	bool CheckTileType(int x, int y){
-		if (x < resourceGrid.mapSizeX && y < resourceGrid.mapSizeY && x > 0 && y > 0) {
-			if (resourceGrid.tiles [x, y].tileType == TileData.Types.rock) {
-				return true;
-			} else {
-				return false;
-			}
+	bool CheckForRock(int x, int y){
+		if (resourceGrid.tiles [x, y].tileType == TileData.Types.rock) {
+			return true;
 		} else {
 			return false;
 		}
 	}
-	bool CheckForEmpty(int x, int y){
+	bool CheckForEmptySides(int x, int y){
+		int top1 = y +1;
+		int top2 = y +2;
+		int bottom1 = y - 1;
+		int bottom2 = y - 2;
+		int left1 = x - 1;
+		int left2 = x - 2;
+		int right1 = x + 1;
+		int right2 = x + 2;
+
+		if (resourceGrid.tiles [x, top1].tileType == TileData.Types.empty && // top
+			resourceGrid.tiles [x, top2].tileType == TileData.Types.empty &&
+			resourceGrid.tiles [left1, top1].tileType == TileData.Types.empty && // top Left
+			resourceGrid.tiles [left2, top2].tileType == TileData.Types.empty &&
+			resourceGrid.tiles [right1, top1].tileType == TileData.Types.empty && // top Right
+			resourceGrid.tiles [right2, top2].tileType == TileData.Types.empty &&
+			resourceGrid.tiles [x, bottom1].tileType == TileData.Types.empty && // bottom
+			resourceGrid.tiles [x, bottom2].tileType == TileData.Types.empty &&
+			resourceGrid.tiles [left1, bottom1].tileType == TileData.Types.empty && // bottom left
+			resourceGrid.tiles [left2, bottom2].tileType == TileData.Types.empty &&
+			resourceGrid.tiles [right1, bottom1].tileType == TileData.Types.empty && // bottom right
+			resourceGrid.tiles [right2, bottom2].tileType == TileData.Types.empty &&
+			resourceGrid.tiles [left1, y].tileType == TileData.Types.empty && // left
+			resourceGrid.tiles [left2, y].tileType == TileData.Types.empty &&
+			resourceGrid.tiles [right1, y].tileType == TileData.Types.empty && // right
+			resourceGrid.tiles [right2, y].tileType == TileData.Types.empty) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	bool CheckEmptyBeneath(int x, int y){
 		if (resourceGrid.tiles [x, y].tileType == TileData.Types.empty) {
 			return true;
 		} else {

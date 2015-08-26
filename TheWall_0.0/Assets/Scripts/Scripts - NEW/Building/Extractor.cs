@@ -16,6 +16,8 @@ public class Extractor : MonoBehaviour {
 
 	public Player_ResourceManager playerResources;
 
+	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
+
 	void Start(){
 		// INIT rocksdetected array
 		// This assumes that we are only checking tiles ONE TILE OVER in all directions
@@ -28,8 +30,8 @@ public class Extractor : MonoBehaviour {
 	
 
 	void Update () {
-		if (canExtract) {
-			StartCoroutine(WaitToExtract());
+		if (canExtract && !starvedMode) {
+			StartCoroutine (WaitToExtract ());
 		}
 	}
 

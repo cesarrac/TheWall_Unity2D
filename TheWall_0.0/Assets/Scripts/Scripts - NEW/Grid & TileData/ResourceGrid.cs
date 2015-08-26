@@ -27,6 +27,9 @@ public class ResourceGrid : MonoBehaviour{
 	
 
 	public int level;
+	public Vector2[] rocksOnLevel; // used to initialize the positions of rocks on the grid
+	public int totalVertWaterLines, totalHorizWaterLines;
+	public Vector2[] vertWaterLines, horizWaterLines; // used to initialize WATER tiles
 
 	public Transform tileHolder; // transform to hold Instantiated tiles in Hierarchy
 
@@ -45,7 +48,7 @@ public class ResourceGrid : MonoBehaviour{
 	public ObjectPool objPool;
 
 	// BUILDING COSTS:
-	public int[] extractorCost, machineGunCost, seaWitchCost, harpoonHCost, cannonCost; // the array's [0] value is ORE Cost, [1] value is FOOD Cost
+	public int[] extractorCost, machineGunCost, seaWitchCost, harpoonHCost, cannonCost, sFarmCost; // the array's [0] value is ORE Cost, [1] value is FOOD Cost
 
 	public Player_ResourceManager playerResources;
 
@@ -73,13 +76,16 @@ public class ResourceGrid : MonoBehaviour{
 		InitPathFindingGraph ();
 	}
 
-//	void Update(){
-//		if (Input.GetMouseButtonDown (1)) {
-//			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-//
-//			Debug.Log("Coords: x: " + Mathf.RoundToInt(m.x) + " y: " + Mathf.RoundToInt(m.y));
-//		}
-//	}
+	void Update(){
+		if (Input.GetMouseButtonDown (1)) {
+			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			int mX = Mathf.RoundToInt(m.x);
+			int mY = Mathf.RoundToInt(m.y);
+			Debug.Log("Coords: x: " + mX + " y: " + mY);
+			if (mX <= mapSizeX && mY <= mapSizeY)
+				Debug.Log("Tile type: " + tiles[mX, mY].tileType);
+		}
+	}
 	
 	void InitGrid(){
 		for (int x = 0; x < mapSizeX; x++) {
@@ -91,32 +97,35 @@ public class ResourceGrid : MonoBehaviour{
 		// SPAWN PLAYER CAPITAL HERE:
 		tiles [capitalSpawnX, capitalSpawnY] = new TileData("Capital", TileData.Types.capital, 0, 10000, 200, 5,0,0,0,0);
 
-		//First build tiles
-//		tiles[3,2]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//		tiles[4,4]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//		tiles[6,4]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//		tiles[3,8]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//
-//		tiles[7,2]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//		tiles[4,6]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//		tiles[6,6]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//		tiles[7,8]=new TileData(TileData.Types.buildable, 0, 10000, buildableTile);
-//
-//		//first visible tiles
-//		tiles[5,1]=new TileData(TileData.Types.rock, 3000, 10000);
-////		tiles[5,4]=new TileData(TileData.Types.rock, 20, 10000, rockTile);
-//		tiles[5,3]=new TileData(TileData.Types.rock, 3000, 10000);
-		tiles[7,2]=new TileData(TileData.Types.rock, 3000, 10000);
-		tiles[8,2]=new TileData(TileData.Types.rock, 3000, 10000);
-		tiles[8,4]=new TileData(TileData.Types.rock, 3000, 10000);
-		tiles[8,5]=new TileData(TileData.Types.rock, 3000, 10000);
-//
-//		tiles[3,3]=3;
-//		tiles[3,2]=3;
-//		tiles[3,4]=3;
-//		tiles[4,4]=3;
-//		tiles[4,5]=3;
-//		tiles[4,6]=3;
+		InitRockTiles ();
+		InitWaterTiles ();
+	}
+
+	void InitRockTiles(){
+		for (int i = 0; i < rocksOnLevel.Length; i ++) {
+			tiles[(int)rocksOnLevel[i].x,(int) rocksOnLevel[i].y] = new TileData(TileData.Types.rock, 3000, 3);
+		}
+	}
+	void InitWaterTiles(){
+		// one straight line up Vertical
+		for (int i = 0; i < totalVertWaterLines; i++) {
+			for (int x = (int)vertWaterLines[i].x; x == (int)vertWaterLines[0].x; x++) {
+				for (int y =0; y < vertWaterLines[i].y; y++) {
+					tiles [x, y] =  new TileData(TileData.Types.water, 0, 10000);
+				}
+			}
+		}
+	
+		if (totalHorizWaterLines > 0) {
+			for (int i = 0; i < totalHorizWaterLines; i++) {
+				for (int y = (int)horizWaterLines[i].y; y == (int)horizWaterLines[i].y; y++){
+					for (int x = 0; x < horizWaterLines[i].x; x++) {
+						tiles [x, y] =  new TileData(TileData.Types.water, 0, 10000);
+					}
+				}
+			}
+		}
+
 	}
 
 //	int SimpleTileSelection(int lastValue){
@@ -139,9 +148,10 @@ public class ResourceGrid : MonoBehaviour{
 //				The ONLY TILES VISIBLE at the start of the game are Buildable tiles
 				if (tiles [x, y].tileType==TileData.Types.capital){
 					SpawnDiscoverTile(tiles [x, y].tileName, new Vector3(x, y, 0.0f),tiles [x, y].tileType); 
-				}else if (tiles [x, y].tileType==TileData.Types.rock){
-					SpawnDiscoverTile(tiles [x, y].tileName, new Vector3(x, y, 0.0f),tiles [x, y].tileType); 
 				}
+//				else if (tiles [x, y].tileType==TileData.Types.rock){
+//					SpawnDiscoverTile(tiles [x, y].tileName, new Vector3(x, y, 0.0f),tiles [x, y].tileType); 
+//				}
 				
 			}
 		}
@@ -186,6 +196,9 @@ public class ResourceGrid : MonoBehaviour{
 			case TileData.Types.harpoonHall:
 				tiles [x, y] = new TileData ("Harpooner's Hall", newType, 0, 10000, 50, 6, 0, 0, harpoonHCost[1], harpoonHCost[0]);
 				break;
+			case TileData.Types.farm_s:
+				tiles [x, y] = new TileData ("Seaweed Farm", newType, 0, 10000, 25, 1, 0, 0, sFarmCost[1], sFarmCost[0]);
+				break;
 			case TileData.Types.building:
 				tiles [x, y] = new TileData (newType, 0, 10000);
 				break;
@@ -199,21 +212,27 @@ public class ResourceGrid : MonoBehaviour{
 			if (tiles[x,y].foodCost > 0)
 				playerResources.totalFoodCost = playerResources.totalFoodCost + tiles[x,y].foodCost;
 
-		} else { // if we are swappin an already spawned tile we are MOST LIKELY turning it into an empty tile
-			// For example, depleted rock tiles turn into EMPTY tiles - empty tiles DONT require spawning
-
+		} else { 
+			// if we are swappin an already spawned tile we are MOST LIKELY turning it into an empty tile
 			// BUT if this was any building that has a food cost that must be reflected in Player resources 
 			//	by subtracting from the total food cost
 			if (tiles[x,y].foodCost > 0){
 				playerResources.totalFoodCost = playerResources.totalFoodCost - tiles[x,y].foodCost;
 			}
 
-				// RETURN 30% OF THE ORE COST TO THE RESOURCES
-				float calc = (float)tiles[x,y].oreCost * 0.3f;
-				playerResources.ore = playerResources.ore + (int)calc;
+			// ALSO if it's a Farm we need to subtract its food production from food produced per day
+			if (tiles[x,y].tileType == TileData.Types.farm_s || tiles[x,y].tileType == TileData.Types.farm_m 
+			    || tiles[x,y].tileType == TileData.Types.farm_l){
+				FoodProduction_Manager foodM = spawnedTiles [x, y].GetComponent<FoodProduction_Manager>();
+				playerResources.CalculateFoodProduction(foodM.foodProduced, foodM.productionRate, true);
+			}
 
-				Destroy(spawnedTiles[x,y].gameObject);
-				tiles[x,y] = new TileData(newType, 0,1);
+			// RETURN 30% OF THE ORE COST TO THE RESOURCES
+			float calc = (float)tiles[x,y].oreCost * 0.3f;
+			playerResources.ore = playerResources.ore + (int)calc;
+
+			Destroy(spawnedTiles[x,y].gameObject);
+			tiles[x,y] = new TileData(newType, 0,1);
 		}
 	}
 

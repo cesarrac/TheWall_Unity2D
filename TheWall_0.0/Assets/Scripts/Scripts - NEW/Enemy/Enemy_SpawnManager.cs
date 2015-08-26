@@ -114,6 +114,8 @@ public class Enemy_SpawnManager : MonoBehaviour {
 				e.GetComponent<Enemy_SpawnHandler>().indexForPath = randomPos;
 				e.GetComponent<Enemy_SpawnHandler>().spwnPointHandler = spwnPointHandler;
 				canSpawn = true;
+			}else{
+				Debug.Log ("Spawn Manager can't find what you're trying to spawn!");
 			}
 		} else {
 			// GAME OVER! YOU WON!!

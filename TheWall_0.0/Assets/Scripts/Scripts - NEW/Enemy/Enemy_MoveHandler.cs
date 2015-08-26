@@ -45,7 +45,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 
 		posX = (int)transform.position.x;
 		posY = (int)transform.position.y;
-		enemyAttkHandler = GetComponent<Enemy_AttackHandler> ();
+		enemyAttkHandler = GetComponentInChildren<Enemy_AttackHandler> ();
 
 		GetFirstPath ();
 	}

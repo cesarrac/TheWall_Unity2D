@@ -35,6 +35,10 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 	Vector3 neighborEnemyPosition = Vector3.zero;
 
 	float newOffsetX = 0, newOffsetY = 0;
+
+	public float unitHP; // to reset when spawning from pool
+
+
 	void Awake(){
 		// init my name
 		enemyName = enemyFab.name;
@@ -67,23 +71,20 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 	public void SpawnFromPool(Vector3 randomVar){
 		GameObject newEnemy = objPool.GetObjectForType (enemyName, true); // only gets it if pooled
 		if (newEnemy != null) {
-			newEnemy.transform.position = transform.position;// move unit to my spawn point
-			if (neighborEnemyPosition == Vector3.zero){
-				// give its child sprite one of the pos variations
-				Transform spriteChild = newEnemy.transform.FindChild("sprite");
-				spriteChild.localPosition = new Vector3(spriteChild.localPosition.x + randomVar.x, spriteChild.localPosition.y + randomVar.y, 0);
-				neighborEnemyPosition = spriteChild.localPosition;
-			}else{
-				Transform spriteChild = newEnemy.transform.FindChild("sprite");
-				spriteChild.localPosition = (spriteChild.localPosition  + randomVar) - (neighborEnemyPosition);
-				neighborEnemyPosition = spriteChild.localPosition;
-			}
+			// reset the HP of this unit in case its being reused from pool
+			newEnemy.GetComponentInChildren<Enemy_AttackHandler>().hp = unitHP;
+
+			// give it an offset variation
+			Vector3 offsetPos = new Vector3(transform.position.x - randomVar.x, transform.position.y - randomVar.y, 0);
+			newEnemy.transform.position = offsetPos;
+			neighborEnemyPosition = newEnemy.transform.position;
+		
 
 			// Give it pathfinding ability. The unit will calculate its own path when spawned
 			newEnemy.GetComponent<Enemy_MoveHandler> ().resourceGrid = resourceGrid;
 			newEnemy.GetComponent<Enemy_MoveHandler> ().spwnPtIndex = indexForPath;
 			newEnemy.GetComponent<Enemy_MoveHandler> ().spwnPtHandler = spwnPointHandler; 
-			newEnemy.GetComponent<Enemy_AttackHandler>().objPool = objPool;
+			newEnemy.GetComponentInChildren<Enemy_AttackHandler>().objPool = objPool;
 			if (enemiesCount < spawnedEnemies.Length){
 			// add new enemy to array of spawned enemies
 				spawnedEnemies [enemiesCount] = newEnemy;

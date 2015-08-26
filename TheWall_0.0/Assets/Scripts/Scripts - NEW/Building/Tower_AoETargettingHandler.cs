@@ -22,6 +22,8 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	public int maxTargets; // caps out how many enemies it can damage at the same time
 	int enemiesCount = 0;
 
+	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
+
 	void Start () {
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
@@ -33,7 +35,7 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	
 	void Update(){
 
-		if (canShoot){
+		if (canShoot && !starvedMode){
 			StartCoroutine(WaitToShoot());
 		}
 	}

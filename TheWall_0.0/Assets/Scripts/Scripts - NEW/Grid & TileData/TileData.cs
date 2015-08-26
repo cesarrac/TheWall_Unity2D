@@ -7,9 +7,10 @@ public class TileData  {
 	public enum Types{
 		rock,
 		empty,
+		water,
 		building,
 		capital,
-		seaWeedFarm,
+		farm_s,
 		farm_m,
 		farm_l,
 		extractor,

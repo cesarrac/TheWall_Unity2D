@@ -4,8 +4,7 @@ using System.Collections;
 public class Barracks_SpawnHandler : MonoBehaviour {
 
 	public ResourceGrid resourceGrid;
-	
-	public int capitalPosX, capitalPosY;
+
 	
 	Vector3 spawnPos; // the position to instantiate a unit
 
@@ -14,69 +13,158 @@ public class Barracks_SpawnHandler : MonoBehaviour {
 	
 	public ObjectPool objPool;
 
-	bool canSpawn;
+	bool canSpawn = false;
 	private int maxNumberofUnits = 4;
 	public GameObject[] unitsSpawned;
-	private int unitCount = 0;
+	public int unitCount = 0, spwnCount = 0;
 	public float spawnRate;
 
 	// name of unit to spawn
-	public string nameOfUnitFab;
+	public GameObject unitFab;
+	float unitHP;
+	bool firstSpawn = false; // to get its stats for further spawns
+	float offset = 0.8f;
+
+	public Vector3[] spawnPositions;
+
+	Transform parentTransform;
+
+	GameObject attackTarget;
+
+	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
 	void Start () {
 		resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
-		capitalPosX = resourceGrid.capitalSpawnX;
-		capitalPosY = resourceGrid.capitalSpawnY;
+	
 		objPool = GameObject.FindGameObjectWithTag ("Pool").GetComponent<ObjectPool> ();
+
+		parentTransform = transform.parent;
 		
 		// spawning units one below me
-		spawnPos = new Vector3 (transform.position.x, transform.position.y - 1f, 0.0f); 
+//		spawnPos = new Vector3 (transform.position.x-1f, transform.position.y - 1f, 0.0f); 
 		posX = (int)transform.position.x;
 		posY = (int)transform.position.y;
 
 		//init array
 		unitsSpawned = new GameObject[maxNumberofUnits];
 
+
+
 		// Start already Spawning
-		Spawn ();
+		for (int i = 0; i < maxNumberofUnits; i++) {
+			Spawn (); 				// spawns four units
+		}
+
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (canSpawn) {
+		if (canSpawn && !starvedMode) {
 			StartCoroutine(WaitToSpawn());
 		}
 	}
 	IEnumerator WaitToSpawn(){
 		canSpawn = false;
 		yield return new WaitForSeconds (spawnRate);
-		if (unitCount < maxNumberofUnits) {
-			Spawn ();
-		} else {
-			CheckSpawnedForNull();
-		}
+		CheckSpawnedForNull();
 
 	}
 	
 	void Spawn(){
-		GameObject unitSpawn = objPool.GetObjectForType (nameOfUnitFab, true);
-		Vector3 offsetPos = new Vector3 (spawnPos.x + (float)unitCount, spawnPos.y, spawnPos.z);
+		Debug.Log ("Spawning units!");
+		GameObject unitSpawn = Instantiate (unitFab, spawnPos, Quaternion.identity)as GameObject;
+		Vector3 storedPos = spawnPositions [spwnCount];
+		offset = offset + 0.8f;
 		if (unitSpawn != null) {
-			unitSpawn.transform.position = offsetPos;
+			unitSpawn.transform.position = transform.position;
+			unitSpawn.transform.parent = parentTransform;
+			Vector3 newPos =  storedPos - unitSpawn.transform.localPosition;
+			unitSpawn.transform.localPosition = newPos;
 			unitSpawn.GetComponent<SelectedUnit_MoveHandler> ().resourceGrid = resourceGrid;
 			unitSpawn.GetComponentInChildren<Player_AttackHandler> ().objPool = objPool;
+//			if (!firstSpawn){
+//				firstSpawn = true;
+//				// get the HP of the first unit to store it
+//				unitHP = unitSpawn.GetComponentInChildren<Player_AttackHandler> ().hp;
+//			}
+//			// init the HP of this unit since it is supposed to be a NEW unit
+//			unitSpawn.GetComponentInChildren<Player_AttackHandler> ().hp = unitHP;
 
-			unitsSpawned[unitCount] = unitSpawn;
-			unitCount++;
+			unitsSpawned [spwnCount] = unitSpawn;
 
-			canSpawn = true;
+			spwnCount ++;
+			if (spwnCount == maxNumberofUnits){
+				unitCount = spwnCount;
+				canSpawn = true;
+			}
+
+		} else {
+			Debug.Log("Couldn't access object from pool!");
 		}
 	}
 
 	void CheckSpawnedForNull(){
-		foreach (GameObject unit in unitsSpawned) {
-			if (unit == null)
+//		Debug.Log ("Checking if any Player units are dead");
+		for (int x = 0; x < unitsSpawned.Length; x++) {
+//			if (!unitsSpawned[x].activeSelf){
+//				unitCount--;
+//			}
+			// THE PROBLEM HERE IS THAT ITS COUNTING THEM OVER AND OVER AGAIN AS NULL SO UNIT COUNT GOES DOWN WAY BEFORE
+			// FOR EXAMPLE THERE'S TWO DUDES LEFT BUT IT DETECTS 3 NULL, ADDING TO THE LAST 1 IT COUNTED AS NULL, IT SPAWNS.
+			// IT SHOULD ONLY SPAWN IF IT DETECTS THE 4 NULL ONCE!!
+			if (unitsSpawned[x] == null){
 				unitCount--;
+			}
+		}
+
+		if (unitCount == 0) {
+
+			spwnCount = 0;
+			for (int i = 0; i < maxNumberofUnits; i++) {
+				Spawn ();
+			}
+		} else {
+			unitCount = spwnCount;
+			canSpawn = true;
+		}
+	}
+
+	void MoveUnits(Vector3 pos){
+		foreach (GameObject unit in unitsSpawned) {
+			if (unit != null && attackTarget != null){
+				SelectedUnit_MoveHandler moveHandler = unit.GetComponent<SelectedUnit_MoveHandler>();
+				moveHandler.attackTarget = attackTarget;
+				moveHandler.moving = true;
+				moveHandler.movingToAttack = true;
+				//			Transform child = enemyUnit.transform.FindChild("sprite").transform;
+				moveHandler.mX = Mathf.RoundToInt(pos.x);
+				moveHandler.mY = Mathf.RoundToInt(pos.y);
+			}
+		}
+	}
+	void StopUnits(){
+		foreach (GameObject unit in unitsSpawned) {
+			if (unit != null){
+				SelectedUnit_MoveHandler moveHandler = unit.GetComponent<SelectedUnit_MoveHandler>();
+				moveHandler.attackTarget = null;
+				moveHandler.moving = false;
+				moveHandler.movingToAttack = false;
+			}
+		}
+	}
+
+	void OnTriggerEnter2D(Collider2D coll){
+		if (coll.gameObject.CompareTag ("Enemy")) {
+			attackTarget = coll.gameObject;
+			MoveUnits (coll.transform.position);
+		} 
+	}
+	void OnTriggerExit2D(Collider2D coll){
+		if (coll.gameObject.CompareTag ("Enemy")) {
+			attackTarget = null;
+			StopUnits();
+			Debug.Log("Target exit. Setting attack target to null!");
+
 		}
 	}
 }

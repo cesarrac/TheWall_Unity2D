@@ -12,14 +12,19 @@ public class FoodProduction_Manager : MonoBehaviour {
 
 	public Player_ResourceManager resourceManager;
 
+	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
 	void Start () {
 		resourceManager = GameObject.FindGameObjectWithTag ("Capital").GetComponent<Player_ResourceManager> ();
+		farming = true;
+
+		// Tell the Resource Manager how much I produce per cycle
+		resourceManager.CalculateFoodProduction (foodProduced, productionRate, false);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (farming) {
+		if (farming && !starvedMode) {
 			StartCoroutine(WaitToFarm());
 		}
 	}
