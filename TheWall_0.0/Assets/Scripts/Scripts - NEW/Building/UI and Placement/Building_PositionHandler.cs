@@ -73,42 +73,71 @@ public class Building_PositionHandler : MonoBehaviour {
 
 
 		if (CheckEmptyBeneath (mX, mY)) {
-
-			if (tileType != TileData.Types.extractor) {
+			
+			if (tileType == TileData.Types.extractor) {
+				if (CheckForResource (mX, mY + 1, true)) { // top
+					sr.color = trueColor;
+					canBuild = true;
+				} else if (CheckForResource (mX, mY - 1, true)) { // bottom
+					sr.color = trueColor;
+					canBuild = true;
+				} else if (CheckForResource (mX - 1, mY, true)) { // left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX + 1, mY, true)) { // right
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX - 1, mY + 1, true)) { // top left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX + 1, mY + 1, true)) { // top right
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX - 1, mY - 1, true)) { // bottom left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX + 1, mY - 1, true)) { // bottom right
+					canBuild = true;
+					sr.color = trueColor;
+				} else {				// NOT ON ROCK
+					sr.color = halfColor;
+					canBuild = false;
+				}
+			} else if (tileType == TileData.Types.desalt_s) { // THIS building is an EXTRACTOR so it needs to check for Rock
+				if (CheckForResource (mX, mY + 1, false)) { // top
+					sr.color = trueColor;
+					canBuild = true;
+				} else if (CheckForResource (mX, mY - 1, false)) { // bottom
+					sr.color = trueColor;
+					canBuild = true;
+				} else if (CheckForResource (mX - 1, mY, false)) { // left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX + 1, mY, false)) { // right
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX - 1, mY + 1, false)) { // top left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX + 1, mY + 1, false)) { // top right
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX - 1, mY - 1, false)) { // bottom left
+					canBuild = true;
+					sr.color = trueColor;
+				} else if (CheckForResource (mX + 1, mY - 1, false)) { // bottom right
+					canBuild = true;
+					sr.color = trueColor;
+				} else {				// NOT ON Water
+					sr.color = halfColor;
+					canBuild = false;
+				}
+			} else{ // not an extractor or desalt pump
 				if (CheckForEmptySides (mX, mY)) {
 						// we are on a legal building position
 					sr.color = trueColor;
 					canBuild = true;
 				} else {// we DO NOT have an empty tile on our sides or beneath
-					sr.color = halfColor;
-					canBuild = false;
-				}
-			} else { // THIS building is an EXTRACTOR so it needs to check for Rock
-				if (CheckForRock (mX, mY + 1)) { // top
-					sr.color = trueColor;
-					canBuild = true;
-				} else if (CheckForRock (mX, mY - 1)) { // bottom
-					sr.color = trueColor;
-					canBuild = true;
-				} else if (CheckForRock (mX - 1, mY)) { // left
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckForRock (mX + 1, mY)) { // right
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckForRock (mX - 1, mY + 1)) { // top left
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckForRock (mX + 1, mY + 1)) { // top right
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckForRock (mX - 1, mY - 1)) { // bottom left
-					canBuild = true;
-					sr.color = trueColor;
-				} else if (CheckForRock (mX + 1, mY - 1)) { // bottom right
-					canBuild = true;
-					sr.color = trueColor;
-				} else {				// NOT ON ROCK
 					sr.color = halfColor;
 					canBuild = false;
 				}
@@ -127,11 +156,11 @@ public class Building_PositionHandler : MonoBehaviour {
 		if (Input.GetMouseButtonDown (0) && canBuild && canAfford) {			// So LEFT CLICK to BUILD!!
 
 			// Subtract the cost
-			resourceManager.ChangeResource("Ore", -currOreCost);
-			mapPosX = mX;
-			mapPosY = mY;
+			resourceManager.ChargeOreorWater("Ore", -currOreCost);
 
 			// stop following and tell grid to swap this tile to this new building
+			mapPosX = mX;
+			mapPosY = mY;
 			resourceGrid.SwapTileType (mX, mY, tileType);
 			followMouse = false;
 
@@ -142,17 +171,29 @@ public class Building_PositionHandler : MonoBehaviour {
 			PoolObject (gameObject); // Pool this because resourceGrid just discovered the tile/building for us
 
 		}
+		if (Input.GetMouseButtonDown (1)) {
+			// CANCEL THE BUILD
+			PoolObject(gameObject);
+		}
 	}
 
 	void PoolObject(GameObject objToPool){
 		objPool.PoolObject (objToPool);
 	}
 
-	bool CheckForRock(int x, int y){
-		if (resourceGrid.tiles [x, y].tileType == TileData.Types.rock) {
-			return true;
+	bool CheckForResource(int x, int y, bool trueIfOre){
+		if (trueIfOre) {
+			if (resourceGrid.tiles [x, y].tileType == TileData.Types.rock) {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
-			return false;
+			if (resourceGrid.tiles [x, y].tileType == TileData.Types.water) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 	bool CheckForEmptySides(int x, int y){

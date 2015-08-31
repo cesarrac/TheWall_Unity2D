@@ -49,6 +49,7 @@ public class ResourceGrid : MonoBehaviour{
 
 	// BUILDING COSTS:
 	public int[] extractorCost, machineGunCost, seaWitchCost, harpoonHCost, cannonCost, sFarmCost; // the array's [0] value is ORE Cost, [1] value is FOOD Cost
+	public int[] storageCost, sDesaltCost;
 
 	public Player_ResourceManager playerResources;
 
@@ -76,16 +77,16 @@ public class ResourceGrid : MonoBehaviour{
 		InitPathFindingGraph ();
 	}
 
-	void Update(){
-		if (Input.GetMouseButtonDown (1)) {
-			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-			int mX = Mathf.RoundToInt(m.x);
-			int mY = Mathf.RoundToInt(m.y);
-			Debug.Log("Coords: x: " + mX + " y: " + mY);
-			if (mX <= mapSizeX && mY <= mapSizeY)
-				Debug.Log("Tile type: " + tiles[mX, mY].tileType);
-		}
-	}
+//	void Update(){
+//		if (Input.GetMouseButtonDown (1)) {
+//			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+//			int mX = Mathf.RoundToInt(m.x);
+//			int mY = Mathf.RoundToInt(m.y);
+//			Debug.Log("Coords: x: " + mX + " y: " + mY);
+//			if (mX <= mapSizeX && mY <= mapSizeY)
+//				Debug.Log("Tile type: " + tiles[mX, mY].tileType);
+//		}
+//	}
 	
 	void InitGrid(){
 		for (int x = 0; x < mapSizeX; x++) {
@@ -157,19 +158,45 @@ public class ResourceGrid : MonoBehaviour{
 		}
 	}
 
-//	void CreateBuildableTile(int x, int y){
-//		// Player clicks on a tile, if that tile is not a buildable tile, call swap tile to swap and "discover"
-//		if (tiles [x, y].tileType != TileData.Types.buildable) {
-//			SwapTileType(x, y, TileData.Types.buildable);
-//		}
-//	}
-
-	public void DamageTile(int x, int y, float damage){
+	/// <summary>
+	/// Damages the tile.
+	/// </summary>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	/// <param name="damage">Damage.</param>
+	public void DamageTile(int x, int y, float damage)
+	{
 		tiles [x, y].hp = tiles [x, y].hp - damage;
-		if (tiles [x, y].hp <= 0) {
+		if (tiles [x, y].hp <= 0) 
+		{
 			SwapTileType(x, y, TileData.Types.empty);	// to KILL TILE I just swap it ;)
 		}
 	}
+
+	/// <summary>
+	/// Gets the type of the tile.
+	/// </summary>
+	/// <returns>The tile type.</returns>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	public TileData.Types GetTileType(int x, int y)
+	{
+		return tiles[x,y].tileType;
+	}
+
+	/// <summary>
+	/// Gets the tile game object from spawned tiles array.
+	/// </summary>
+	/// <returns>The tile game object.</returns>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	public GameObject GetTileGameObj(int x, int y){
+		if (spawnedTiles [x, y] != null)
+			return spawnedTiles [x, y];
+		else
+			return null;
+	}
+
 
 	/// <summary>
 	/// Swaps the type of the tile.
@@ -199,6 +226,12 @@ public class ResourceGrid : MonoBehaviour{
 			case TileData.Types.farm_s:
 				tiles [x, y] = new TileData ("Seaweed Farm", newType, 0, 10000, 25, 1, 0, 0, sFarmCost[1], sFarmCost[0]);
 				break;
+			case TileData.Types.storage:
+				tiles [x, y] = new TileData ("Storage", newType, 0, 10000, 35, 2, 0, 0, storageCost[1], storageCost[0]);
+				break;
+			case TileData.Types.desalt_s:
+				tiles [x, y] = new TileData ("Desalination Pump", newType, 0, 10000, 15, 1, 0, 0, sDesaltCost[1], sDesaltCost[0]);
+				break;
 			case TileData.Types.building:
 				tiles [x, y] = new TileData (newType, 0, 10000);
 				break;
@@ -220,11 +253,37 @@ public class ResourceGrid : MonoBehaviour{
 				playerResources.totalFoodCost = playerResources.totalFoodCost - tiles[x,y].foodCost;
 			}
 
-			// ALSO if it's a Farm we need to subtract its food production from food produced per day
-			if (tiles[x,y].tileType == TileData.Types.farm_s || tiles[x,y].tileType == TileData.Types.farm_m 
-			    || tiles[x,y].tileType == TileData.Types.farm_l){
-				FoodProduction_Manager foodM = spawnedTiles [x, y].GetComponent<FoodProduction_Manager>();
-				playerResources.CalculateFoodProduction(foodM.foodProduced, foodM.productionRate, true);
+			// ALSO if it's a Farm we need to subtract its FOOD production and its WATER consumed
+			if (playerResources.foodProducedPerDay > 0){
+				if (tiles[x,y].tileType == TileData.Types.farm_s || tiles[x,y].tileType == TileData.Types.farm_m 
+				    || tiles[x,y].tileType == TileData.Types.farm_l){
+					FoodProduction_Manager foodM = spawnedTiles [x, y].GetComponent<FoodProduction_Manager>();
+					playerResources.CalculateFoodProduction(foodM.foodProduced, foodM.productionRate, foodM.waterConsumed, true);
+				}
+			}
+
+			// AND if it's a STORAGE we need to subtract all the ORE and WATER from the resources
+			if (tiles[x,y].tileType == TileData.Types.storage){
+				Storage storage = spawnedTiles[x,y].GetComponent<Storage>();
+				if (storage.oreStored > 0 || storage.waterStored > 0){
+					playerResources.ChangeResource("Ore", - storage.oreStored);
+					playerResources.ChangeResource("Water", -storage.waterStored);
+				}
+				// remove the storage building from the list
+				playerResources.RemoveStorageBuilding(storage);
+			}
+
+			// If it's an EXTRACTOR also need to subtract from Ore Produced
+			if (tiles[x,y].tileType == TileData.Types.extractor){
+				Extractor extra = spawnedTiles [x, y].GetComponent<Extractor>();
+				playerResources.CalculateOreProduction(extra.extractAmmnt, extra.extractRate, true);
+			}
+
+			// Same thing for a WATER PUMP
+			if (tiles[x,y].tileType == TileData.Types.desalt_s || tiles[x,y].tileType == TileData.Types.desalt_m 
+			    || tiles[x,y].tileType == TileData.Types.desalt_l){
+				DeSalt_Plant pump = spawnedTiles [x, y].GetComponent<DeSalt_Plant>();
+				playerResources.CalculateWaterProduction(pump.waterPumped, pump.pumpRate, true);
 			}
 
 			// RETURN 30% OF THE ORE COST TO THE RESOURCES

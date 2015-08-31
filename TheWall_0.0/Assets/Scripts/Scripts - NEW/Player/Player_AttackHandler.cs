@@ -10,6 +10,7 @@ public class Player_AttackHandler : Unit_Base {
 	public ObjectPool objPool;
 
 	public bool canAttack { private get; set;}
+	bool continueCounter;
 
 	public GameObject unitParent;
 
@@ -17,20 +18,23 @@ public class Player_AttackHandler : Unit_Base {
 
 	Animator anim;
 
+	public Barracks_SpawnHandler myBarracks;
+
 	void Start () {
 		anim = GetComponentInParent<Animator> ();
 		unitParent = gameObject.transform.parent.gameObject;
+		continueCounter = true;
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (canAttack) {
+		if (canAttack && continueCounter) {
 			StartCoroutine(WaitToAttack());
 		}
 	}
 	
 	IEnumerator WaitToAttack(){
-		canAttack = false;
+		continueCounter = false;
 		yield return new WaitForSeconds (rateOfAttack);
 		if (unitToPool != null) {
 			PoolTarget(unitToPool);
@@ -50,12 +54,20 @@ public class Player_AttackHandler : Unit_Base {
 			Unit_Base unitToHit = enemyUnit.GetComponent<Unit_Base> ();
 			AttackOtherUnit (unitToHit);
 			canAttack = true;
+			continueCounter = true;
 		} else {
 			canAttack = false;
 			enemyUnit = null;
+			continueCounter = true;
 		}
 		
 	}
+
+//	void MoveToAttack(){
+//		if (enemyUnit != null) {
+//			moveHandler.mX = Mathf.RoundToInt(enemyUnit.transform.position.x);
+//		}
+//	}
 	
 	void PoolTarget(GameObject target){
 		objPool.PoolObject (target); // Pool the Dead Unit
@@ -69,19 +81,26 @@ public class Player_AttackHandler : Unit_Base {
 		enemyUnit = null;
 		moveHandler.moving = false;
 		moveHandler.movingToAttack = false;
+		moveHandler.attackTarget = null;
+		continueCounter = true;
 
 	}
 
 	// To Add and enemy unit, this unit has to detect it Entering its Circle Collider
-	void OnTriggerEnter2D(Collider2D coll){
-		if (coll.gameObject.CompareTag ("Enemy")) {
+	void OnTriggerStay2D(Collider2D coll){
+		if (coll.gameObject.CompareTag ("Enemy") && enemyUnit == null) {
 //			Debug.Log ("Enemy entered collider!");
 			enemyUnit = coll.gameObject;
 			enemyUnit.GetComponent<Enemy_AttackHandler>().playerUnit = gameObject;
-			enemyUnit.GetComponent<Enemy_AttackHandler>().canAttack = true;
+			if (enemyUnit.GetComponent<Enemy_AttackHandler>().canAttack == false)
+				enemyUnit.GetComponent<Enemy_AttackHandler>().canAttack = true;
+
 			canAttack = true;
-//			moveHandler.moving = true;
-//			moveHandler.movingToAttack = true;
+			moveHandler.attackTarget = enemyUnit;
+			moveHandler.moving = true;
+			moveHandler.movingToAttack = true;
+			moveHandler.mX = Mathf.RoundToInt(enemyUnit.transform.position.x);
+			moveHandler.mY = Mathf.RoundToInt(enemyUnit.transform.position.y);
 
 
 		}
@@ -93,6 +112,12 @@ public class Player_AttackHandler : Unit_Base {
 			enemyUnit.GetComponent<Enemy_AttackHandler>().playerUnit = null;
 			enemyUnit.GetComponent<Enemy_AttackHandler>().canAttack = false;
 			enemyUnit = null;
+
+			moveHandler.attackTarget = null;
+			moveHandler.moving = false;
+			moveHandler.movingToAttack = false;
+
+
 		}
 	}
 }

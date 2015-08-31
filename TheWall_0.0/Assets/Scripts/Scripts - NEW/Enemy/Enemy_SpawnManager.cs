@@ -65,27 +65,27 @@ public class Enemy_SpawnManager : MonoBehaviour {
 		switch (level) {
 		case 1:
 			currEnemies[0] = easyBasic;
-			currEnemies[1] =  easyBasic;
+			currEnemies[1] =  easyMixed;
 			currEnemies[2] =  easyBasic;
-			currEnemies[3] =  easyBasic;
+			currEnemies[3] =  easyMixed;
+			currEnemies[4] =  easyBasic;
+			currEnemies[5] =  easyBasic;
+			currEnemies[6] =  easyBasic;
+			currEnemies[7] =  easyMixed;
+			currEnemies[8] = easyMixed;
+			currEnemies[9] = easyPythons;
+			break;
+		default:
+			currEnemies[0] = easyBasic;
+			currEnemies[1] =  easyBasic;
+			currEnemies[2] =  easyMixed;
+			currEnemies[3] =  easyMixed;
 //			currEnemies[4] =  easyThieves;
 //			currEnemies[5] =  easyThieves;
 //			currEnemies[6] =  easyBasic;
 //			currEnemies[7] =  easyMixed;
 //			currEnemies[8] = easyMixed;
 //			currEnemies[9] = easyPythons;
-			break;
-		default:
-			currEnemies[0] = easyBasic;
-			currEnemies[1] =  easyBasic;
-			currEnemies[2] =  easyBasic;
-			currEnemies[3] =  easyBasic;
-			currEnemies[4] =  easyThieves;
-			currEnemies[5] =  easyThieves;
-			currEnemies[6] =  easyBasic;
-			currEnemies[7] =  easyMixed;
-			currEnemies[8] = easyMixed;
-			currEnemies[9] = easyPythons;
 			break;
 		}
 	}
@@ -103,16 +103,17 @@ public class Enemy_SpawnManager : MonoBehaviour {
 	}
 
 	void SpawnFromPool(int count){
-		//TOTAL OF 5 SPAWN POSITONS!
+		//TOTAL OF 3 SPAWN POSITONS!
 		int randomPos = Random.Range (0, spawnPositions.Length);
 		if (count <= currEnemies.Length && currEnemies[count -1] != null) {
-			GameObject e = objPool.GetObjectForType(eBasicName, true);
+			GameObject e = objPool.GetObjectForType(currEnemies[count -1].name, true);
 			if (e != null){
 				e.transform.position = spawnPositions[randomPos];
-				e.GetComponent<Enemy_SpawnHandler>().resourceGrid = resourceGrid;
-				e.GetComponent<Enemy_SpawnHandler>().objPool = objPool;
-				e.GetComponent<Enemy_SpawnHandler>().indexForPath = randomPos;
-				e.GetComponent<Enemy_SpawnHandler>().spwnPointHandler = spwnPointHandler;
+				Enemy_SpawnHandler spwnHandler = e.GetComponent<Enemy_SpawnHandler>();
+				spwnHandler.resourceGrid = resourceGrid;
+				spwnHandler.objPool = objPool;
+				spwnHandler.indexForPath = randomPos;
+				spwnHandler.spwnPointHandler = spwnPointHandler;
 				canSpawn = true;
 			}else{
 				Debug.Log ("Spawn Manager can't find what you're trying to spawn!");

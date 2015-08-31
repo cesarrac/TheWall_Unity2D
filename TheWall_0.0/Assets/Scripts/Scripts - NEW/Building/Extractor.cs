@@ -10,28 +10,114 @@ public class Extractor : MonoBehaviour {
 
 	int rockPosX, rockPosY, currRockIndex;
 
-	public float extractTime;
+	public float extractRate;
 
-	public int extractRate;
+	public int extractAmmnt;
 
 	public Player_ResourceManager playerResources;
 
 	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
+
+	LineRenderer lineR;
+	public bool selecting;
+	Vector3 mouseEnd;
+
+	Building_UIHandler buildingUI;
+
+	Storage myStorage; // is set when player connects the plant to a storage building
+
+	bool statsInitialized;
+
+	void Awake(){
+		lineR = GetComponent<LineRenderer> ();
+	}
 
 	void Start(){
 		// INIT rocksdetected array
 		// This assumes that we are only checking tiles ONE TILE OVER in all directions
 		rocksDetected = new Vector2[8]; 
 
-		if (SearchForRock ()) {
-			CycleRocksArray();
+//		if (SearchForRock ()) {
+//			CycleRocksArray();
+//		}
+		if (resourceGrid == null) {
+			resourceGrid = GameObject.FindGameObjectWithTag("Map").GetComponent<ResourceGrid>();
 		}
+
+		if (buildingUI == null) {
+			buildingUI = GameObject.FindGameObjectWithTag ("UI").GetComponent<Building_UIHandler> ();
+		}
+
+		lineR.SetPosition (0, transform.position);
+		selecting = true;
 	}
 	
 
 	void Update () {
+		if (selecting)
+		{
+			lineR.enabled = true;
+			myStorage = null;
+			LineFollowMouse();
+			buildingUI.currentlyBuilding = true;
+			if (Input.GetMouseButtonUp (0)) 
+			{
+				SetStorageAndExtract();
+			}
+		}
+
+
+
 		if (canExtract && !starvedMode) {
 			StartCoroutine (WaitToExtract ());
+		}
+
+		if (!selecting && myStorage == null) {
+			lineR.enabled = false;
+			canExtract = false;
+			Debug.Log ("Need STORAGE!");
+		} else if (!selecting && myStorage != null) {
+			if (!statsInitialized){
+				playerResources.CalculateOreProduction(extractAmmnt, extractRate, false);
+				statsInitialized = true;
+			}
+		}
+	}
+
+	void LineFollowMouse(){
+		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
+		mouseEnd = new Vector3 (Mathf.Clamp(m.x, transform.position.x - 10f, transform.position.x + 10f), 
+		                        Mathf.Clamp(m.y, transform.position.y - 10f, transform.position.y + 10f), 
+		                        0.0f);
+		lineR.SetPosition (1, mouseEnd);
+	}
+
+	public void ActivateSelecting(){
+		if (!selecting) {
+			selecting = true;
+		}
+	}
+
+	void SetStorageAndExtract(){
+		int mX = Mathf.RoundToInt(mouseEnd.x);
+		int mY = Mathf.RoundToInt(mouseEnd.y);
+		if (mX > 2 && mX < resourceGrid.mapSizeX - 2 && mY > 2 && mY < resourceGrid.mapSizeY - 2) {
+			if (resourceGrid.GetTileType (mX, mY) == TileData.Types.storage) {
+				Debug.Log("Storage found for ore!");
+				selecting = false;
+			
+				buildingUI.currentlyBuilding = false;
+				//			lineR.enabled = false;
+				// set my storage
+				myStorage = resourceGrid.GetTileGameObj (mX, mY).GetComponent<Storage> ();
+
+				// start extracting by finding which direction our rock is
+				if (SearchForRock ()) {
+					CycleRocksArray ();
+				}
+			} else {
+				Debug.Log ("Need a place to store the ore!");
+			}
 		}
 	}
 
@@ -82,9 +168,9 @@ public class Extractor : MonoBehaviour {
 
 	bool CheckTileType(int x, int y){
 		if (x < resourceGrid.mapSizeX && y < resourceGrid.mapSizeY && x > 0 && y > 0) {
-			if (resourceGrid.tiles [x, y].tileType == TileData.Types.rock) {
+			if (resourceGrid.GetTileType(x, y) == TileData.Types.rock){
 				return true;
-			} else {
+			}else{
 				return false;
 			}
 		} else {
@@ -107,24 +193,69 @@ public class Extractor : MonoBehaviour {
 
 	IEnumerator WaitToExtract(){
 		canExtract = false;
-		yield return new WaitForSeconds(extractTime);
-		Extract ();
+		yield return new WaitForSeconds(extractRate);
+		if (myStorage != null) {
+			Extract ();
+		} 
 	}
+
+//	void Extract(){
+//		int q = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
+//		int calc = q - extractAmmnt;
+//		// subtract it from the tile
+//		resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity = calc;
+//		// add it to Player resources
+//		playerResources.ChangeResource ("Ore", extractAmmnt);
+//		// check if tile is depleted
+//		int newQ = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
+//		Debug.Log ("Extracting!");
+//		if (newQ <= 0) {
+//			DepleteRock (rockPosX, rockPosY);
+//		} else {
+//			canExtract = true;
+//		}
+//	}
 
 	void Extract(){
 		int q = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
-		int calc = q - extractRate;
-		// subtract it from the tile
-		resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity = calc;
-		// add it to Player resources
-		playerResources.ChangeResource ("Ore", extractRate);
-		// check if tile is depleted
-		int newQ = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
-		Debug.Log ("Extracting!");
-		if (newQ <= 0) {
-			DepleteRock (rockPosX, rockPosY);
-		} else {
-			canExtract = true;
+		int calc = q - extractAmmnt;
+		if (calc > 0) { // theres still ore left in this rock
+			Debug.Log ("Extracting!");
+		
+			// check that storage is not full
+			if (!myStorage.CheckIfFull (extractAmmnt, false)) {
+
+				// add it to Storage
+				myStorage.AddOreOrWater (extractAmmnt, false);
+
+				// subtract it from the tile
+				resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity = calc;
+
+				// check if tile is depleted
+				int newQ = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
+
+				if (newQ <= 0) {
+					// it is Depleted
+					DepleteRock (rockPosX, rockPosY);
+				} else {
+					// it's not Depleted so continue extracting
+					canExtract = true;
+				}
+
+			} else {
+
+				// storage is full and extractor stops until it gets a new storage
+				myStorage = null;
+
+//				// keep extracting
+//				if (SearchForRock ()) {
+//					CycleRocksArray();
+//				}
+			}
+
+
+		} else { // tile is depleted
+			DepleteRock(rockPosX, rockPosY);
 		}
 	}
 

@@ -33,6 +33,8 @@ public class Barracks_SpawnHandler : MonoBehaviour {
 
 	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
+	Vector3[] unitPositions;
+
 	void Start () {
 		resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
 	
@@ -47,6 +49,8 @@ public class Barracks_SpawnHandler : MonoBehaviour {
 
 		//init array
 		unitsSpawned = new GameObject[maxNumberofUnits];
+
+		unitPositions = new Vector3[maxNumberofUnits];
 
 
 
@@ -78,10 +82,16 @@ public class Barracks_SpawnHandler : MonoBehaviour {
 		if (unitSpawn != null) {
 			unitSpawn.transform.position = transform.position;
 			unitSpawn.transform.parent = parentTransform;
+
 			Vector3 newPos =  storedPos - unitSpawn.transform.localPosition;
 			unitSpawn.transform.localPosition = newPos;
 			unitSpawn.GetComponent<SelectedUnit_MoveHandler> ().resourceGrid = resourceGrid;
 			unitSpawn.GetComponentInChildren<Player_AttackHandler> ().objPool = objPool;
+			unitSpawn.GetComponentInChildren<Player_AttackHandler> ().myBarracks = this;
+
+			//STORE THE POSITION 
+			unitPositions [spwnCount] = newPos;
+
 //			if (!firstSpawn){
 //				firstSpawn = true;
 //				// get the HP of the first unit to store it
@@ -153,18 +163,32 @@ public class Barracks_SpawnHandler : MonoBehaviour {
 		}
 	}
 
-	void OnTriggerEnter2D(Collider2D coll){
-		if (coll.gameObject.CompareTag ("Enemy")) {
-			attackTarget = coll.gameObject;
-			MoveUnits (coll.transform.position);
-		} 
-	}
-	void OnTriggerExit2D(Collider2D coll){
-		if (coll.gameObject.CompareTag ("Enemy")) {
-			attackTarget = null;
-			StopUnits();
-			Debug.Log("Target exit. Setting attack target to null!");
+	public void MoveUnitsBack(){
+		for (int x = 0; x < unitsSpawned.Length; x++) {
+			if (unitsSpawned[x] != null){
+				SelectedUnit_MoveHandler moveHandler = unitsSpawned[x].GetComponent<SelectedUnit_MoveHandler>();
 
+				moveHandler.moving = true;
+				moveHandler.movingToAttack = false;
+				moveHandler.mX = Mathf.RoundToInt(unitPositions[x].x);
+				moveHandler.mY = Mathf.RoundToInt(unitPositions[x].y);
+			}
 		}
+//		StopUnits ();
 	}
+
+//	void OnTriggerEnter2D(Collider2D coll){
+//		if (coll.gameObject.CompareTag ("Enemy")) {
+//			attackTarget = coll.gameObject;
+//			MoveUnits (coll.transform.position);
+//		} 
+//	}
+//	void OnTriggerExit2D(Collider2D coll){
+//		if (coll.gameObject.CompareTag ("Enemy")) {
+//			attackTarget = null;
+//			MoveUnitsBack();
+//			Debug.Log("Target exit. Setting attack target to null!");
+//
+//		}
+//	}
 }

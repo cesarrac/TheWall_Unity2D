@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class Building_ClickHandler : MonoBehaviour {
@@ -21,7 +22,25 @@ public class Building_ClickHandler : MonoBehaviour {
 	BoxCollider2D myCollider;
 	float vertExtents;
 
+	[SerializeField]
+	private Canvas buildingCanvas;
+
+//	[SerializeField]
+//	private GameObject buildingPanel;
+
 	void Start () {
+
+		if (buildingCanvas == null) {
+			Debug.Log("CLICK HANDLER: Building Canvas not set!");
+		} 
+//		if (buildingPanel == null) {
+//			Debug.Log("CLICK HANDLER: Building Panel not set!");
+//		}
+
+		if (buildingCanvas != null) {
+			buildingCanvas.worldCamera = Camera.main;
+		}
+
 					// IF THIS BUILDING is spawned by the UI Handler, it won't need to make this search
 		if (buildingUIhandler == null) {
 			buildingUIhandler = GameObject.FindGameObjectWithTag ("UI").GetComponent<Building_UIHandler> ();
@@ -38,9 +57,25 @@ public class Building_ClickHandler : MonoBehaviour {
 
 	public void ActivateBuildingUI(){
 		Vector3 offset = new Vector3 (transform.position.x, transform.position.y + vertExtents);
-		if (!buildingUIhandler.currentlyBuilding)
-			buildingUIhandler.CreateOptionsButtons (offset, CheckTileType(mapPosX, mapPosY), mapPosX, mapPosY);
+//		if (!buildingUIhandler.currentlyBuilding)
+//			buildingUIhandler.CreateOptionsButtons (offset, CheckTileType(mapPosX, mapPosY), mapPosX, mapPosY, buildingPanel, buildingCanvas);
 
+		if (!buildingCanvas.gameObject.activeSelf) {
+			buildingCanvas.gameObject.SetActive(true);
+		}
+
+	}
+
+	public void ClosePanel(){
+		if (buildingCanvas.gameObject.activeSelf) {
+			buildingCanvas.gameObject.SetActive(false);
+		}
+	}
+
+	public void Sell(){
+		if (resourceGrid != null) {
+			resourceGrid.SwapTileType(mapPosX, mapPosY, TileData.Types.empty);
+		}
 	}
 
 	TileData.Types CheckTileType(int x, int y){

@@ -14,18 +14,27 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	bool canShoot, enemyInRange = false;
 
-	private GameObject targetUnit;
+	public GameObject targetUnit;
 
 	LineRenderer lineR;
 
 	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
+	SpriteRenderer sr;
+
 	void Start () {
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
 		}
-		lineR = sightStart.GetComponent<LineRenderer> ();
-		lineR.sortingLayerName = "Units";
+
+		if (GetComponentInParent<SpriteRenderer> () != null) {
+			sr = GetComponentInParent<SpriteRenderer> ();
+			
+			lineR = sightStart.GetComponent<LineRenderer> ();
+			lineR.sortingLayerName = sr.sortingLayerName;
+			lineR.sortingOrder = sr.sortingOrder;
+		}
+
 
 	}
 
@@ -43,7 +52,7 @@ public class Tower_TargettingHandler : Unit_Base {
 				if (targetUnit == null) {// DONT GET TARGET if you already have one!
 					targetUnit = hit.collider.gameObject;
 				// shoot one shot quickly then start coroutine
-//					VisualShooting ();
+					VisualShooting ();
 					HandleDamageToUnit ();
 				}
 			}
@@ -65,7 +74,7 @@ public class Tower_TargettingHandler : Unit_Base {
 		if (unitToPool != null) {
 			PoolTarget(unitToPool);
 		} else if (targetUnit != null){
-//			VisualShooting ();
+			VisualShooting ();
 			HandleDamageToUnit ();
 		}
 
@@ -76,9 +85,9 @@ public class Tower_TargettingHandler : Unit_Base {
 	/// The bullet itself is just for visual reference and will just Pool itself when it hits.
 	/// </summary>
 	void VisualShooting(){
-		GameObject bullet = objPool.GetObjectForType ("Bullet", false);
-		if (bullet != null) {
-			bullet.GetComponent<Bullet_FastMoveHandler>().objPool = objPool;
+		GameObject explosion = objPool.GetObjectForType ("Explosion Particles", false);
+		if (explosion != null) {
+			explosion.transform.position = targetUnit.transform.position;
 		}
 	}
 
@@ -110,11 +119,25 @@ public class Tower_TargettingHandler : Unit_Base {
 	}
 
 	void OnTriggerStay2D(Collider2D coll){
-		if (coll.gameObject.CompareTag("Enemy")){
-			float z = Mathf.Atan2((coll.transform.position.y - sightStart.position.y), (coll.transform.position.x - sightStart.position.x)) * Mathf.Rad2Deg - 90;		
-			//		myTransform.eulerAngles = new Vector3 (0,0,z);
-			sightStart.rotation = Quaternion.AngleAxis(z, Vector3.forward);
+		if (coll.gameObject.CompareTag ("Enemy") && targetUnit == null) {
+			// Rotate to the new target
+			float z = Mathf.Atan2 ((coll.transform.position.y - sightStart.position.y), (coll.transform.position.x - sightStart.position.x)) * Mathf.Rad2Deg - 90;		
+			sightStart.rotation = Quaternion.AngleAxis (z, Vector3.forward);
 			enemyInRange = true;
+
+		} else if (coll.gameObject.CompareTag ("Enemy") && targetUnit != null) {
+			// Already have a target, keep rotating with it
+			float z = Mathf.Atan2 ((targetUnit.transform.position.y - sightStart.position.y), (targetUnit.transform.position.x - sightStart.position.x)) * Mathf.Rad2Deg - 90;		
+			sightStart.rotation = Quaternion.AngleAxis (z, Vector3.forward);
+		}
+	}
+
+	void OnTriggerExit2D(Collider2D coll){
+		if (coll.gameObject.CompareTag ("Enemy") && targetUnit != null) {
+			if (coll.gameObject == targetUnit){
+				targetUnit = null;
+				enemyInRange = false;
+			}
 		}
 	}
 

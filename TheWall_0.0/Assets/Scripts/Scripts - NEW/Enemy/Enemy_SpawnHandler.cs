@@ -72,7 +72,7 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 		GameObject newEnemy = objPool.GetObjectForType (enemyName, true); // only gets it if pooled
 		if (newEnemy != null) {
 			// reset the HP of this unit in case its being reused from pool
-			newEnemy.GetComponentInChildren<Enemy_AttackHandler>().hp = unitHP;
+			newEnemy.GetComponentInChildren<Enemy_AttackHandler>().curHP = unitHP;
 
 			// give it an offset variation
 			Vector3 offsetPos = new Vector3(transform.position.x - randomVar.x, transform.position.y - randomVar.y, 0);

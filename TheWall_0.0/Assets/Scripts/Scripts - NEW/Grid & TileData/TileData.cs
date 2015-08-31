@@ -14,11 +14,15 @@ public class TileData  {
 		farm_m,
 		farm_l,
 		extractor,
+		desalt_s,
+		desalt_m,
+		desalt_l,
 		house,
 		seaWitch,
 		cannons,
 		machine_gun,
-		harpoonHall
+		harpoonHall,
+		storage
 	}
 	public Types tileType;
 

@@ -3,27 +3,42 @@ using System.Collections;
 
 public class FoodProduction_Manager : MonoBehaviour {
 	/// <summary>
-	/// Extracts x # of food each production cycle and adds it to the Player's resources.
+	/// Extracts x # of food each production cycle and adds it to the Player's resources. Will not start or continue
+	/// to produce food if the player has no water in storage.
 	/// </summary>
 
 	public float productionRate;
 	public int foodProduced;
+	public int waterConsumed; // water Consumed every farming cycle in order to produce a harvest
 	bool farming;
 
 	public Player_ResourceManager resourceManager;
 
 	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
+	bool foodStatsInitialized = false;
+
 	void Start () {
 		resourceManager = GameObject.FindGameObjectWithTag ("Capital").GetComponent<Player_ResourceManager> ();
 		farming = true;
 
-		// Tell the Resource Manager how much I produce per cycle
-		resourceManager.CalculateFoodProduction (foodProduced, productionRate, false);
+		// MAKE SURE THE PLAYER HAS WATER BEFORE ADDING THIS FARM'S PRODUCTION TO THE STATS
+		if (resourceManager.water > 0) {
+			// Tell the Resource Manager how much I produce per cycle
+			resourceManager.CalculateFoodProduction (foodProduced, productionRate, waterConsumed, false);
+			foodStatsInitialized = true;
+		}
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
+		if (!foodStatsInitialized) {
+			if (resourceManager.water > 0){
+				resourceManager.CalculateFoodProduction (foodProduced, productionRate, waterConsumed, false);
+				foodStatsInitialized = true;
+			}
+		}
+
 		if (farming && !starvedMode) {
 			StartCoroutine(WaitToFarm());
 		}
@@ -32,11 +47,24 @@ public class FoodProduction_Manager : MonoBehaviour {
 	IEnumerator WaitToFarm(){
 		farming = false;
 		yield return new WaitForSeconds (productionRate);
-		Farm ();
+		// Farms NEED WATER! Here we have to check with Resources to see if Player has enough water
+		if (resourceManager.water >= waterConsumed) {
+			Farm ();
+		} else {
+			// NOT enough water to farm!
+		}
 	}
 
 	void Farm(){
-		resourceManager.food = resourceManager.food + foodProduced;
+
+		// Before we can Harvest we need to charge water from resources, that script in turn charges the first storage
+		// holding enough water
+//		resourceManager.ChargeFromStorage (waterConsumed, "Water");
+		resourceManager.ChargeOreorWater ("Water", -waterConsumed);
+
+		// then add the food
+		resourceManager.ChangeResource("Food", foodProduced);
+
 		farming = true;
 	}
 

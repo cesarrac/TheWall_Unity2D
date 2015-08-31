@@ -47,12 +47,18 @@ public class Tower_AoETargettingHandler : Unit_Base {
 			PoolTarget(unitToPool);
 		} 
 		if (enemiesInRange[0] != null){
-			//			VisualShooting ();
+//			VisualShooting ();
 			HandleDamageToUnits ();
 		}
 		
 	}
-	//TODO: Don't need to spawn a bullet at all!! Just create a shooting animation that starts up when it shoots!!!
+
+	void VisualShooting(Vector3 position){
+		GameObject explosion = objPool.GetObjectForType ("Explosion Particles", false);
+		if (explosion != null) {
+			explosion.transform.position = position;
+		}
+	}
 
 	
 	/// <summary>
@@ -64,7 +70,7 @@ public class Tower_AoETargettingHandler : Unit_Base {
 			for (int x =0; x < enemiesInRange.Length; x++) {
 				if (enemiesInRange [x] != null) { // target hasn't already been killed
 					AttackOtherUnit (enemiesInRange [x].GetComponent<Unit_Base> ());
-
+					VisualShooting(enemiesInRange[x].transform.position);
 				}
 			}
 			canShoot = true;
@@ -112,6 +118,7 @@ public class Tower_AoETargettingHandler : Unit_Base {
 			if (!enemyInRange){
 				enemyInRange = true;
 				HandleDamageToUnits();
+//				VisualShooting();
 			}
 		}
 

@@ -3,7 +3,10 @@ using System.Collections;
 
 public class Unit_Base : MonoBehaviour {
 
-	public float hp, defence, attack, shield, damage, rateOfAttack;
+	public float maxHP, defence, attack, shield, damage, rateOfAttack;
+
+	private float _curHP;
+	public float curHP { get { return _curHP; } set { _curHP = Mathf.Clamp (value, 0f, maxHP); } }
 
 	public ResourceGrid resourceGrid;
 
@@ -14,6 +17,27 @@ public class Unit_Base : MonoBehaviour {
 	TileData tileUnderAttack = null;
 	float tileDefence, tileShield, tileHP;
 	public bool canAttackTile;
+
+//	public Damage_PopUp dmgPopUp; 
+
+	[Header("Optional: ")]
+	[SerializeField]
+	private Unit_StatusIndicator statusIndicator;
+
+	void Awake(){
+		// finds its own dmgPopUp
+//		dmgPopUp = GetComponent<Damage_PopUp> ();
+
+		curHP = maxHP;
+	}
+
+	void Start(){
+		if (statusIndicator != null) {
+			statusIndicator.SetHealth(curHP, maxHP);
+		}
+	}
+
+
 
 	public void AttackTile(int x, int y, Enemy_MoveHandler enemyMove){
 		if (resourceGrid.tiles [x, y] != null) {
@@ -55,28 +79,57 @@ public class Unit_Base : MonoBehaviour {
 
 	public void AttackOtherUnit(Unit_Base unit){
 
-		if (unit.hp > 0) {
+		if (unit.curHP > 0) {
 			float def = (unit.defence + unit.shield);
+
 			if (attack > def){
+				Debug.Log("Attacking " + unit.name + " DEF: " + def + " ATTK: " + attack);
+
 				// Apply full damage
-				unit.hp = unit.hp - damage;
-				if (unit.hp <=0){
-					Die(unit.gameObject);
-				}
+				TakeDamage(unit, damage);
+
+//				unit.hp = unit.hp - damage;
+//
+//				if (unit.hp <=0){
+//					Die(unit.gameObject);
+//				}
 			}else{
 				// hit for difference between def and attack
 				float calc = def - attack;
 				float damageCalc = damage - calc;
-				unit.hp = unit.hp - Mathf.Clamp(damageCalc, 1f, damage); // always do MINIMUM 1 pt of damage
-				if (unit.hp <=0){
-					Die(unit.gameObject);
-				} 
+				Debug.Log("Can't beat " + unit.name + "'s Attack, so I hit for " + damageCalc);
+
+				// always do MINIMUM 1 pt of damage
+				float clampedDamage = Mathf.Clamp(damageCalc, 1f, damage);
+
+				TakeDamage (unit, clampedDamage);
+//				unit.hp = unit.hp - Mathf.Clamp(damageCalc, 1f, damage); 
+//				if (unit.hp <=0){
+//					Die(unit.gameObject);
+//				} 
 			}
 		} else {
 			// target is dead by now
 			Die (unit.gameObject);
 		}
 	
+	}
+
+	void TakeDamage(Unit_Base unit, float damage){
+
+		unit.curHP = unit.curHP - damage;
+		if (unit.curHP <= 0f) {
+			Die (unit.gameObject);
+		} else {
+			if (unit.statusIndicator != null) {
+				unit.statusIndicator.SetHealth(unit.curHP, unit.maxHP, damage);
+			}
+		}
+
+		// pop up the damage
+//		unit.dmgPopUp.PopUpDamage (damage);
+
+
 	}
 
 	void Die(GameObject target){

@@ -12,7 +12,9 @@ public class Enemy_AttackHandler : Unit_Base {
 
 	public ObjectPool objPool;
 
-	public bool canAttack { private get; set;}
+	public bool canAttack;
+
+	bool startCounter = true;
 
 	void Start () {
 		resourceGrid = GetComponentInParent<Enemy_MoveHandler> ().resourceGrid;
@@ -20,15 +22,17 @@ public class Enemy_AttackHandler : Unit_Base {
 	
 	// Update is called once per frame
 	void Update () {
-		if (canAttack || canAttackTile) {
+		if (canAttack && startCounter || canAttackTile && startCounter) {
 			StartCoroutine (WaitToAttack ());
 
 		} 
 	}
 
 	IEnumerator WaitToAttack(){
-		canAttack = false;
-		canAttackTile = false;
+//		canAttack = false;
+//		canAttackTile = false;
+		startCounter = false;
+	
 		yield return new WaitForSeconds (rateOfAttack);
 		if (unitToPool != null) {
 			PoolTarget(unitToPool);
@@ -50,6 +54,7 @@ public class Enemy_AttackHandler : Unit_Base {
 			Unit_Base unitToHit = playerUnit.GetComponent<Unit_Base> ();
 			AttackOtherUnit (unitToHit);
 			canAttack = true;
+			startCounter = true;
 		} else {
 			canAttack = false;
 		}
@@ -82,5 +87,6 @@ public class Enemy_AttackHandler : Unit_Base {
 		playerUnit = null;
 		canAttack = false;
 		moveHandler.isAttacking = false;
+		startCounter = true;
 	}
 }

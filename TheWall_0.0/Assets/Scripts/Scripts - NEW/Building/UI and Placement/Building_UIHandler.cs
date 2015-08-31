@@ -13,7 +13,9 @@ public class Building_UIHandler : MonoBehaviour {
 	public GameObject mainBuildPanel;
 	public Button buildBttnFab;
 	// Building Sprites
-	public Sprite buildingSprite, extractSprite, machineGunSprite, seaWSprite, harpoonHSprite, cannonSprite, sFarmSprite;
+	public Sprite buildingSprite, extractSprite, machineGunSprite, seaWSprite, harpoonHSprite, 
+	cannonSprite, sFarmSprite, storSprite, sDesaltSprite;
+
 	// Building Names
 	public string buildingName;
 
@@ -25,7 +27,7 @@ public class Building_UIHandler : MonoBehaviour {
 	private GameObject buildUpgradePanel;
 
 
-	public Button buildButton;
+	public Button buildUpgradeBttn;
 	public Button closeBttn;
 
 //	string currBuildingName;
@@ -40,7 +42,7 @@ public class Building_UIHandler : MonoBehaviour {
 	public Player_ResourceManager resourceManager;
 
 	// Costs of Buildings:
-	public int[] extractCost, mGunCost, seaWCost, hHallCost, cannonCost,sFarmCost;
+	public int[] extractCost, mGunCost, seaWCost, hHallCost, cannonCost,sFarmCost, storageCost, sDesaltCost;
 
 	// Indicator that pops up just over the build panel, destroys itself
 	public GameObject indicatorFab;
@@ -79,6 +81,8 @@ public class Building_UIHandler : MonoBehaviour {
 		cannonCost = resourceGrid.cannonCost;
 		hHallCost = resourceGrid.harpoonHCost;
 		sFarmCost = resourceGrid.sFarmCost;
+		storageCost = resourceGrid.storageCost;
+		sDesaltCost = resourceGrid.sDesaltCost;
 	}
 
 	void CreateBuildingButtons(){
@@ -91,9 +95,13 @@ public class Building_UIHandler : MonoBehaviour {
 		BuildButton (buildBttnFab,cannonSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (96f, 90f, 0), new Vector2 (32, 32), buildingNames[2], cannonCost[0], cannonCost[1]); 
 		BuildButton (buildBttnFab,harpoonHSprite, mainBuildPanel, corners, corners, 
-		             new Vector3 (184f, 10f, 0), new Vector2 (32, 32), buildingNames[3], hHallCost[0], hHallCost[1]); 
+		             new Vector3 (176f, 10f, 0), new Vector2 (32, 32), buildingNames[3], hHallCost[0], hHallCost[1]); 
 		BuildButton (buildBttnFab,sFarmSprite, mainBuildPanel, corners, corners, 
-		             new Vector3 (260f, 10f, 0), new Vector2 (32, 32),buildingNames[4], sFarmCost[0], sFarmCost[1]);
+		             new Vector3 (256f, 10f, 0), new Vector2 (32, 32),buildingNames[4], sFarmCost[0], sFarmCost[1]);
+		BuildButton (buildBttnFab,sDesaltSprite, mainBuildPanel, corners, corners, 
+		             new Vector3 (256f, 90f, 0), new Vector2 (32, 32),buildingNames[5], sDesaltCost[0], sDesaltCost[1]);
+		BuildButton (buildBttnFab,storSprite, mainBuildPanel, corners, corners, 
+		             new Vector3 (336f, 10f, 0), new Vector2 (32, 32),buildingNames[6], storageCost[0], storageCost[1]);
 	}
 
 	void BuildButton(Button buttonPrefab,Sprite image, GameObject panel, Vector2 cornerTopR, Vector2 cornerBottL, Vector3 position, Vector2 size,  string bName, int oCost, int fCost){
@@ -272,6 +280,52 @@ public class Building_UIHandler : MonoBehaviour {
 				CreateIndicator("Need " + diff + " more Ore!");
 			}
 			break;
+		case "Storage":
+			if (resourceManager.ore >= storageCost[0]){		
+				GameObject storage = objPool.GetObjectForType(halfName, false);
+				if(storage != null){
+					// set the sprite
+					storage.GetComponent<SpriteRenderer>().sprite = storSprite;
+					//					// add building pos handler
+					//					sWeed.AddComponent<Building_PositionHandler>();
+					Building_PositionHandler bPosHand = storage.GetComponent<Building_PositionHandler>();
+					
+					bPosHand.resourceGrid = resourceGrid;
+					bPosHand.followMouse = true;
+					bPosHand.tileType = TileData.Types.storage;
+					bPosHand.resourceManager = resourceManager;
+					bPosHand.currOreCost = storageCost[0];
+					bPosHand.objPool = objPool;
+					bPosHand.buildingUI = this;
+				}
+			}else{
+				int diff = storageCost[0] - resourceManager.ore;
+				CreateIndicator("Need " + diff + " more Ore!");
+			}
+			break;
+		case "Desalination Pump":
+			if (resourceManager.ore >= sDesaltCost[0]){		
+				GameObject dSalt = objPool.GetObjectForType(halfName, false);
+				if(dSalt != null){
+					// set the sprite
+					dSalt.GetComponent<SpriteRenderer>().sprite = sDesaltSprite;
+					//					// add building pos handler
+					//					sWeed.AddComponent<Building_PositionHandler>();
+					Building_PositionHandler bPosHand = dSalt.GetComponent<Building_PositionHandler>();
+					
+					bPosHand.resourceGrid = resourceGrid;
+					bPosHand.followMouse = true;
+					bPosHand.tileType = TileData.Types.desalt_s;
+					bPosHand.resourceManager = resourceManager;
+					bPosHand.currOreCost = sDesaltCost[0];
+					bPosHand.objPool = objPool;
+					bPosHand.buildingUI = this;
+				}
+			}else{
+				int diff = sDesaltCost[0] - resourceManager.ore;
+				CreateIndicator("Need " + diff + " more Ore!");
+			}
+			break;
 		default:
 			print("UI handler cant find this type!");
 			break;
@@ -286,95 +340,218 @@ public class Building_UIHandler : MonoBehaviour {
 
 
 
-	GameObject CreateNewPanel(Vector3 position){
-		Vector3 posInScreen = Camera.main.WorldToScreenPoint (position);
-		Vector3 newPos = posInScreen - canvasRectTransform.position;
-		Vector2 corners = new Vector2(0.5f, 1f);
-		GameObject panel = Instantiate (buildUpgradePanelFab, newPos, Quaternion.identity) as GameObject;
-		RectTransform rectTransform = panel.GetComponent<RectTransform> ();
-		rectTransform.SetParent (canvas.transform);
-		rectTransform.anchoredPosition3D = position;
-		rectTransform.offsetMax = Vector2.zero;
-		rectTransform.offsetMin = Vector2.zero;
-		rectTransform.sizeDelta = new Vector2(111, 76);
-		rectTransform.localPosition = new Vector3(rectTransform.localPosition.x + newPos.x, rectTransform.localPosition.y + newPos.y + 100f, 0);
-		return panel;
-	}
-
-
-
-	public void CreateOptionsButtons(Vector3 buildPosition, TileData.Types tileType, int posX, int posY){
-		if (!currentlyBuilding) {
-			Vector2 corners = new Vector2 (0, 1);
-			currentTileType = tileType;
-			currPosX = posX;
-			currPosY = posY;
-
-			// This gets called by the clicked building and gives its position so we can re-position the build panel
-			if (currentTileType != TileData.Types.empty && currentTileType != TileData.Types.rock && currentTileType != TileData.Types.capital) { 
-				// Create a Panel on top of this building tile
-				buildUpgradePanel = CreateNewPanel (buildPosition);
-
-				// Clear the already active buttons so we don't create them on top of each other
-				foreach (Button button in activeButtons) {
-					if (button != null) {
-						Destroy (button.gameObject);
-					}
-				}
-				// First create the Close Panel button, then we can create the Buiding buttons
-				// Close Panel button
-				CreateButton (closeBttn, 0, buildUpgradePanel, new Vector2 (1, 1), new Vector2 (1, 1), new Vector3 (-4f, -1.6f, 0), new Vector2 (8, 8), " ", ClosePanel); 
-				// Here we would need a switch for the types to determine what Upgrade buttons we need
-				CreateButton (buildButton, 1, buildUpgradePanel, corners, corners, new Vector3 (27, 38, 0), new Vector2 (32, 32), "Sell", CallOption); 
-			}
-		}
-	}
-
-
-
-
-	void CreateButton(Button buttonPrefab, int bttnArrayIndex, GameObject panel, Vector2 cornerTopR, Vector2 cornerBottL, Vector3 position, Vector2 size,  string text, UnityAction method){
-		Button buildB = Instantiate (buttonPrefab, Vector3.zero, Quaternion.identity) as Button;
-		RectTransform rectTransform = buildB.GetComponent<RectTransform> ();
-		rectTransform.SetParent (panel.transform);
-		rectTransform.anchorMax = cornerTopR;
-		rectTransform.anchorMin = cornerBottL;
-		rectTransform.offsetMax = Vector2.zero;
-		rectTransform.offsetMin = Vector2.zero;
-		rectTransform.sizeDelta = size;
-		rectTransform.localPosition = new Vector3(rectTransform.localPosition.x + position.x, rectTransform.localPosition.y - position.y, 0);
-		Text txt = buildB.gameObject.GetComponentInChildren<Text> ();
-		txt.text = text;
-		string currBuildingName = text;
-		buildB.onClick.AddListener (method);
-		// add this button to the array of active buttons ( so we can later clear it out)
-		activeButtons [bttnArrayIndex] = buildB;
-	}
-	void CallOption(){
-		OptionsForThis ();
-	}
-	void OptionsForThis(){
-		// To build we are just using the function SwapTileType to change this tile's type to that of the building
-		switch (currentTileType) {
-		case TileData.Types.capital:
-			Debug.Log("No options for the capital right now!");
-			ClosePanel();
-			break;
-		default:
-			resourceGrid.SwapTileType(currPosX, currPosY, TileData.Types.empty); 
-			ClosePanel();
-			break;
-		}
-	}
-
-//	void CallSpawn(){
-//		playerSpawn.Spawn ();
-//		ClosePanel();
+//	GameObject CreateNewPanel(Vector3 position){
+//		Vector3 posInScreen = Camera.main.WorldToScreenPoint (position);
+//		Vector3 newPos = posInScreen - canvasRectTransform.position;
+//		Vector2 corners = new Vector2(0.5f, 1f);
+//		GameObject panel = Instantiate (buildUpgradePanelFab, newPos, Quaternion.identity) as GameObject;
+//		RectTransform rectTransform = panel.GetComponent<RectTransform> ();
+//		rectTransform.SetParent (canvas.transform);
+//		rectTransform.anchoredPosition3D = position;
+//		rectTransform.offsetMax = Vector2.zero;
+//		rectTransform.offsetMin = Vector2.zero;
+//		rectTransform.sizeDelta = new Vector2(111, 76);
+//		rectTransform.localPosition = new Vector3(rectTransform.localPosition.x + newPos.x, rectTransform.localPosition.y + newPos.y + 100f, 0);
+//		return panel;
 //	}
 
-	public void ClosePanel(){
-		Destroy (buildUpgradePanel.gameObject);
-	}
+//	public void CreateOptionsButtons(Vector3 buildPosition, TileData.Types tileType, int posX, int posY, GameObject buildingPanel, Canvas buildingCanvas){
+//		if (!currentlyBuilding) {
+//			Vector2 corners = new Vector2 (1, 1);
+//			currentTileType = tileType;
+//			currPosX = posX;
+//			currPosY = posY;
+//			
+//			// This gets called by the clicked building and gives its position so we can re-position the build panel
+//			if (currentTileType != TileData.Types.empty && currentTileType != TileData.Types.rock && 
+//			    currentTileType != TileData.Types.capital && currentTileType != TileData.Types.desalt_s &&
+//			    currentTileType != TileData.Types.extractor ) { 
+//				
+////				// Activate the building's panel
+//				buildingPanel.SetActive(true);
+//				buildUpgradePanel = buildingPanel;
+//
+//				// Clear the already active buttons so we don't create them on top of each other
+//				foreach (Button button in activeButtons) {
+//					if (button != null) {
+//						Destroy (button.gameObject);
+//					}
+//				}
+//
+//				// First create the Close Panel button, then we can create the Buiding buttons
+//				// Close Panel button
+//				CreateButton (closeBttn, 0, buildingPanel, corners,corners, Vector3.zero, new Vector2 (32, 32), " ", ClosePanel); 
+//				// Here we would need a switch for the types to determine what Upgrade buttons we need
+//				CreateButton (buildUpgradeBttn, 1, buildingPanel, new Vector2(0,0.5f), new Vector2(0,0.5f), new Vector3 (113, 0, 0), new Vector2 (200, 100), "Sell", Sell); 
+//			}
+//			
+////			if (currentTileType == TileData.Types.desalt_s || currentTileType == TileData.Types.extractor){
+////				
+////				if (buildUpgradePanel != null){
+////					Destroy (buildUpgradePanel);
+////					buildUpgradePanel = CreateNewPanel (buildPosition);
+////				}else{
+////					buildUpgradePanel = CreateNewPanel (buildPosition);
+////				}
+////				
+////				foreach (Button button in activeButtons) {
+////					if (button != null) {
+////						Destroy (button.gameObject);
+////					}
+////				}
+////				CreateButton (closeBttn, 0, buildUpgradePanel, new Vector2 (1, 1), new Vector2 (1, 1), new Vector3 (-4f, -1.6f, 0), new Vector2 (8, 8), " ", ClosePanel); 
+////				
+////				CreateButton (buildButton, 1, buildUpgradePanel, corners, corners, new Vector3 (64, 24, 0), new Vector2 (32, 32), "Sell", Sell); 
+////				
+////				CreateButton (buildButton, 1, buildUpgradePanel, corners, corners, new Vector3 (60, 56, 0), new Vector2 (64, 32), "Set Storage", CallOption); 
+////				
+////			}
+//		}
+//	}
+
+//	void CreateButton(Button buttonPrefab, int bttnArrayIndex, GameObject panel, Vector2 anchorMin, Vector2 anchorMax, Vector3 position, Vector2 size,  string text, UnityAction method){
+//		Button buildB = Instantiate (buttonPrefab, Vector3.zero, Quaternion.identity) as Button;
+//		RectTransform rectTransform = buildB.GetComponent<RectTransform> ();
+//		rectTransform.SetParent (panel.transform);
+//		rectTransform.anchorMax = anchorMax;
+//		rectTransform.anchorMin = anchorMin;
+//		rectTransform.offsetMax = Vector2.zero;
+//		rectTransform.offsetMin = Vector2.zero;
+//		rectTransform.sizeDelta = size;
+//		rectTransform.localPosition = new Vector3(rectTransform.localPosition.x + position.x, rectTransform.localPosition.y - position.y, 0);
+//		Text txt = buildB.gameObject.GetComponentInChildren<Text> ();
+//		txt.text = text;
+//		string currBuildingName = text;
+//		buildB.onClick.AddListener (method);
+//
+//		// add this button to the array of active buttons ( so we can later clear it out)
+//		activeButtons [bttnArrayIndex] = buildB;
+//	}
+
+//	public void CreateOptionsButtons(Vector3 buildPosition, TileData.Types tileType, int posX, int posY){
+//		if (!currentlyBuilding) {
+//			Vector2 corners = new Vector2 (0, 1);
+//			currentTileType = tileType;
+//			currPosX = posX;
+//			currPosY = posY;
+//
+//			// This gets called by the clicked building and gives its position so we can re-position the build panel
+//			if (currentTileType != TileData.Types.empty && currentTileType != TileData.Types.rock && 
+//			    currentTileType != TileData.Types.capital && currentTileType != TileData.Types.desalt_s &&
+//			    currentTileType != TileData.Types.extractor ) { 
+//
+//				// Create a Panel on top of this building tile, if there's one already destroy it
+//				if (buildUpgradePanel != null){
+//					Destroy (buildUpgradePanel);
+//					buildUpgradePanel = CreateNewPanel (buildPosition);
+//				}else{
+//					buildUpgradePanel = CreateNewPanel (buildPosition);
+//				}
+//
+//				// Clear the already active buttons so we don't create them on top of each other
+//				foreach (Button button in activeButtons) {
+//					if (button != null) {
+//						Destroy (button.gameObject);
+//					}
+//				}
+//				// First create the Close Panel button, then we can create the Buiding buttons
+//				// Close Panel button
+//				CreateButton (closeBttn, 0, buildUpgradePanel, new Vector2 (1, 1), new Vector2 (1, 1), new Vector3 (-4f, -1.6f, 0), new Vector2 (8, 8), " ", ClosePanel); 
+//				// Here we would need a switch for the types to determine what Upgrade buttons we need
+//				CreateButton (buildButton, 1, buildUpgradePanel, corners, corners, new Vector3 (27, 38, 0), new Vector2 (32, 32), "Sell", Sell); 
+//			}
+//
+//			if (currentTileType == TileData.Types.desalt_s || currentTileType == TileData.Types.extractor){
+//		
+//				if (buildUpgradePanel != null){
+//					Destroy (buildUpgradePanel);
+//					buildUpgradePanel = CreateNewPanel (buildPosition);
+//				}else{
+//					buildUpgradePanel = CreateNewPanel (buildPosition);
+//				}
+//
+//				foreach (Button button in activeButtons) {
+//					if (button != null) {
+//						Destroy (button.gameObject);
+//					}
+//				}
+//				CreateButton (closeBttn, 0, buildUpgradePanel, new Vector2 (1, 1), new Vector2 (1, 1), new Vector3 (-4f, -1.6f, 0), new Vector2 (8, 8), " ", ClosePanel); 
+//
+//				CreateButton (buildButton, 1, buildUpgradePanel, corners, corners, new Vector3 (64, 24, 0), new Vector2 (32, 32), "Sell", Sell); 
+//
+//				CreateButton (buildButton, 1, buildUpgradePanel, corners, corners, new Vector3 (60, 56, 0), new Vector2 (64, 32), "Set Storage", CallOption); 
+//
+//			}
+//		}
+//	}
+
+
+
+
+//	void CreateButton(Button buttonPrefab, int bttnArrayIndex, GameObject panel, Vector2 cornerTopR, Vector2 cornerBottL, Vector3 position, Vector2 size,  string text, UnityAction method){
+//		Button buildB = Instantiate (buttonPrefab, Vector3.zero, Quaternion.identity) as Button;
+//		RectTransform rectTransform = buildB.GetComponent<RectTransform> ();
+//		rectTransform.SetParent (panel.transform);
+//		rectTransform.anchorMax = cornerTopR;
+//		rectTransform.anchorMin = cornerBottL;
+//		rectTransform.offsetMax = Vector2.zero;
+//		rectTransform.offsetMin = Vector2.zero;
+//		rectTransform.sizeDelta = size;
+//		rectTransform.localPosition = new Vector3(rectTransform.localPosition.x + position.x, rectTransform.localPosition.y - position.y, 0);
+//		Text txt = buildB.gameObject.GetComponentInChildren<Text> ();
+//		txt.text = text;
+//		string currBuildingName = text;
+//		buildB.onClick.AddListener (method);
+//		// add this button to the array of active buttons ( so we can later clear it out)
+//		activeButtons [bttnArrayIndex] = buildB;
+//	}
+
+//
+//	void CallOption(){
+//		OptionsForThis ();
+//	}
+//	void OptionsForThis(){
+//
+//		switch (currentTileType) {
+//		case TileData.Types.capital:
+//			Debug.Log("No options for the capital right now!");
+//			ClosePanel();
+//			break;
+//		case TileData.Types.desalt_s:
+//			ResetStorage();
+//			break;
+//		case TileData.Types.extractor:
+//			ResetStorage();
+//			break;
+//		default:
+//			Sell ();
+//			break;
+//		}
+//	}
+//
+//	public void Sell(){
+//		resourceGrid.SwapTileType(currPosX, currPosY, TileData.Types.empty); 
+//		ClosePanel();
+//	}
+//
+//	public void ClosePanel(){
+//		buildUpgradePanel.SetActive(false);
+//	}
+//
+//	public void ResetStorage(){
+//		if (resourceGrid.GetTileGameObj (currPosX, currPosY) != null) {
+//			if (resourceGrid.GetTileType(currPosX, currPosY) == TileData.Types.desalt_s){
+//				resourceGrid.GetTileGameObj (currPosX, currPosY).GetComponent<DeSalt_Plant>().selecting = true;
+//			}else if (resourceGrid.GetTileType(currPosX, currPosY) == TileData.Types.extractor) {
+//				resourceGrid.GetTileGameObj (currPosX, currPosY).GetComponent<Extractor>().selecting = true;
+//			}
+//		}
+//		ClosePanel ();
+//	}
+
+
+
+
 
 	public void CreateIndicator(string message){
 		if (currIndicator != null) {
@@ -384,8 +561,8 @@ public class Building_UIHandler : MonoBehaviour {
 			currIndicator.transform.position = mainBuildPanel.transform.position;
 			currIndicator.transform.SetParent (canvas.transform);
 			RectTransform rectTransform = currIndicator.GetComponent<RectTransform> ();
-			rectTransform.sizeDelta = new Vector2 (145.6f, 32f);
-			rectTransform.localPosition = new Vector3 (rectTransform.localPosition.x - 336f, rectTransform.localPosition.y + 123f, 0);
+			rectTransform.sizeDelta = new Vector2 (182f, 32f);
+			rectTransform.localPosition = new Vector3 (rectTransform.localPosition.x - 345f, rectTransform.localPosition.y + 113f, 0);
 			currIndicator.GetComponentInChildren<Text> ().text = message;
 	}
 	public void PoolIndicator(){

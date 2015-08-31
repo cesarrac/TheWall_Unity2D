@@ -8,6 +8,7 @@ public class Player_ResourceManager : MonoBehaviour {
 	public int ore;
 	public int food;
 	public int credits;
+	public int water;
 
 	public int maxCitizenCount = 1;// the maximum citizens will increase with each level, bringing in new characters
 
@@ -22,13 +23,26 @@ public class Player_ResourceManager : MonoBehaviour {
 	Building_UIHandler buildingUI;
 
 	public ResourceGrid resourceGrid;
+
 	List <GameObject> buildingsStarved = new List<GameObject>();
+
 	GameObject lastBuildingPicked, currStarvedBuilding;
 
 	// Keep track of all Farms built and how much they produce per day
-	int farmCount;
+	public int farmCount{ get; private set; }
 	public int foodProducedPerDay { get; private set; }
 
+	// Keep track of all Storage buildings keeping ore and water, each storage adds itself when instantiated
+	public List<Storage> storageBuildings = new List<Storage> ();
+
+	// Keep track of all Water plants/pumps
+	public int waterPumpCount{ get; private set; }
+	public int waterProducedPerDay{ get; private set; }
+	public int totalWaterCost;
+
+	// Keep track of all Extractors gathering Ore
+	public int extractorCount{ get; private set; }
+	public int oreExtractedPerDay { get; private set; }
 	
 	/// <summary>
 	/// Calculates the food production per day.
@@ -39,7 +53,7 @@ public class Player_ResourceManager : MonoBehaviour {
 	/// <param name="foodProduced">Food produced.</param>
 	/// <param name="rateOfProd">Rate of prod.</param>
 	/// <param name="trueIfSubtracting">Set to true if this Farm is being destroyed.</param>
-	public void CalculateFoodProduction(int foodProduced, float rateOfProd, bool trueIfSubtracting){
+	public void CalculateFoodProduction(int foodProduced, float rateOfProd, int waterNeeded, bool trueIfSubtracting){
 	
 		float productionRate = dayTime / rateOfProd;
 //		Debug.Log ("Production Rate: " + productionRate);
@@ -50,11 +64,43 @@ public class Player_ResourceManager : MonoBehaviour {
 		if (!trueIfSubtracting) {
 			farmCount++;
 			foodProducedPerDay = foodProducedPerDay + perDay;
+			// add this farm's water needed stat to keep track of how much water we need
+			totalWaterCost = totalWaterCost + waterNeeded;
 		} else {
 			farmCount--;
 			foodProducedPerDay = foodProducedPerDay - perDay;
+
+			totalWaterCost = totalWaterCost - waterNeeded;
 		}
 		Debug.Log ("Food Produced Per Day = " + foodProducedPerDay + " from " + farmCount + " Farms.");
+	}
+
+	public void CalculateWaterProduction(int waterPumped, float rateOfPump, bool trueIfSubtracting){
+		float productionRate = dayTime / rateOfPump;
+		
+		int perDay = Mathf.RoundToInt (waterPumped * productionRate);
+		
+		if (!trueIfSubtracting) {
+			waterPumpCount++;
+			waterProducedPerDay = waterProducedPerDay + perDay;
+		} else {
+			waterPumpCount--;
+			waterProducedPerDay = waterProducedPerDay - perDay;
+		}
+	}
+
+	public void CalculateOreProduction(int oreExtracted, float rateOfExtract, bool trueIfSubtracting){
+		float productionRate = dayTime / rateOfExtract;
+		
+		int perDay = Mathf.RoundToInt (oreExtracted * productionRate);
+		
+		if (!trueIfSubtracting) {
+			extractorCount++;
+			oreExtractedPerDay = oreExtractedPerDay + perDay;
+		} else {
+			extractorCount--;
+			oreExtractedPerDay = oreExtractedPerDay - perDay;
+		}
 	}
 
 	void Start(){
@@ -181,7 +227,7 @@ public class Player_ResourceManager : MonoBehaviour {
 			building.GetComponentInChildren<Tower_TargettingHandler>().starvedMode = true;
 			buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
 			}else{
-				building.GetComponent<Tower_TargettingHandler>().starvedMode = false;
+				building.GetComponentInChildren<Tower_TargettingHandler>().starvedMode = false;
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
@@ -190,7 +236,7 @@ public class Player_ResourceManager : MonoBehaviour {
 			building.GetComponentInChildren<Tower_AoETargettingHandler>().starvedMode = true;
 			buildingUI.CreateIndicator(buildingName + " stopped working.");
 			}else{
-				building.GetComponent<Tower_AoETargettingHandler>().starvedMode = false;
+				building.GetComponentInChildren<Tower_AoETargettingHandler>().starvedMode = false;
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
@@ -199,7 +245,7 @@ public class Player_ResourceManager : MonoBehaviour {
 			building.GetComponentInChildren<Barracks_SpawnHandler>().starvedMode = true;
 			buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
 			}else{
-				building.GetComponent<Barracks_SpawnHandler>().starvedMode = false;
+				building.GetComponentInChildren<Barracks_SpawnHandler>().starvedMode = false;
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
@@ -221,27 +267,116 @@ public class Player_ResourceManager : MonoBehaviour {
 
 
 
+	/// <summary>
+	/// Add or subtract a resource. This is changing the total ammount that is then seen in the UI.
+	/// </summary>
+	/// <param name="id">Identifier.</param>
+	/// <param name="quantity">Quantity.</param>
+	public void ChangeResource (string id, int quantity){
+		Debug.Log ("Changing " + id + " by " + quantity);
 
-	public void ChangeResource (string id, int quantityToAdd){
 		switch (id) {
 		case "Ore":
-			ore = ore + quantityToAdd;
+			ore = ore + quantity;
+
 			break;
 		case "Food":
-			food = food + quantityToAdd;
+
+			food = food + quantity;
+
 			break;
 		case "Credits":
-			credits = credits + quantityToAdd;
+
+			credits = credits + quantity;
+
 			break;
-			//		case "xp":
-			//			float xpCalc = xp + (float)quantityToAdd;
-			//			xp = Mathf.Round(xpCalc);
-			//			break;
+		case "Water":
+			water = water + quantity;
+
+			break;
 		default:
 			print ("Cant find that resource type!");
 			break;
 		}
 	}
 
+	public bool CheckStorageForResource(string id, int ammnt){
+		if (storageBuildings.Count > 0) {
+			for (int i =0; i < storageBuildings.Count; i++) {
+				if (id == "Ore") {
+					if (storageBuildings [i].oreStored >= ammnt)
+						return true;
+				} else if (id == "Water") {
+					if (storageBuildings [i].waterStored >= ammnt)
+						return true;
+				} else {
+					// no other resource but ore and water in storage right now
+					return false;
+				}
+			}
+
+			// if none of the storages have returned true then just return false
+			return false;
+
+		} else {
+
+			return false;
+
+		}
+
+	}
+
+	/// <summary>
+	/// Charges an ammount of WATER or ORE from the first
+	/// storage that contains more than or equal the charge ammount.
+	/// </summary>
+	/// <param name="id">Identifier.</param>
+	/// <param name="charge">Charge.</param>
+	public void ChargeFromStorage(int charge, string id){
+		if (storageBuildings.Count > 0) {
+			for (int x=0; x < storageBuildings.Count; x++){
+				if (id == "Ore"){
+					if (storageBuildings[x].oreStored >= charge){
+						storageBuildings[x].ChargeResource(charge, "Ore");
+						break;
+					}
+				}else if (id == "Water"){
+					if (storageBuildings[x].waterStored >= charge){
+						storageBuildings[x].ChargeResource(charge, "Water");
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	public void ChargeOreorWater(string id, int ammnt){
+		// this assumes that I've already checked there is more than ammnt in the total Ore / Water
+
+		// First, check if there are any storage buildings
+		if (storageBuildings.Count > 0) {
+			// Since there ARE storage buildings let's try charging this ammnt from one of them
+
+			if (CheckStorageForResource(id, -ammnt)){ // here we check if there's a storage with enough of that resource
+
+				ChargeFromStorage(ammnt, id); // this TAKES the ammnt from a storage
+
+			}
+		
+		} else {
+			// if there are NO storage buildings we just charge from the total Ore / Water
+			ChangeResource(id, ammnt);
+
+		}
+	}
+
+
+	/// <summary>
+	/// Removes the storage building from the list.
+	/// </summary>
+	/// <param name="storage">Storage.</param>
+	public void RemoveStorageBuilding(Storage storage){
+		storageBuildings.Remove (storage);
+	}
 
 }

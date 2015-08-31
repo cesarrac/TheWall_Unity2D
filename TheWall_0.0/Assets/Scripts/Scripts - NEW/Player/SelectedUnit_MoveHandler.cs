@@ -143,7 +143,7 @@ public class SelectedUnit_MoveHandler : MonoBehaviour {
 					anim.SetTrigger ("attackRight");
 				}
 			}else{
-
+				anim.SetTrigger("idle");
 				anim.ResetTrigger("attackLeft");
 				anim.ResetTrigger("attackRight");
 			}
