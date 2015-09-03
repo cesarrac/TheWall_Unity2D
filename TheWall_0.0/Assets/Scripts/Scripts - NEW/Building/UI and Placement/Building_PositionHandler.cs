@@ -156,7 +156,8 @@ public class Building_PositionHandler : MonoBehaviour {
 		if (Input.GetMouseButtonDown (0) && canBuild && canAfford) {			// So LEFT CLICK to BUILD!!
 
 			// Subtract the cost
-			resourceManager.ChargeOreorWater("Ore", -currOreCost);
+//			resourceManager.ChargeOreorWater("Ore", -currOreCost);
+			resourceManager.ChangeResource("Ore", -currOreCost);
 
 			// stop following and tell grid to swap this tile to this new building
 			mapPosX = mX;

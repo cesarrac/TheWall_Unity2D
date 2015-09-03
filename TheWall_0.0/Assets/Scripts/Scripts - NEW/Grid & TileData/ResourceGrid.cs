@@ -49,7 +49,7 @@ public class ResourceGrid : MonoBehaviour{
 
 	// BUILDING COSTS:
 	public int[] extractorCost, machineGunCost, seaWitchCost, harpoonHCost, cannonCost, sFarmCost; // the array's [0] value is ORE Cost, [1] value is FOOD Cost
-	public int[] storageCost, sDesaltCost;
+	public int[] storageCost, sDesaltCost, sniperCost;
 
 	public Player_ResourceManager playerResources;
 
@@ -77,16 +77,16 @@ public class ResourceGrid : MonoBehaviour{
 		InitPathFindingGraph ();
 	}
 
-//	void Update(){
-//		if (Input.GetMouseButtonDown (1)) {
-//			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-//			int mX = Mathf.RoundToInt(m.x);
-//			int mY = Mathf.RoundToInt(m.y);
-//			Debug.Log("Coords: x: " + mX + " y: " + mY);
-//			if (mX <= mapSizeX && mY <= mapSizeY)
-//				Debug.Log("Tile type: " + tiles[mX, mY].tileType);
-//		}
-//	}
+	void Update(){
+		if (Input.GetMouseButtonDown (1)) {
+			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+			int mX = Mathf.RoundToInt(m.x);
+			int mY = Mathf.RoundToInt(m.y);
+			Debug.Log("Coords: x: " + mX + " y: " + mY);
+			if (mX <= mapSizeX && mY <= mapSizeY)
+				Debug.Log("Tile type: " + tiles[mX, mY].tileType);
+		}
+	}
 	
 	void InitGrid(){
 		for (int x = 0; x < mapSizeX; x++) {
@@ -232,6 +232,12 @@ public class ResourceGrid : MonoBehaviour{
 			case TileData.Types.desalt_s:
 				tiles [x, y] = new TileData ("Desalination Pump", newType, 0, 10000, 15, 1, 0, 0, sDesaltCost[1], sDesaltCost[0]);
 				break;
+			case TileData.Types.sniper:
+				tiles [x, y] = new TileData ("Sniper Gun", newType, 0, 10000, 0, 0, 0, 0, sniperCost[1], sniperCost[0]);
+				break;
+			case TileData.Types.seaWitch:
+				tiles [x, y] = new TileData ("Sea-Witch Crag", newType, 0, 10000, 0, 0, 0, 0, seaWitchCost[1], seaWitchCost[0]);
+				break;
 			case TileData.Types.building:
 				tiles [x, y] = new TileData (newType, 0, 10000);
 				break;
@@ -265,10 +271,10 @@ public class ResourceGrid : MonoBehaviour{
 			// AND if it's a STORAGE we need to subtract all the ORE and WATER from the resources
 			if (tiles[x,y].tileType == TileData.Types.storage){
 				Storage storage = spawnedTiles[x,y].GetComponent<Storage>();
-				if (storage.oreStored > 0 || storage.waterStored > 0){
-					playerResources.ChangeResource("Ore", - storage.oreStored);
-					playerResources.ChangeResource("Water", -storage.waterStored);
-				}
+//				if (storage.oreStored > 0 || storage.waterStored > 0){
+//					playerResources.ChangeResource("Ore", - storage.oreStored);
+//					playerResources.ChangeResource("Water", -storage.waterStored);
+//				}
 				// remove the storage building from the list
 				playerResources.RemoveStorageBuilding(storage);
 			}

@@ -2,6 +2,22 @@
 using System.Collections.Generic;
 
 public class Enemy_MoveHandler : MonoBehaviour {
+
+	[System.Serializable]
+	public class MovementStats {
+		public float startMoveSpeed;
+
+		private float _moveSpeed;
+
+		public float curMoveSpeed{ get { return _moveSpeed; } set { _moveSpeed = Mathf.Clamp(value, 0, startMoveSpeed); } }
+
+		public void InitMoveStats(){
+			curMoveSpeed = startMoveSpeed;
+		}
+	}
+
+	public MovementStats mStats = new MovementStats();
+
 	public ResourceGrid resourceGrid;
 	
 	public int posX, targetPosX;
@@ -16,7 +32,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 
 	public Enemy_AttackHandler enemyAttkHandler;
 
-	public float movementSpeed = 1.0F;
+//	public float movementSpeed = 1.0F;
 
 	public bool moving;
 
@@ -28,7 +44,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 	public float stoppingDistance;
 	CircleCollider2D collider;
 	public Vector3 destination;
-	public bool destinationReached = false;
+
 
 	public bool movingBackToPath = false, movingToFormation = false;
 	Vector2 formationPos;
@@ -38,7 +54,12 @@ public class Enemy_MoveHandler : MonoBehaviour {
 
 	public Animator anim;
 
+	private Vector2 _capitalPosition;
+
 	void Start () {
+
+		mStats.InitMoveStats ();
+
 		if (anim == null) {
 			anim = GetComponentInChildren<Animator>();
 		}
@@ -48,6 +69,8 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		enemyAttkHandler = GetComponentInChildren<Enemy_AttackHandler> ();
 
 		GetFirstPath ();
+
+		_capitalPosition = new Vector2 (resourceGrid.capitalSpawnX, resourceGrid.capitalSpawnY);
 	}
 
 	void GetFirstPath(){
@@ -109,16 +132,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			}
 		
 		} 
-		if (!destinationReached) {
 
-			if (Vector3.Distance(transform.position, destination) < stoppingDistance){ // + 1 for the tile separation
-				destinationReached = true;
-				moving = false;
-				Debug.Log("Destination Reached");
-			}
-		
-		}
-	
 		if (moving && !isAttacking){
 			// Have we moved close enough to the target tile that we can move to next tile in current path?
 			if (Vector2.Distance (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY)) < (0.1)) {
@@ -126,7 +140,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			}
 			transform.position = Vector2.MoveTowards(transform.position, 
 			                                         resourceGrid.TileCoordToWorldCoord (posX, posY), 
-			                                         movementSpeed * Time.deltaTime);
+			                                         mStats.curMoveSpeed * Time.deltaTime);
 			// ANIMATION CONTROLS:
 			if (posX > transform.position.x){
 				anim.SetTrigger ("movingRight");
@@ -136,9 +150,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 				anim.ResetTrigger("movingRight");
 			}
 		}
-		if (!moving && !isAttacking) {
-			moving = true;
-		}
+
 
 		// BUDDY SYSTEM CALLED ONLY IF MY BUDDY IS NOT NULL
 		if (myBuddy != null) {
@@ -159,16 +171,23 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			if (CheckForTileAttack (currentPath [1].x, currentPath [1].y)) {
 				Debug.Log("Attacking Tile!");
 				// here I would tell the Attack script to start its attack on the tile
-				targetPosX = currentPath [1].x;
-				targetPosY = currentPath [1].y;
-				enemyAttkHandler.targetTilePosX = currentPath [1].x;
-				enemyAttkHandler.targetTilePosY = currentPath [1].y;
-				enemyAttkHandler.resourceGrid = resourceGrid;
-				enemyAttkHandler.canAttackTile = true;
-				isAttacking = true;
-				moving = false;
-//				currentPath = null;
-//				return;
+				// But if it's the Capital, not just any tile, then it needs to do a special attack
+				if (currentPath[1].x == _capitalPosition.x && currentPath[1].y == _capitalPosition.y)
+				{
+					// we are at the capital! Do special!
+					enemyAttkHandler.SpecialAttack(currentPath[1].x, currentPath[1].y);
+				}
+				else
+				{
+					targetPosX = currentPath [1].x;
+					targetPosY = currentPath [1].y;
+					enemyAttkHandler.targetTilePosX = currentPath [1].x;
+					enemyAttkHandler.targetTilePosY = currentPath [1].y;
+					enemyAttkHandler.resourceGrid = resourceGrid;
+					enemyAttkHandler.canAttackTile = true;
+					isAttacking = true;
+				}
+			
 			} 
 
 		} else {
@@ -203,13 +222,14 @@ public class Enemy_MoveHandler : MonoBehaviour {
 	/// - is Attacking
 	/// </summary>
 	void BuddySystem(){
-		if (!destinationReached) {
-			if (myBuddy.destinationReached == true){
-				destinationReached = true;
-				moving = false;
-				Debug.Log ("stopping.");
-			}
-		}
+//		if (!destinationReached) {
+//			if (myBuddy.destinationReached == true){
+//				destinationReached = true;
+////				moving = false;
+////				Debug.Log ("stopping.");
+//				//TODO: Instead of stopping here, when they reach their destination, I want them to surround the building
+//			}
+//		}
 		if (!isAttacking) {
 			if (myBuddy.isAttacking == true){
 				if (CheckForTileAttack(myBuddy.targetPosX, myBuddy.targetPosY)){
@@ -226,61 +246,4 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			}
 		}
 	}
-
-//	void OnTriggerStay2D(Collider2D col){
-//		Debug.Log ("touching");
-//		if (col.gameObject.CompareTag ("Enemy")) {
-//			if (!destinationReached) {
-//				if (col.gameObject.GetComponent<Enemy_MoveHandler> ().destinationReached == true) {
-//					destinationReached = true;
-//					moving = false;
-//					Debug.Log ("stopping.");
-//				}
-//			} 
-//
-//	
-//			if (!isAttacking) {
-//				if (col.gameObject.GetComponent<Enemy_MoveHandler> ().isAttacking == true) {
-//					Enemy_MoveHandler enemy = col.gameObject.GetComponent<Enemy_MoveHandler> ();
-//					if (CheckForTileAttack (enemy.targetPosX, enemy.targetPosY)) {
-//						isAttacking = true;
-//						moving = false;
-//						targetPosX = enemy.targetPosX;
-//						targetPosY = enemy.targetPosY;
-//						enemyAttkHandler.targetTilePosX = enemy.targetPosX;
-//						enemyAttkHandler.targetTilePosY = enemy.targetPosY;
-//						enemyAttkHandler.resourceGrid = resourceGrid;
-//						enemyAttkHandler.canAttackTile = true;
-//						Debug.Log ("Also attacking tile!");
-//						// Is my leader up or down / left or right?
-////					if (col.transform.position.y < transform.position.y){
-////						formationPos = new Vector2(col.transform.position.x + formationOffset,col.transform.position.y - formationOffset);
-////					}else if(col.transform.position.y > transform.position.y){
-////						formationPos = new Vector2(col.transform.position.x + formationOffset,col.transform.position.y +  formationOffset);
-////					}else{ // its not above or below, it MUST be left or right
-////						if (col.transform.position.x > transform.position.x){
-////							formationPos = new Vector2(col.transform.position.x +  formationOffset,col.transform.position.y +  formationOffset);
-////						}else if (col.transform.position.x < transform.position.x){
-////							formationPos = new Vector2(col.transform.position.x - formationOffset,col.transform.position.y -  formationOffset);
-////						}
-////					}
-////					movingToFormation = true;
-////					Debug.Log ("Moving back to Formation!");
-//					}
-//				}
-//			}
-//		}
-////		// if moving, tell the others to move towards my last known location, and once there get their place in the path again,
-////		// this will happen as a chain reaction, calling each once the last one has found its path and made moving true
-////		if (movingBackToPath) {
-////			if (col.gameObject.GetComponent<Enemy_MoveHandler>().moving == true){
-////				// find my last node position as a vector2
-////				Vector2 node = new Vector2(currentPath[1].x, currentPath[1].y);
-////				MoveBackToPath(node);
-////				Debug.Log ("Moving back to Path!");
-////			}
-////		}
-//
-//
-//	}
 }

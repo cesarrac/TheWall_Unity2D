@@ -21,6 +21,10 @@ public class Player_AttackHandler : Unit_Base {
 	public Barracks_SpawnHandler myBarracks;
 
 	void Start () {
+
+		// Initialize Unit stats
+		stats.Init ();
+
 		anim = GetComponentInParent<Animator> ();
 		unitParent = gameObject.transform.parent.gameObject;
 		continueCounter = true;
@@ -35,7 +39,7 @@ public class Player_AttackHandler : Unit_Base {
 	
 	IEnumerator WaitToAttack(){
 		continueCounter = false;
-		yield return new WaitForSeconds (rateOfAttack);
+		yield return new WaitForSeconds (stats.curRateOfAttk);
 		if (unitToPool != null) {
 			PoolTarget(unitToPool);
 		}else if (enemyUnit != null) {
@@ -73,7 +77,7 @@ public class Player_AttackHandler : Unit_Base {
 		objPool.PoolObject (target); // Pool the Dead Unit
 		GameObject deadE = objPool.GetObjectForType("dead", false); // Get the dead unit object
 		if (deadE != null) {
-			deadE.GetComponent<FadeToPool> ().objPool = objPool;
+			deadE.GetComponent<EasyPool> ().objPool = objPool;
 			deadE.transform.position = unitToPool.transform.position;
 		}
 		unitToPool = null;

@@ -25,6 +25,13 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
 	void Start () {
+		if (resourceGrid == null)
+			resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
+
+		// Initialize building stats
+		stats.Init ();
+		InitTileStats((int)transform.position.x, (int)transform.position.y);
+
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
 		}
@@ -42,7 +49,7 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	
 	IEnumerator WaitToShoot(){
 		canShoot = false;
-		yield return new WaitForSeconds (rateOfAttack);
+		yield return new WaitForSeconds (stats.curRateOfAttk);
 		if (unitToPool != null) {
 			PoolTarget(unitToPool);
 		} 
@@ -54,8 +61,16 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	}
 
 	void VisualShooting(Vector3 position){
-		GameObject explosion = objPool.GetObjectForType ("Explosion Particles", false);
+		GameObject explosion = objPool.GetObjectForType ("Explosion Particles", true);
 		if (explosion != null) {
+			// the Explosion's sorting layer must match the target's layer
+
+			// Get the target's layer
+			string targetLayer =  enemiesInRange[0].GetComponent<SpriteRenderer>().sortingLayerName;
+
+			// apply layer to Particle System Renderer
+			explosion.GetComponent<ParticleSystemRenderer>().sortingLayerName = targetLayer;
+
 			explosion.transform.position = position;
 		}
 	}
@@ -86,7 +101,7 @@ public class Tower_AoETargettingHandler : Unit_Base {
 		objPool.PoolObject (target); // Pool the Dead Unit
 		string deathName = "dead";
 		GameObject deadE = objPool.GetObjectForType(deathName, true); // Get the dead unit object
-		deadE.GetComponent<FadeToPool> ().objPool = objPool;
+		deadE.GetComponent<EasyPool> ().objPool = objPool;
 		deadE.transform.position = unitToPool.transform.position;
 		unitToPool = null;
 		// if we are pooling it means its dead so we should check for target again

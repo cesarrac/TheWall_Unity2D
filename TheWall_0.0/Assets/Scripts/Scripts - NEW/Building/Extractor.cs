@@ -28,6 +28,8 @@ public class Extractor : MonoBehaviour {
 
 	bool statsInitialized;
 
+	SpriteRenderer sr;
+
 	void Awake(){
 		lineR = GetComponent<LineRenderer> ();
 	}
@@ -48,6 +50,9 @@ public class Extractor : MonoBehaviour {
 			buildingUI = GameObject.FindGameObjectWithTag ("UI").GetComponent<Building_UIHandler> ();
 		}
 
+		sr = GetComponent<SpriteRenderer> ();
+		lineR.sortingLayerName = sr.sortingLayerName;
+		lineR.sortingOrder = sr.sortingOrder - 1;
 		lineR.SetPosition (0, transform.position);
 		selecting = true;
 	}
@@ -92,6 +97,10 @@ public class Extractor : MonoBehaviour {
 		lineR.SetPosition (1, mouseEnd);
 	}
 
+	/// <summary>
+	/// Sets selecting bool to true. Useful for attaching to
+	/// an On-Click Event on a Button for Resetting this extractor's storage.
+	/// </summary>
 	public void ActivateSelecting(){
 		if (!selecting) {
 			selecting = true;

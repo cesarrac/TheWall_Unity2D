@@ -14,9 +14,13 @@ public class Enemy_AttackHandler : Unit_Base {
 
 	public bool canAttack;
 
-	bool startCounter = true;
+	public bool startCounter = true;
 
 	void Start () {
+
+		// Initialize Unit stats
+		stats.Init ();
+
 		resourceGrid = GetComponentInParent<Enemy_MoveHandler> ().resourceGrid;
 	}
 	
@@ -33,14 +37,21 @@ public class Enemy_AttackHandler : Unit_Base {
 //		canAttackTile = false;
 		startCounter = false;
 	
-		yield return new WaitForSeconds (rateOfAttack);
+		yield return new WaitForSeconds (stats.curRateOfAttk);
 		if (unitToPool != null) {
 			PoolTarget(unitToPool);
 		}else if (playerUnit != null) {
 			HandleDamageToUnit ();
 		} else {
 			if(moveHandler != null){
-				AttackTile(targetTilePosX, targetTilePosY, moveHandler);
+				if(AttackTile(targetTilePosX, targetTilePosY, moveHandler)){
+					startCounter = true;
+					canAttackTile = true;
+					moveHandler.moving = false;
+				}else{
+					moveHandler.moving = true;
+				}
+
 			}
 		}
 	}
@@ -79,7 +90,7 @@ public class Enemy_AttackHandler : Unit_Base {
 		Destroy (target.GetComponent<Player_AttackHandler>().unitParent);
 		GameObject deadE = objPool.GetObjectForType("dead", false); // Get the dead unit object
 		if (deadE != null) {
-			deadE.GetComponent<FadeToPool> ().objPool = objPool;
+			deadE.GetComponent<EasyPool> ().objPool = objPool;
 			deadE.transform.position = unitToPool.transform.position;
 		}
 		unitToPool = null;
@@ -88,5 +99,35 @@ public class Enemy_AttackHandler : Unit_Base {
 		canAttack = false;
 		moveHandler.isAttacking = false;
 		startCounter = true;
+	}
+
+	/// <summary>
+	/// Special Attack for when Enemy reaches the Capital,
+	/// suicide bombs the building doing max special damage.
+	/// </summary>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	public void SpecialAttack(int x, int y){
+		Debug.Log ("ENEMY: Doing special attack on Capital!");
+
+		// Hit the tile with special damage
+		resourceGrid.DamageTile (x, y, stats.curSPdamage);
+
+		// Spawn an explosion at my position
+		GameObject explosion = objPool.GetObjectForType ("Explosion Particles", true);
+
+		if (explosion != null) {
+			// Explosion must match my layer
+			string targetLayer = GetComponent<SpriteRenderer>().sortingLayerName;
+
+			// assign it to Particle Renderer
+			explosion.GetComponent<ParticleSystemRenderer>().sortingLayerName = targetLayer;
+
+			explosion.transform.position = transform.position;
+		}
+
+
+		// then pool myself
+		objPool.PoolObject (this.gameObject);
 	}
 }

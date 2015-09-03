@@ -22,7 +22,8 @@ public class TileData  {
 		cannons,
 		machine_gun,
 		harpoonHall,
-		storage
+		storage,
+		sniper
 	}
 	public Types tileType;
 

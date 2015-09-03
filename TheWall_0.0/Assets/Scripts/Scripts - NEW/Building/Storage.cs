@@ -24,6 +24,7 @@ public class Storage : MonoBehaviour {
 		}
 
 		if (playerResources != null) {
+			Debug.Log ("STORAGE: Added to list of storage!");
 			playerResources.storageBuildings.Add(this);
 		}
 
@@ -32,9 +33,10 @@ public class Storage : MonoBehaviour {
 		}
 	}
 	
-	// Update is called once per frame
+
 	void Update () {
-	
+		if (oreStored >= 100 || waterStored >= 5)
+			WithdrawResources ();
 	}
 
 	void OnMouseOver(){
@@ -54,12 +56,12 @@ public class Storage : MonoBehaviour {
 				waterCapacityLeft = waterCapacity - waterStored;
 
 				// ADD TO THE PLAYER RESOURCES TO DISPLAY ON UI
-				playerResources.ChangeResource("Water", ammt);
+//				playerResources.ChangeResource("Water", ammt);
 
 			} else {
 				// cant store more water
 			}
-			Debug.Log ("Total water in storage = " + waterStored);
+			Debug.Log ("STORAGE: Total water = " + waterStored);
 		} else {
 			int calcW = oreStored + ammt;
 			if (calcW <= oreCapacity) {
@@ -67,12 +69,12 @@ public class Storage : MonoBehaviour {
 				oreCapacityLeft = oreCapacity - oreStored;
 
 				// ADD TO THE PLAYER RESOURCES TO DISPLAY ON UI
-				playerResources.ChangeResource("Ore", ammt);
+//				playerResources.ChangeResource("Ore", ammt);
 
 			} else {
 				// cant store more water
 			}
-			Debug.Log ("Total ore in storage = " + oreStored);
+			Debug.Log ("STORAGE: Total ore = " + oreStored);
 		}
 	}
 
@@ -100,12 +102,32 @@ public class Storage : MonoBehaviour {
 	public void ChargeResource(int ammnt, string id){
 		if (id == "Ore") {
 			oreStored = oreStored + ammnt;
-			Debug.Log("Charging stored ore for " + ammnt);
-			playerResources.ChangeResource(id, ammnt);
+			Debug.Log ("STORAGE: Charging stored ore for " + ammnt);
+			playerResources.ChangeResource (id, ammnt);
 		} else if (id == "Water") {
 			waterStored = waterStored + ammnt;
-			playerResources.ChangeResource(id, ammnt);
+			playerResources.ChangeResource (id, ammnt);
+			Debug.Log ("STORAGE: Charging stored water for " + ammnt);
 
+		} else {
+			Debug.Log ("STORAGE: Can't Find that resource ID!");
 		}
+	}
+
+	public void WithdrawResources(){
+		Debug.Log ("STORAGE: Capital withdrawing " + waterStored + " WATER and " + oreStored + " ORE.");
+
+		playerResources.ChangeResource ("Ore", oreStored);
+		playerResources.ChangeResource ("Water", waterStored);
+
+		ResetStorageAmmnts ();
+	}
+
+	void ResetStorageAmmnts(){
+		oreStored = 0;
+		waterStored = 0;
+		waterCapacityLeft = waterCapacity;
+		oreCapacityLeft = oreCapacity;
+		Debug.Log ("STORAGE: Storage now empty!");
 	}
 }

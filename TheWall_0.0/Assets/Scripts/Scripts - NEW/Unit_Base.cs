@@ -3,10 +3,32 @@ using System.Collections;
 
 public class Unit_Base : MonoBehaviour {
 
-	public float maxHP, defence, attack, shield, damage, rateOfAttack;
+	[System.Serializable]
+	public class Stats{
+		public float maxHP, startDefence, startAttack, startShield, startRate, startDamage, startSpecialDmg;
+		private float _hitPoints, _defence, _attack, _shield, _damage, _specialDamage, _rateOfAttack;
+	
+		public float curHP { get { return _hitPoints; } set { _hitPoints = Mathf.Clamp (value, 0f, maxHP); } }
+		public float curDefence {get {return _defence;} set { _defence = Mathf.Clamp (value, 0f, 100f); }}
+		public float curAttack {get {return _attack;} set { _attack = Mathf.Clamp (value, 0f, 100f); }}
+		public float curShield {get {return _shield;} set { _shield = Mathf.Clamp (value, 0f, 100f); }}
+		public float curRateOfAttk {get {return _rateOfAttack;} set { _rateOfAttack = Mathf.Clamp (value, 0f, 5f); }}
+		public float curDamage {get {return _damage;} set { _damage = Mathf.Clamp (value, 0f, 100f); }}
+		public float curSPdamage { get {return _specialDamage;} set {_specialDamage = Mathf.Clamp (value, 0f, 100f);}}
 
-	private float _curHP;
-	public float curHP { get { return _curHP; } set { _curHP = Mathf.Clamp (value, 0f, maxHP); } }
+
+		public void Init(){
+			curHP = maxHP;
+			curDefence = startDefence;
+			curAttack = startAttack;
+			curShield = startShield;
+			curRateOfAttk = startRate;
+			curDamage = startDamage;
+			curSPdamage = startSpecialDmg;
+		}
+	}
+
+	public Stats stats = new Stats ();
 
 	public ResourceGrid resourceGrid;
 
@@ -23,23 +45,24 @@ public class Unit_Base : MonoBehaviour {
 	[Header("Optional: ")]
 	[SerializeField]
 	private Unit_StatusIndicator statusIndicator;
-
-	void Awake(){
-		// finds its own dmgPopUp
-//		dmgPopUp = GetComponent<Damage_PopUp> ();
-
-		curHP = maxHP;
-	}
+	
 
 	void Start(){
+
 		if (statusIndicator != null) {
-			statusIndicator.SetHealth(curHP, maxHP);
+			statusIndicator.SetHealth(stats.curHP, stats.maxHP);
 		}
 	}
 
+	public void InitTileStats(int x, int y){
+		Debug.Log ("BASE: Tile stats initialized!");
+		resourceGrid.tiles [x, y].hp = stats.curHP;
+		resourceGrid.tiles [x, y].def = stats.curDefence;
+		resourceGrid.tiles [x, y].attk = stats.curAttack;
+		resourceGrid.tiles [x, y].shield = stats.curShield;
+	}
 
-
-	public void AttackTile(int x, int y, Enemy_MoveHandler enemyMove){
+	public bool AttackTile(int x, int y, Enemy_MoveHandler enemyMove){
 		if (resourceGrid.tiles [x, y] != null) {
 			// if no tile has been attacked OR this unit is attacking ANOTHER TILE, then we fill the tile and store it for calcs
 			if (tileUnderAttack == null || tileUnderAttack != resourceGrid.tiles [x, y]) { 
@@ -48,45 +71,46 @@ public class Unit_Base : MonoBehaviour {
 				tileShield = tileUnderAttack.shield;
 				tileHP = tileUnderAttack.hp;
 			} 
-//		Debug.Log ("TileHP: " + tileUnderAttack.hp);
+		Debug.Log ("TileHP: " + tileUnderAttack.hp);
 
-			// hit Calc =  (defense - attack) - armor
-			// if hitCalc > 0, damage = full damage
-			// if hitCalc <=0, damage = 1
 			if (tileHP > 0) {
-				float calc = (tileDefence - attack) - tileShield;
+				float calc = (tileDefence - stats.curAttack) - tileShield;
 //			
 				if (calc > 0) {
 					// Apply full damage
-					resourceGrid.DamageTile (x, y, damage);  
+					resourceGrid.DamageTile (x, y, stats.curDamage);  
 				} else {
 					// Apply just 1 damage
 					resourceGrid.DamageTile (x, y, 1f);  
 				}
 				canAttackTile = true;
+				return true;
+
 			} else {
 				canAttackTile = false;
 				enemyMove.isAttacking = false;
 //				enemyMove.GetPath (); // start on path again!
 				tileUnderAttack = null;
+				return false;
 			}
 		} else {
 			canAttackTile = false;
 			enemyMove.isAttacking = false;
+			return false;
 //			enemyMove.GetPath (); // start on path again!
 		}
 	}
 
 	public void AttackOtherUnit(Unit_Base unit){
 
-		if (unit.curHP > 0) {
-			float def = (unit.defence + unit.shield);
+		if (unit.stats.curHP > 0) {
+			float def = (unit.stats.curDefence + unit.stats.curShield);
 
-			if (attack > def){
-				Debug.Log("Attacking " + unit.name + " DEF: " + def + " ATTK: " + attack);
+			if (stats.curAttack > def){
+				Debug.Log("Attacking " + unit.name + " DEF: " + def + " ATTK: " + stats.curAttack);
 
 				// Apply full damage
-				TakeDamage(unit, damage);
+				TakeDamage(unit, stats.curDamage);
 
 //				unit.hp = unit.hp - damage;
 //
@@ -95,12 +119,14 @@ public class Unit_Base : MonoBehaviour {
 //				}
 			}else{
 				// hit for difference between def and attack
-				float calc = def - attack;
-				float damageCalc = damage - calc;
-				Debug.Log("Can't beat " + unit.name + "'s Attack, so I hit for " + damageCalc);
+				float calc = def - stats.curAttack;
+				float damageCalc = stats.curDamage - calc;
+
 
 				// always do MINIMUM 1 pt of damage
-				float clampedDamage = Mathf.Clamp(damageCalc, 1f, damage);
+				float clampedDamage = Mathf.Clamp(damageCalc, 1f, stats.curDamage);
+
+				Debug.Log("Can't beat " + unit.name + "'s Defence, so I hit for " + clampedDamage);
 
 				TakeDamage (unit, clampedDamage);
 //				unit.hp = unit.hp - Mathf.Clamp(damageCalc, 1f, damage); 
@@ -117,19 +143,21 @@ public class Unit_Base : MonoBehaviour {
 
 	void TakeDamage(Unit_Base unit, float damage){
 
-		unit.curHP = unit.curHP - damage;
-		if (unit.curHP <= 0f) {
+		unit.stats.curHP = unit.stats.curHP - damage;
+		if (unit.stats.curHP <= 0f) {
 			Die (unit.gameObject);
 		} else {
 			if (unit.statusIndicator != null) {
-				unit.statusIndicator.SetHealth(unit.curHP, unit.maxHP, damage);
+				unit.statusIndicator.SetHealth(unit.stats.curHP, unit.stats.maxHP, damage);
 			}
 		}
 
 		// pop up the damage
 //		unit.dmgPopUp.PopUpDamage (damage);
+	}
 
-
+	public void TakeDebuff(float debuffAmmnt, string statID){
+		statusIndicator.CreateDamageText (debuffAmmnt, statID);
 	}
 
 	void Die(GameObject target){

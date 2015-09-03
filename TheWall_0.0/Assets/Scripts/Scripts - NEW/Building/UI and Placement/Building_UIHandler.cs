@@ -14,7 +14,7 @@ public class Building_UIHandler : MonoBehaviour {
 	public Button buildBttnFab;
 	// Building Sprites
 	public Sprite buildingSprite, extractSprite, machineGunSprite, seaWSprite, harpoonHSprite, 
-	cannonSprite, sFarmSprite, storSprite, sDesaltSprite;
+	cannonSprite, sFarmSprite, storSprite, sDesaltSprite, sniperSprite;
 
 	// Building Names
 	public string buildingName;
@@ -42,7 +42,8 @@ public class Building_UIHandler : MonoBehaviour {
 	public Player_ResourceManager resourceManager;
 
 	// Costs of Buildings:
-	public int[] extractCost, mGunCost, seaWCost, hHallCost, cannonCost,sFarmCost, storageCost, sDesaltCost;
+	public int[] extractCost, mGunCost, seaWCost, hHallCost, cannonCost,sFarmCost, storageCost, sDesaltCost,
+		sniperCost;
 
 	// Indicator that pops up just over the build panel, destroys itself
 	public GameObject indicatorFab;
@@ -83,6 +84,7 @@ public class Building_UIHandler : MonoBehaviour {
 		sFarmCost = resourceGrid.sFarmCost;
 		storageCost = resourceGrid.storageCost;
 		sDesaltCost = resourceGrid.sDesaltCost;
+		sniperCost = resourceGrid.sniperCost;
 	}
 
 	void CreateBuildingButtons(){
@@ -90,16 +92,25 @@ public class Building_UIHandler : MonoBehaviour {
 											// BUILD BUTTONS
 		BuildButton (buildBttnFab,extractSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (16f, 10f, 0), new Vector2 (32, 32), buildingNames[0], extractCost[0], extractCost[1]); 
+
 		BuildButton (buildBttnFab,machineGunSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (96f, 10f, 0), new Vector2 (32, 32), buildingNames[1], mGunCost[0], mGunCost[1]); 
+
 		BuildButton (buildBttnFab,cannonSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (96f, 90f, 0), new Vector2 (32, 32), buildingNames[2], cannonCost[0], cannonCost[1]); 
-		BuildButton (buildBttnFab,harpoonHSprite, mainBuildPanel, corners, corners, 
-		             new Vector3 (176f, 10f, 0), new Vector2 (32, 32), buildingNames[3], hHallCost[0], hHallCost[1]); 
+
+		BuildButton (buildBttnFab,seaWSprite, mainBuildPanel, corners, corners, 
+		             new Vector3 (176f, 10f, 0), new Vector2 (32, 32), buildingNames[3], seaWCost[0], seaWCost[1]);
+
+		BuildButton (buildBttnFab,sniperSprite, mainBuildPanel, corners, corners, 
+		             new Vector3 (176f, 90f, 0), new Vector2 (32, 32), buildingNames[7], sniperCost[0], sniperCost[1]);
+
 		BuildButton (buildBttnFab,sFarmSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (256f, 10f, 0), new Vector2 (32, 32),buildingNames[4], sFarmCost[0], sFarmCost[1]);
+
 		BuildButton (buildBttnFab,sDesaltSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (256f, 90f, 0), new Vector2 (32, 32),buildingNames[5], sDesaltCost[0], sDesaltCost[1]);
+
 		BuildButton (buildBttnFab,storSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (336f, 10f, 0), new Vector2 (32, 32),buildingNames[6], storageCost[0], storageCost[1]);
 	}
@@ -169,10 +180,11 @@ public class Building_UIHandler : MonoBehaviour {
 				// Add Building Position Handler and fill its vars
 				GameObject sExtractor = objPool.GetObjectForType(halfName, true);
 				if (sExtractor != null){
+
 					// set the sprite
 					sExtractor.GetComponent<SpriteRenderer>().sprite = extractSprite;
+
 //					// add building pos handler
-//					sExtractor.AddComponent<Building_PositionHandler>();
 					Building_PositionHandler bPosHand = sExtractor.GetComponent<Building_PositionHandler>(); 
 
 					bPosHand.resourceGrid = resourceGrid;
@@ -192,10 +204,11 @@ public class Building_UIHandler : MonoBehaviour {
 			if (resourceManager.ore >= mGunCost[0]){
 				GameObject mGun = objPool.GetObjectForType(halfName, true);
 				if(mGun != null){
+
 					// set the sprite
 					mGun.GetComponent<SpriteRenderer>().sprite = machineGunSprite;
+
 //					// add building pos handler
-//					mGun.AddComponent<Building_PositionHandler>();
 					Building_PositionHandler bPosHand = mGun.GetComponent<Building_PositionHandler>();
 
 					bPosHand.resourceGrid = resourceGrid;
@@ -215,10 +228,11 @@ public class Building_UIHandler : MonoBehaviour {
 			if (resourceManager.ore >= cannonCost[0]){		
 				GameObject can = objPool.GetObjectForType(halfName, true);
 				if(can != null){
+
 					// set the sprite
 					can.GetComponent<SpriteRenderer>().sprite = cannonSprite;
+
 //					// add building pos handler
-//					can.AddComponent<Building_PositionHandler>();
 					Building_PositionHandler bPosHand = can.GetComponent<Building_PositionHandler>();
 
 					bPosHand.resourceGrid = resourceGrid;
@@ -238,10 +252,11 @@ public class Building_UIHandler : MonoBehaviour {
 			if (resourceManager.ore >= hHallCost[0]){		// ** HAS FOOD COST
 				GameObject hHall = objPool.GetObjectForType(halfName, true);
 				if(hHall != null){
+
 					// set the sprite
 					hHall.GetComponent<SpriteRenderer>().sprite = harpoonHSprite;
+
 					// add building pos handler
-//					hHall.AddComponent<Building_PositionHandler>();
 					Building_PositionHandler bPosHand = hHall.GetComponent<Building_PositionHandler>();
 
 					bPosHand.resourceGrid = resourceGrid;
@@ -259,12 +274,13 @@ public class Building_UIHandler : MonoBehaviour {
 			break;
 		case "Seaweed Farm":
 			if (resourceManager.ore >= sFarmCost[0]){		// ** HAS FOOD COST
-				GameObject sWeed = objPool.GetObjectForType(halfName, false);
+				GameObject sWeed = objPool.GetObjectForType(halfName, true);
 				if(sWeed != null){
+
 					// set the sprite
 					sWeed.GetComponent<SpriteRenderer>().sprite = sFarmSprite;
-//					// add building pos handler
-//					sWeed.AddComponent<Building_PositionHandler>();
+
+				// add building pos handler
 					Building_PositionHandler bPosHand = sWeed.GetComponent<Building_PositionHandler>();
 
 					bPosHand.resourceGrid = resourceGrid;
@@ -282,12 +298,13 @@ public class Building_UIHandler : MonoBehaviour {
 			break;
 		case "Storage":
 			if (resourceManager.ore >= storageCost[0]){		
-				GameObject storage = objPool.GetObjectForType(halfName, false);
+				GameObject storage = objPool.GetObjectForType(halfName, true);
 				if(storage != null){
+
 					// set the sprite
 					storage.GetComponent<SpriteRenderer>().sprite = storSprite;
-					//					// add building pos handler
-					//					sWeed.AddComponent<Building_PositionHandler>();
+
+					//add building pos handler
 					Building_PositionHandler bPosHand = storage.GetComponent<Building_PositionHandler>();
 					
 					bPosHand.resourceGrid = resourceGrid;
@@ -305,12 +322,13 @@ public class Building_UIHandler : MonoBehaviour {
 			break;
 		case "Desalination Pump":
 			if (resourceManager.ore >= sDesaltCost[0]){		
-				GameObject dSalt = objPool.GetObjectForType(halfName, false);
+				GameObject dSalt = objPool.GetObjectForType(halfName, true);
 				if(dSalt != null){
+
 					// set the sprite
 					dSalt.GetComponent<SpriteRenderer>().sprite = sDesaltSprite;
-					//					// add building pos handler
-					//					sWeed.AddComponent<Building_PositionHandler>();
+
+				// add building pos handler
 					Building_PositionHandler bPosHand = dSalt.GetComponent<Building_PositionHandler>();
 					
 					bPosHand.resourceGrid = resourceGrid;
@@ -323,6 +341,54 @@ public class Building_UIHandler : MonoBehaviour {
 				}
 			}else{
 				int diff = sDesaltCost[0] - resourceManager.ore;
+				CreateIndicator("Need " + diff + " more Ore!");
+			}
+			break;
+		case "Sniper Gun":
+			if (resourceManager.ore >= sniperCost[0]){		
+				GameObject sniper = objPool.GetObjectForType(halfName, true);
+				if(sniper != null){
+
+					// set the sprite
+					sniper.GetComponent<SpriteRenderer>().sprite = sniperSprite;
+
+					// add building pos handler
+					Building_PositionHandler bPosHand = sniper.GetComponent<Building_PositionHandler>();
+					
+					bPosHand.resourceGrid = resourceGrid;
+					bPosHand.followMouse = true;
+					bPosHand.tileType = TileData.Types.sniper;
+					bPosHand.resourceManager = resourceManager;
+					bPosHand.currOreCost = sniperCost[0];
+					bPosHand.objPool = objPool;
+					bPosHand.buildingUI = this;
+				}
+			}else{
+				int diff = sniperCost[0] - resourceManager.ore;
+				CreateIndicator("Need " + diff + " more Ore!");
+			}
+			break;
+		case "Sea-Witch Crag":
+			if (resourceManager.ore >= seaWCost[0]){		
+				GameObject seaW = objPool.GetObjectForType(halfName, true);
+				if(seaW != null){
+					
+					// set the sprite
+					seaW.GetComponent<SpriteRenderer>().sprite = seaWSprite;
+					
+					// add building pos handler
+					Building_PositionHandler bPosHand = seaW.GetComponent<Building_PositionHandler>();
+					
+					bPosHand.resourceGrid = resourceGrid;
+					bPosHand.followMouse = true;
+					bPosHand.tileType = TileData.Types.seaWitch;
+					bPosHand.resourceManager = resourceManager;
+					bPosHand.currOreCost = seaWCost[0];
+					bPosHand.objPool = objPool;
+					bPosHand.buildingUI = this;
+				}
+			}else{
+				int diff = sniperCost[0] - resourceManager.ore;
 				CreateIndicator("Need " + diff + " more Ore!");
 			}
 			break;
@@ -557,7 +623,7 @@ public class Building_UIHandler : MonoBehaviour {
 		if (currIndicator != null) {
 			objPool.PoolObject(currIndicator);
 		}
-			currIndicator = objPool.GetObjectForType ("indicator", false);
+			currIndicator = objPool.GetObjectForType ("indicator", true);
 			currIndicator.transform.position = mainBuildPanel.transform.position;
 			currIndicator.transform.SetParent (canvas.transform);
 			RectTransform rectTransform = currIndicator.GetComponent<RectTransform> ();

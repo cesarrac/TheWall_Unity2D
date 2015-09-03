@@ -38,6 +38,7 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 
 	public float unitHP; // to reset when spawning from pool
 
+	private IEnumerator _coRoutine;
 
 	void Awake(){
 		// init my name
@@ -51,12 +52,13 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 		posY = (int)transform.position.y;
 
 		// start with the first spawn as soon as this object is instantiated
-		StartCoroutine (WaitToSpawn ());
+		_coRoutine = WaitToSpawn ();
+		StartCoroutine (_coRoutine);
 	}
 
 	void Update(){
 		if (canSpawn) {
-			StartCoroutine(WaitToSpawn());
+			StartCoroutine(_coRoutine);
 		}
 	}
 
@@ -72,7 +74,7 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 		GameObject newEnemy = objPool.GetObjectForType (enemyName, true); // only gets it if pooled
 		if (newEnemy != null) {
 			// reset the HP of this unit in case its being reused from pool
-			newEnemy.GetComponentInChildren<Enemy_AttackHandler>().curHP = unitHP;
+			newEnemy.GetComponentInChildren<Enemy_AttackHandler>().stats.curHP = unitHP;
 
 			// give it an offset variation
 			Vector3 offsetPos = new Vector3(transform.position.x - randomVar.x, transform.position.y - randomVar.y, 0);
@@ -80,11 +82,12 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 			neighborEnemyPosition = newEnemy.transform.position;
 		
 
-			// Give it pathfinding ability. The unit will calculate its own path when spawned
+			// Give it pathfinding ability. Using the spwnPtIndex it can find which path it needs to take out of the 3
 			newEnemy.GetComponent<Enemy_MoveHandler> ().resourceGrid = resourceGrid;
 			newEnemy.GetComponent<Enemy_MoveHandler> ().spwnPtIndex = indexForPath;
 			newEnemy.GetComponent<Enemy_MoveHandler> ().spwnPtHandler = spwnPointHandler; 
 			newEnemy.GetComponentInChildren<Enemy_AttackHandler>().objPool = objPool;
+
 			if (enemiesCount < spawnedEnemies.Length){
 			// add new enemy to array of spawned enemies
 				spawnedEnemies [enemiesCount] = newEnemy;
@@ -100,19 +103,20 @@ public class Enemy_SpawnHandler : MonoBehaviour {
 			if (enemiesCount < howManyEnemies) {
 				canSpawn = true;
 			} else {
+				// done spawning enemies from this handler
 				canSpawn = false;
-			
+
 			}
 		}
 	}
 
 	
-	public void CreateEnemyPath(){
-		// Since the path to the Capital doesn't change from when this Spawn Point appears,
-		// we can GET A PATH at the start and then just feed it to each spawned enemy.
-		// Feed it this gameObject as the unitToPath
-		resourceGrid.unitOnPath = gameObject;
-		resourceGrid.GenerateWalkPath (targetPosX, targetPosY, false);
-	}
+//	public void CreateEnemyPath(){
+//		// Since the path to the Capital doesn't change from when this Spawn Point appears,
+//		// we can GET A PATH at the start and then just feed it to each spawned enemy.
+//		// Feed it this gameObject as the unitToPath
+//		resourceGrid.unitOnPath = gameObject;
+//		resourceGrid.GenerateWalkPath (targetPosX, targetPosY, false);
+//	}
 
 }

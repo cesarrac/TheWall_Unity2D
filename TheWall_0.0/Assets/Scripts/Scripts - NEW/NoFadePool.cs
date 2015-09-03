@@ -10,13 +10,13 @@ public class NoFadePool : MonoBehaviour {
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
 		}
-		_coroutine = WaitToPool (2f);
+		_coroutine = WaitToPool (1.2f);
 		StartCoroutine(_coroutine);
 	}
 	
 	IEnumerator WaitToPool(float time){
 		yield return new WaitForSeconds(time);
 		objPool.PoolObject (this.gameObject);
-		StopCoroutine (_coroutine);
+
 	}
 }

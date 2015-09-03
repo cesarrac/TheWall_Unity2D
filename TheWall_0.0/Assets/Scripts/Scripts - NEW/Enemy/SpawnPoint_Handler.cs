@@ -19,6 +19,8 @@ public class SpawnPoint_Handler : MonoBehaviour {
 			if (resourceGrid.pathToCapital != null)
 				FillPath(resourceGrid.pathToCapital, x);
 		}
+		Debug.Log ("SPAWNPOINT_HANDLER: Created " + path.Length + " paths!");
+
 
 	}
 	void FillPath(List<Node> currPath, int i){
@@ -27,6 +29,8 @@ public class SpawnPoint_Handler : MonoBehaviour {
 		for (int y = 0; y < currPath.Count; y++) {
 			path [i].Add (currPath [y]);
 		}
+
+		Debug.Log ("PATH " + i + " From: " + path [i] [0].x + " " + path[i][0].y + " To: " + path [i] [path [i].Count - 1].x + " " + path [i] [path [i].Count - 1].y);
 
 	}
 }

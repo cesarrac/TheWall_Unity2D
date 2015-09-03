@@ -52,15 +52,15 @@ public class FoodProduction_Manager : MonoBehaviour {
 			Farm ();
 		} else {
 			// NOT enough water to farm!
+			Debug.Log ("FOOD PRODUCTION: Not enough Water!");
+			farming = true;
 		}
 	}
 
 	void Farm(){
-
-		// Before we can Harvest we need to charge water from resources, that script in turn charges the first storage
-		// holding enough water
-//		resourceManager.ChargeFromStorage (waterConsumed, "Water");
-		resourceManager.ChargeOreorWater ("Water", -waterConsumed);
+		Debug.Log ("FOOD PRODUCTION: Farming!");
+		resourceManager.ChangeResource ("Water", -waterConsumed);
+//		resourceManager.ChargeOreorWater ("Water", -waterConsumed);
 
 		// then add the food
 		resourceManager.ChangeResource("Food", foodProduced);

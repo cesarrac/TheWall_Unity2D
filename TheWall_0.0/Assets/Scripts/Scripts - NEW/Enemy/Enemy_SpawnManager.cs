@@ -28,6 +28,8 @@ public class Enemy_SpawnManager : MonoBehaviour {
 
 	public SpawnPoint_Handler spwnPointHandler;
 
+	private IEnumerator _coRoutine;
+
 	void Start () {
 		InitNames ();
 		InitLevelCount ();
@@ -35,7 +37,9 @@ public class Enemy_SpawnManager : MonoBehaviour {
 		InitMaxEnemies ();
 		currEnemies = new GameObject[maxWaves];
 		InitSpawners ();
-		StartCoroutine (WaitToSpawn ());
+
+		_coRoutine = WaitToSpawn ();
+		StartCoroutine (_coRoutine);
 	}
 	void InitNames(){
 		eBasicName = easyBasic.name;
@@ -91,7 +95,7 @@ public class Enemy_SpawnManager : MonoBehaviour {
 	}
 	void Update(){
 		if (canSpawn) {
-			StartCoroutine(WaitToSpawn());
+			StartCoroutine(_coRoutine);
 		}
 	}
 
@@ -121,6 +125,7 @@ public class Enemy_SpawnManager : MonoBehaviour {
 		} else {
 			// GAME OVER! YOU WON!!
 			Debug.Log("No more enemies to spawn!");
+
 		}
 	}	
 }

@@ -5,12 +5,19 @@ using System.Collections.Generic;
 
 public class Player_ResourceManager : MonoBehaviour {
 
-	public int ore;
-	public int food;
-	public int credits;
-	public int water;
+	public int maxHeroCount;
+	private int _ore, _food, _credits, _water, _heroCount;
+	public int ore { get { return _ore; } set { _ore = value; } }
+	public int food { get { return _food; } set { _food = value; } }
+	public int credits { get { return _credits; } set { _credits = value; } }
+	public int water { get { return _water; } set { _water = value; } }
+	public int heroCount { get { return _heroCount; } set { _heroCount = value; } }
 
-	public int maxCitizenCount = 1;// the maximum citizens will increase with each level, bringing in new characters
+	
+	public int startOre;
+	public int startFood;
+	public int startCredits;
+	public int startWater;
 
 	public int totalFoodCost; // this is the cost of food every turn/cycle. It gets added & subtracted by the resource grid whenever it 
 													// Swaps tiles.
@@ -37,13 +44,82 @@ public class Player_ResourceManager : MonoBehaviour {
 
 	// Keep track of all Water plants/pumps
 	public int waterPumpCount{ get; private set; }
-	public int waterProducedPerDay{ get; private set; }
+	private int _waterProducedPDay;
+	public int waterProducedPerDay{ get {return _waterProducedPDay;} set {_waterProducedPDay = Mathf.Clamp(value, 0, value);}}
 	public int totalWaterCost;
 
 	// Keep track of all Extractors gathering Ore
 	public int extractorCount{ get; private set; }
-	public int oreExtractedPerDay { get; private set; }
-	
+	private int _oreExtractedPDay;
+	public int oreExtractedPerDay { get{return _oreExtractedPDay;} set{ _oreExtractedPDay = Mathf.Clamp(value, 0, value);}}
+
+
+	// Hero logic: Player selects their chosen hero before the level begins. This Hero spawns on start then will spawn again, if dead,
+	// every 4 seconds.
+	[Header ("Optional Hero Pre-Fab: ")]
+	public GameObject chosenHero;
+
+	[SerializeField]
+	private GameObject _curHero;
+
+
+	public float timeToSpawn;
+
+	private Vector3 spawnPosition;
+
+	private IEnumerator _spwnCoRoutine;
+
+	public ObjectPool objPool;
+
+	void Start(){
+		buildingUI = GetComponentInChildren<Building_UIHandler> ();
+		
+		feeding = true;
+
+		if (objPool == null) 
+			objPool = GameObject.FindGameObjectWithTag ("Pool").GetComponent<ObjectPool> ();
+
+		if (chosenHero != null) {
+
+			// get the spawn position
+			spawnPosition = new Vector3(resourceGrid.capitalSpawnX, resourceGrid.capitalSpawnY - 1.2f, 0.0f);
+
+			_spwnCoRoutine = WaitToSpawn(timeToSpawn);
+			StartCoroutine(_spwnCoRoutine);
+		}
+
+		InitStartingResources ();
+
+	}
+
+	void InitStartingResources()
+	{
+		water = startWater;
+		food = startFood;
+		credits = startCredits;
+		ore = startOre;
+	}
+
+	IEnumerator WaitToSpawn(float time){
+		yield return new WaitForSeconds (time);
+		if (_curHero == null) {
+
+			_curHero = Instantiate(chosenHero, spawnPosition, Quaternion.identity) as GameObject;
+			_curHero.GetComponent<SelectedUnit_MoveHandler> ().resourceGrid = resourceGrid;
+			_curHero.GetComponentInChildren<Player_AttackHandler> ().objPool = objPool;
+		}else{
+			// get its hp
+			if (_curHero.GetComponentInChildren<Player_AttackHandler>() != null){
+				Player_AttackHandler handler = _curHero.GetComponentInChildren<Player_AttackHandler>();
+				if (handler.stats.curHP <= 1)
+					_curHero = null;
+			}else{
+				_curHero = null;
+			}
+		}
+
+	}
+
 	/// <summary>
 	/// Calculates the food production per day.
 	/// Each farm takes X time to create Y food. A day takes T time.
@@ -103,11 +179,7 @@ public class Player_ResourceManager : MonoBehaviour {
 		}
 	}
 
-	void Start(){
-		buildingUI = GetComponentInChildren<Building_UIHandler> ();
-	
-		feeding = true;
-	}
+
 	
 	void Update(){
 	
@@ -116,6 +188,8 @@ public class Player_ResourceManager : MonoBehaviour {
 				StartCoroutine(WaitToFeed());
 		}
 	}
+
+
 	IEnumerator WaitToFeed(){
 		feeding = false;
 		yield return new WaitForSeconds (dayTime); // feeding ONCE per day
@@ -216,45 +290,78 @@ public class Player_ResourceManager : MonoBehaviour {
 		case "Extractor":	// extractor
 			if (starving){
 				building.GetComponent<Extractor>().starvedMode = true;
+				//change building status image to RED
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
+
 				buildingUI.CreateIndicator("An " + buildingName + " stopped working.");
 			}else{
 				building.GetComponent<Extractor>().starvedMode = false;
+
+				//change building status image to GREEN
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
+
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
 		case "Machine Gun": // machine gun
 			if (starving){
-			building.GetComponentInChildren<Tower_TargettingHandler>().starvedMode = true;
-			buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
+				building.GetComponentInChildren<Tower_TargettingHandler>().starvedMode = true;
+
+				//change building status image to RED
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
+
+				buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
 			}else{
 				building.GetComponentInChildren<Tower_TargettingHandler>().starvedMode = false;
+
+				//change building status image to GREEN
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
+
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
 		case "Cannons": // cannons
 			if (starving){
-			building.GetComponentInChildren<Tower_AoETargettingHandler>().starvedMode = true;
-			buildingUI.CreateIndicator(buildingName + " stopped working.");
+				building.GetComponentInChildren<Tower_AoETargettingHandler>().starvedMode = true;
+
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
+
+				buildingUI.CreateIndicator(buildingName + " stopped working.");
 			}else{
 				building.GetComponentInChildren<Tower_AoETargettingHandler>().starvedMode = false;
+
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
+
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
 		case "Harpooner's Hall": // harpooners hall
 			if (starving){
-			building.GetComponentInChildren<Barracks_SpawnHandler>().starvedMode = true;
-			buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
+				building.GetComponentInChildren<Barracks_SpawnHandler>().starvedMode = true;
+
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
+
+				buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
 			}else{
 				building.GetComponentInChildren<Barracks_SpawnHandler>().starvedMode = false;
+
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
+
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
 		case "Seaweed Farm": // seaweed farm
 			if (starving){
-			building.GetComponent<FoodProduction_Manager>().starvedMode = true;
-			buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
+				building.GetComponent<FoodProduction_Manager>().starvedMode = true;
+
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
+
+				buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
 			}else{
 				building.GetComponent<FoodProduction_Manager>().starvedMode = true;
+
+				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
+
 				buildingUI.CreateIndicator(buildingName + " back online!");
 			}
 			break;
@@ -278,7 +385,7 @@ public class Player_ResourceManager : MonoBehaviour {
 		switch (id) {
 		case "Ore":
 			ore = ore + quantity;
-
+			 
 			break;
 		case "Food":
 
@@ -291,40 +398,46 @@ public class Player_ResourceManager : MonoBehaviour {
 
 			break;
 		case "Water":
-			water = water + quantity;
+			water  = water + quantity;
 
 			break;
 		default:
-			print ("Cant find that resource type!");
+			print ("R MANAGER: Cant find that resource type!");
 			break;
 		}
 	}
 
-	public bool CheckStorageForResource(string id, int ammnt){
-		if (storageBuildings.Count > 0) {
-			for (int i =0; i < storageBuildings.Count; i++) {
-				if (id == "Ore") {
-					if (storageBuildings [i].oreStored >= ammnt)
-						return true;
-				} else if (id == "Water") {
-					if (storageBuildings [i].waterStored >= ammnt)
-						return true;
-				} else {
-					// no other resource but ore and water in storage right now
-					return false;
-				}
-			}
 
-			// if none of the storages have returned true then just return false
-			return false;
+	// ***** V BELOW IS THE OLD LOGIC FOR CHARGING ORE FROM STORAGE. 
+		// I replaced this with a button on each storage for the player to withdraw resources manually
 
-		} else {
 
-			return false;
 
-		}
-
-	}
+//	public bool CheckStorageForResource(string id, int ammnt){
+//		if (storageBuildings.Count > 0) {
+//			for (int i =0; i < storageBuildings.Count; i++) {
+//				if (id == "Ore") {
+//					if (storageBuildings [i].oreStored >= ammnt)
+//						return true;
+//				} else if (id == "Water") {
+//					if (storageBuildings [i].waterStored >= ammnt)
+//						return true;
+//				} else {
+//					// no other resource but ore and water in storage right now
+//					return false;
+//				}
+//			}
+//
+//			// if none of the storages have returned true then just return false
+//			return false;
+//
+//		} else {
+//
+//			return false;
+//
+//		}
+//
+//	}
 
 	/// <summary>
 	/// Charges an ammount of WATER or ORE from the first
@@ -332,43 +445,49 @@ public class Player_ResourceManager : MonoBehaviour {
 	/// </summary>
 	/// <param name="id">Identifier.</param>
 	/// <param name="charge">Charge.</param>
-	public void ChargeFromStorage(int charge, string id){
-		if (storageBuildings.Count > 0) {
-			for (int x=0; x < storageBuildings.Count; x++){
-				if (id == "Ore"){
-					if (storageBuildings[x].oreStored >= charge){
-						storageBuildings[x].ChargeResource(charge, "Ore");
-						break;
-					}
-				}else if (id == "Water"){
-					if (storageBuildings[x].waterStored >= charge){
-						storageBuildings[x].ChargeResource(charge, "Water");
-						break;
-					}
-				}
-			}
-		}
-	}
+//	public void ChargeFromStorage(int charge, string id){
+//		if (storageBuildings.Count > 0) {
+//			for (int x=0; x < storageBuildings.Count; x++){
+//				if (id == "Ore"){
+//					if (storageBuildings[x].oreStored >= charge){
+//						storageBuildings[x].ChargeResource(charge, "Ore");
+//						break;
+//					}
+//				}else if (id == "Water"){
+//					if (storageBuildings[x].waterStored >= charge){
+//						storageBuildings[x].ChargeResource(charge, "Water");
+//						break;
+//					}
+//				}
+//			}
+//		}
+//	}
 
-	public void ChargeOreorWater(string id, int ammnt){
-		// this assumes that I've already checked there is more than ammnt in the total Ore / Water
-
-		// First, check if there are any storage buildings
-		if (storageBuildings.Count > 0) {
-			// Since there ARE storage buildings let's try charging this ammnt from one of them
-
-			if (CheckStorageForResource(id, -ammnt)){ // here we check if there's a storage with enough of that resource
-
-				ChargeFromStorage(ammnt, id); // this TAKES the ammnt from a storage
-
-			}
-		
-		} else {
-			// if there are NO storage buildings we just charge from the total Ore / Water
-			ChangeResource(id, ammnt);
-
-		}
-	}
+//	public void ChargeOreorWater(string id, int ammnt){
+//		// this assumes that I've already checked there is more than ammnt in the total Ore / Water
+//
+//		// First, check if there are any storage buildings
+//		if (storageBuildings.Count > 0) {
+//			// Since there ARE storage buildings let's try charging this ammnt from one of them
+//			// here we check if there's a storage with enough of that resource, using NEGATIVE value so it turns positive
+//			if (CheckStorageForResource(id, -ammnt)){ 
+//				Debug.Log ("R MANAGER: Found Ore in Storage!");
+//				ChargeFromStorage(ammnt, id); // this TAKES the ammnt from a storage
+//
+//			}else{
+//				// Here we haven't found that ammount in any of our storage, so we know this is being charged
+//				// directly from the total ore (so it is coming from a surplus NOT in storage)
+//				Debug.Log ("R MANAGER: Could NOT find Ore in Storage. Charging total surplus instead.");
+//				ChangeResource(id, ammnt);
+//			}
+//		
+//		} else {
+//			// if there are NO storage buildings we just charge from the total Ore / Water
+//			Debug.Log ("R MANAGER: NO Storage in List. Charging total surplus.");
+//			ChangeResource(id, ammnt);
+//
+//		}
+//	}
 
 
 	/// <summary>

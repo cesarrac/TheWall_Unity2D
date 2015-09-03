@@ -22,7 +22,16 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	SpriteRenderer sr;
 
+	bool continueTimer;
+
 	void Start () {
+		if (resourceGrid == null)
+			resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
+
+		// Initialize building stats
+		stats.Init ();
+		InitTileStats((int)transform.position.x, (int)transform.position.y);
+
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
 		}
@@ -34,6 +43,8 @@ public class Tower_TargettingHandler : Unit_Base {
 			lineR.sortingLayerName = sr.sortingLayerName;
 			lineR.sortingOrder = sr.sortingOrder;
 		}
+
+		continueTimer = true;
 
 
 	}
@@ -60,7 +71,13 @@ public class Tower_TargettingHandler : Unit_Base {
 	}
 
 	void Update(){
-		if (canShoot){
+
+		// Check that my line renderer's sorting layer is the same as mine
+		if (lineR.sortingLayerName != sr.sortingLayerName) {
+			lineR.sortingLayerName = sr.sortingLayerName;
+			lineR.sortingOrder = sr.sortingOrder + 1;
+		}
+		if (canShoot && continueTimer){
 			StartCoroutine(WaitToShoot());
 		}
 //		Debug.DrawLine (sightStart.position, sightEnd.position, Color.magenta);
@@ -69,13 +86,15 @@ public class Tower_TargettingHandler : Unit_Base {
 	}
 
 	IEnumerator WaitToShoot(){
+//		continueTimer = false;
 		canShoot = false;
-		yield return new WaitForSeconds (rateOfAttack);
+		yield return new WaitForSeconds (stats.curRateOfAttk);
 		if (unitToPool != null) {
 			PoolTarget(unitToPool);
 		} else if (targetUnit != null){
 			VisualShooting ();
 			HandleDamageToUnit ();
+			Debug.Log("MACHINE GUN: Shooting!");
 		}
 
 	}
@@ -85,8 +104,16 @@ public class Tower_TargettingHandler : Unit_Base {
 	/// The bullet itself is just for visual reference and will just Pool itself when it hits.
 	/// </summary>
 	void VisualShooting(){
-		GameObject explosion = objPool.GetObjectForType ("Explosion Particles", false);
+		GameObject explosion = objPool.GetObjectForType ("Burst Particles", true);
 		if (explosion != null) {
+			// Explosion must match the target's layer
+
+			// get the target layer
+			string targetLayer = targetUnit.GetComponent<SpriteRenderer>().sortingLayerName;
+
+			// assign layer to Particle Renderer
+			explosion.GetComponent<ParticleSystemRenderer>().sortingLayerName = targetLayer;
+
 			explosion.transform.position = targetUnit.transform.position;
 		}
 	}
@@ -110,7 +137,7 @@ public class Tower_TargettingHandler : Unit_Base {
 		objPool.PoolObject (target); // Pool the Dead Unit
 		string deathName = "dead";
 		GameObject deadE = objPool.GetObjectForType(deathName, false); // Get the dead unit object
-		deadE.GetComponent<FadeToPool> ().objPool = objPool;
+		deadE.GetComponent<EasyPool> ().objPool = objPool;
 		deadE.transform.position = unitToPool.transform.position;
 		unitToPool = null;
 		// if we are pooling it means its dead so we should check for target again
@@ -134,10 +161,10 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	void OnTriggerExit2D(Collider2D coll){
 		if (coll.gameObject.CompareTag ("Enemy") && targetUnit != null) {
-			if (coll.gameObject == targetUnit){
+
 				targetUnit = null;
 				enemyInRange = false;
-			}
+
 		}
 	}
 

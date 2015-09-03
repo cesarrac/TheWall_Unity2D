@@ -21,6 +21,8 @@ public class DeSalt_Plant : MonoBehaviour {
 
 	bool statsInitialized;
 
+	SpriteRenderer sr;
+
 	void Awake(){
 		lineR = GetComponent<LineRenderer> ();
 	
@@ -36,6 +38,10 @@ public class DeSalt_Plant : MonoBehaviour {
 		if (playerResources == null) {
 			playerResources = GameObject.FindGameObjectWithTag("Capital").GetComponent<Player_ResourceManager>();
 		}
+
+		sr = GetComponent<SpriteRenderer> ();
+		lineR.sortingLayerName = sr.sortingLayerName;
+		lineR.sortingOrder = sr.sortingOrder - 1;
 		lineR.SetPosition (0, transform.position);
 		selecting = true;
 	}
