@@ -32,6 +32,10 @@ public class Player_AttackHandler : Unit_Base {
 	
 	// Update is called once per frame
 	void Update () {
+
+		if (unitToPool != null)
+			PoolTarget (unitToPool);
+
 		if (canAttack && continueCounter) {
 			StartCoroutine(WaitToAttack());
 		}
@@ -40,9 +44,7 @@ public class Player_AttackHandler : Unit_Base {
 	IEnumerator WaitToAttack(){
 		continueCounter = false;
 		yield return new WaitForSeconds (stats.curRateOfAttk);
-		if (unitToPool != null) {
-			PoolTarget(unitToPool);
-		}else if (enemyUnit != null) {
+		if (enemyUnit != null) {
 			HandleDamageToUnit ();
 		} 
 	}
@@ -74,13 +76,16 @@ public class Player_AttackHandler : Unit_Base {
 //	}
 	
 	void PoolTarget(GameObject target){
+		unitToPool = null;
+
 		objPool.PoolObject (target); // Pool the Dead Unit
+
 		GameObject deadE = objPool.GetObjectForType("dead", false); // Get the dead unit object
 		if (deadE != null) {
 			deadE.GetComponent<EasyPool> ().objPool = objPool;
-			deadE.transform.position = unitToPool.transform.position;
+			deadE.transform.position = target.transform.position;
 		}
-		unitToPool = null;
+	
 		// if we are pooling it means its dead so we should check for target again
 		enemyUnit = null;
 		moveHandler.moving = false;

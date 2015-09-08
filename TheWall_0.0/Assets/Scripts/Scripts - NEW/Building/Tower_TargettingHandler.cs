@@ -24,6 +24,7 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	bool continueTimer;
 
+
 	void Start () {
 		if (resourceGrid == null)
 			resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
@@ -77,9 +78,16 @@ public class Tower_TargettingHandler : Unit_Base {
 			lineR.sortingLayerName = sr.sortingLayerName;
 			lineR.sortingOrder = sr.sortingOrder + 1;
 		}
+
+
+		// continue shooting
 		if (canShoot && continueTimer){
 			StartCoroutine(WaitToShoot());
 		}
+
+		if (unitToPool != null)
+			PoolTarget (unitToPool);
+
 //		Debug.DrawLine (sightStart.position, sightEnd.position, Color.magenta);
 		if (!enemyInRange && !starvedMode) 
 			sightStart.Rotate (Vector3.forward * 90 * Time.deltaTime);
@@ -89,9 +97,7 @@ public class Tower_TargettingHandler : Unit_Base {
 //		continueTimer = false;
 		canShoot = false;
 		yield return new WaitForSeconds (stats.curRateOfAttk);
-		if (unitToPool != null) {
-			PoolTarget(unitToPool);
-		} else if (targetUnit != null){
+		if (targetUnit != null){
 			VisualShooting ();
 			HandleDamageToUnit ();
 			Debug.Log("MACHINE GUN: Shooting!");
@@ -134,12 +140,14 @@ public class Tower_TargettingHandler : Unit_Base {
 	}
 
 	void PoolTarget(GameObject target){
+		unitToPool = null;
+
 		objPool.PoolObject (target); // Pool the Dead Unit
+
 		string deathName = "dead";
 		GameObject deadE = objPool.GetObjectForType(deathName, false); // Get the dead unit object
 		deadE.GetComponent<EasyPool> ().objPool = objPool;
-		deadE.transform.position = unitToPool.transform.position;
-		unitToPool = null;
+		deadE.transform.position = target.transform.position;
 		// if we are pooling it means its dead so we should check for target again
 		targetUnit = null;
 		enemyInRange = false;

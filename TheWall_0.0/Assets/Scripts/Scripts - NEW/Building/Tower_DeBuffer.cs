@@ -29,8 +29,8 @@ public class Tower_DeBuffer : Unit_Base {
 			resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
 		
 		// Initialize building stats
-//		stats.Init ();
-//		InitTileStats((int)transform.position.x, (int)transform.position.y);
+		stats.Init ();
+		InitTileStats((int)transform.position.x, (int)transform.position.y);
 		
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();

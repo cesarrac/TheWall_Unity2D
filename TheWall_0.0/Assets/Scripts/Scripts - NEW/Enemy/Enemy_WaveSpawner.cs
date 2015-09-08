@@ -8,14 +8,28 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 	public enum SpawnState { SPAWNING, WAITING, COUNTING, STOP };
 
 	[System.Serializable]
+	public class EnemyUnit
+	{
+		public string enemyName;
+		public int enemyCount;
+		public Sprite enemySprite;
+		public float spawnRate;
+	}
+
+	[System.Serializable]
 	public class Wave
 	{
+		
 		public string name;
-		public string enemyName;
-		public int count;
-		public float rate;
+
+		public EnemyUnit[] members;
+
+
 		public int spawnPosIndex;
+		public Sprite enemySprite;
 	}
+
+
 
 	public Wave[] waves;
 	private int nextWave = 0;
@@ -61,7 +75,13 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 	[SerializeField]
 	private int groupCount;
 
-	private int nextGroup = 0;
+	private int nextGroup = 1;
+
+	GameObject[] indicators;
+
+	private bool indicatorsCreated = false;
+
+	private int nextWaveInGroup = 0; // gets reset everytime a group is done spawning
 
 	void Start()
 	{
@@ -74,7 +94,10 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 		displayTime.text = "Next Wave in: ";
 
+		indicators = new GameObject[wavesInGroup];
 
+		// create initial indicators
+		CreateSpawnPointIndicators ();
 
 	}
 
@@ -91,6 +114,14 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 					if (state != SpawnState.SPAWNING && state != SpawnState.STOP) {
 
 						displayTime.text = waves [nextWave].name + " INCOMING!";
+
+						// get rid of the indicators
+						for (int i =0; i < indicators.Length; i++){
+							objPool.PoolObject(indicators[i]);
+//							indicators[i] = null;
+						}
+						// reset bool
+						indicatorsCreated = false;
 
 						// Start spawning a wave
 						StartCoroutine (SpawnWave (waves [nextWave]));
@@ -109,6 +140,13 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			displayTime.color = Color.green;
 			displayTime.text = "Attack Incoming in: " + startingCountDown.ToString("f1");
 		}
+
+		// Creates indicators as soon as we are on peace count down
+		if (peaceCountDown > 0) {
+			if (!indicatorsCreated)
+				CreateSpawnPointIndicators();
+		}
+
 	}
 
 	public void ForceStartAttack()
@@ -120,24 +158,69 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 		}
 	}
 
+	public void CreateSpawnPointIndicators()
+	{
+
+		// create spawn point indicators for each wave in a group
+		for (int i =0; i < wavesInGroup; i++) {
+			// find the wave to get its info
+			Wave thisWave = waves[nextWave + i];
+			// get a new spawn indicator
+			GameObject spwnIndicator = objPool.GetObjectForType("Spawn Indicator", true);
+
+			if (spwnIndicator != null){
+
+				// add this indicator to our array
+				indicators[i] = spwnIndicator;
+
+				// place it on the right location
+				spwnIndicator.transform.position = spawnPositions[thisWave.spawnPosIndex];
+
+				// then fill its information
+				Enemy_ForceSpawn indicator = spwnIndicator.GetComponent<Enemy_ForceSpawn>();
+				indicator.spwnIndicator.Init(thisWave.name, thisWave.members.Length, thisWave.enemySprite);
+
+				// now that its info has been initialized, we can set the info
+				indicator.SetIndicator();
+
+				// and give it access to the functions on this script
+				indicator.enemyWaveSpawner = this;
+
+			}else{
+				Debug.Log("WAVE SPAWNER: Pool can't find Spawn Indicator!");
+			}
+		}
+
+		indicatorsCreated = true;
+	}
+
 	IEnumerator SpawnWave (Wave _wave)
 	{
+		Debug.Log ("WAVE: Spawning wave " + nextWave + ", group member: " + nextWaveInGroup);
+
 		state = SpawnState.SPAWNING;
 
 		// Spawn
-		for (int i =0; i < _wave.count; i++) 
-		{
-			SpawnEnemy(_wave.enemyName, _wave.spawnPosIndex);
-//			Debug.Log ("SPAWNING " + _wave.enemyName);
-			yield return new WaitForSeconds( 1f / _wave.rate);
+			// Loop through members in a wave
+		for (int x = 0; x < _wave.members.Length; x++) {
+			// each member has a name and a count, loop through this count too
+			for (int y = 0; y < _wave.members[x].enemyCount; y++){
+				// spawn this enemy name
+				SpawnEnemy(_wave.members[x].enemyName, _wave.spawnPosIndex);
+
+				yield return new WaitForSeconds (1f / _wave.members[x].spawnRate);
+			}
 		}
 
 		nextWave ++;
 
 		if (groupCount > 0) 
 		{		// CHECK IF THERE ARE ANY GROUPS
-			if (nextWave <= wavesInGroup - 1) 
+			if (nextWaveInGroup < wavesInGroup - 1) // this needs to say if it there has been at least wavesIngroup spawned
 			{
+				Debug.Log ("WAVE: still spawning from same group!");
+				nextWaveInGroup ++;
+
 				// keep spawning
 				waveCountDown = timeBetweenWaves;
 
@@ -146,9 +229,14 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			} 
 			else
 			{
+				Debug.Log ("WAVE: spawning from NEW group!");
+				// reset next wave in group
+				nextWaveInGroup = 0;
+
 				// this GROUP is done spawning, go to next group
 				nextGroup++;
-				if (nextGroup <= groupCount - 1)
+
+				if (nextGroup <= groupCount)
 				{
 					// start peace time and keep nextwave with its current value
 					peaceCountDown = peaceTime;
@@ -159,6 +247,8 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 				{
 					// No more groups, so STOP spawning
 					state = SpawnState.STOP;
+
+					displayTime.gameObject.SetActive(false);
 				}
 
 			}
@@ -176,6 +266,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			{
 				// No more Waves left, STOP Spawning
 				state = SpawnState.STOP;
+
 
 				displayTime.gameObject.SetActive(false);
 			}
@@ -196,8 +287,11 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 			// reset its Stats in case it just got brought back from the Pool
 			Enemy_AttackHandler _attkHandler = _enemy.GetComponentInChildren<Enemy_AttackHandler>();
-
 			_attkHandler.stats.Init();
+
+			// also reset their Health Bar 
+			_attkHandler.statusIndicator.SetHealth(_attkHandler.stats.curHP, _attkHandler.stats.maxHP);
+			Debug.Log ("WAVESPAWNER: spawning unit with curHP: " + _attkHandler.stats.curHP + " and maxHP: " + _attkHandler.stats.maxHP);
 
 			// and give it the Object Pool
 			_attkHandler.objPool = objPool;
@@ -210,6 +304,9 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			_moveHandler.resourceGrid = resourceGrid;
 			_moveHandler.spwnPtIndex = _spawnIndex;
 			_moveHandler.spwnPtHandler = spwnPtHandler; 
+
+			// reset the current move speed in case this unit was affected by a DeBuffer
+			_moveHandler.mStats.curMoveSpeed = _moveHandler.mStats.startMoveSpeed;
 
 			// feed it the move handler from the enemy spawned before this one so it has a buddy
 			if (lastEnemy != null){

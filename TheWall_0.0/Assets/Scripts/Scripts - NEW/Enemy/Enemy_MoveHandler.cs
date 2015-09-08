@@ -56,6 +56,8 @@ public class Enemy_MoveHandler : MonoBehaviour {
 
 	private Vector2 _capitalPosition;
 
+	public bool isKamikaze;
+
 	void Start () {
 
 		mStats.InitMoveStats ();
@@ -68,18 +70,41 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		posY = (int)transform.position.y;
 		enemyAttkHandler = GetComponentInChildren<Enemy_AttackHandler> ();
 
-		GetFirstPath ();
+		if (!isKamikaze) {
+			GetFirstPath (false);
+		} else {
+			GetFirstPath(true);
+		}
+
+
 
 		_capitalPosition = new Vector2 (resourceGrid.capitalSpawnX, resourceGrid.capitalSpawnY);
 	}
 
-	void GetFirstPath(){
+	void GetFirstPath(bool isKamikaze){
 		if (spwnPtHandler != null) {
-			currentPath = new List<Node>();
-			for (int x = 0; x < spwnPtHandler.path[spwnPtIndex].Count; x++){
-				currentPath.Add(spwnPtHandler.path[spwnPtIndex][x]);
+			if (!isKamikaze){
+				currentPath = new List<Node>();
+				for (int x = 0; x < spwnPtHandler.path[spwnPtIndex].Count; x++){
+					currentPath.Add(spwnPtHandler.path[spwnPtIndex][x]);
+
+					if (x == spwnPtHandler.path[spwnPtIndex].Count - 1){
+						destination = new Vector3( currentPath[x].x, currentPath[x].y, 0.0f);
+					}
+				}
+				moving = true;
+			}else{
+				currentPath = new List<Node>();
+				for (int x = 0; x < spwnPtHandler.kamikazePath[spwnPtIndex].Count; x++){
+					currentPath.Add(spwnPtHandler.kamikazePath[spwnPtIndex][x]);
+
+					if (x == spwnPtHandler.kamikazePath[spwnPtIndex].Count - 1){
+						destination = new Vector3( currentPath[x].x, currentPath[x].y, 0.0f);
+					}
+				}
+				moving = true;
 			}
-			moving = true;
+		
 		}
 	}
 
@@ -125,9 +150,9 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			int currNode = 0;
 			while (currNode < currentPath.Count -1) {
 				Vector3 start = resourceGrid.TileCoordToWorldCoord (currentPath [currNode].x, currentPath [currNode].y);
-				destination = resourceGrid.TileCoordToWorldCoord (currentPath [currNode + 1].x, currentPath [currNode + 1].y);
+				Vector3 end = resourceGrid.TileCoordToWorldCoord (currentPath [currNode + 1].x, currentPath [currNode + 1].y);
 				;
-				Debug.DrawLine (start, destination, Color.blue);
+				Debug.DrawLine (start, end, Color.blue);
 				currNode++;
 			}
 		
@@ -164,21 +189,22 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		// Remove the old first node from the path
 		currentPath.RemoveAt (0);
 		
-		// Check if the next tile is a UNWAKABLE tile, if it is clear path
+		// Check if the next tile is a UNWAKABLE tile OR if it is clear path
 		if (resourceGrid.UnitCanEnterTile (currentPath [1].x, currentPath [1].y) == false) {
 			moving = false;
 			Debug.Log ("Path is blocked! at x" + currentPath [1].x + ", y" + currentPath [1].y);
 			if (CheckForTileAttack (currentPath [1].x, currentPath [1].y)) {
 				Debug.Log("Attacking Tile!");
 				// here I would tell the Attack script to start its attack on the tile
-				// But if it's the Capital, not just any tile, then it needs to do a special attack
-				if (currentPath[1].x == _capitalPosition.x && currentPath[1].y == _capitalPosition.y)
+				// But if it's the Destination tile, not just any tile, then it needs to do a special attack
+				if (currentPath[1].x == destination.x && currentPath[1].y == destination.y)
 				{
-					// we are at the capital! Do special!
+					// we are at the destination! Do special!
 					enemyAttkHandler.SpecialAttack(currentPath[1].x, currentPath[1].y);
 				}
 				else
 				{
+					// it's a tile but NOT the destination, so just do normal attack
 					targetPosX = currentPath [1].x;
 					targetPosY = currentPath [1].y;
 					enemyAttkHandler.targetTilePosX = currentPath [1].x;
@@ -195,6 +221,15 @@ public class Enemy_MoveHandler : MonoBehaviour {
 				currentPath = null;
 				moving = false;
 				return;
+			}
+
+			// this check if for KAMIKAZE UNITS ONLY
+			if (isKamikaze){
+				// if the next tile on the Path is the destination
+				if (currentPath[1].x == destination.x && currentPath[1].y == destination.y){
+					// reached the destination, do Special Attack!
+					enemyAttkHandler.SpecialAttack(currentPath[1].x, currentPath[1].y);
+				}
 			}
 		} 	
 		// Move to the next Node position in path

@@ -14,7 +14,7 @@ public class Building_UIHandler : MonoBehaviour {
 	public Button buildBttnFab;
 	// Building Sprites
 	public Sprite buildingSprite, extractSprite, machineGunSprite, seaWSprite, harpoonHSprite, 
-	cannonSprite, sFarmSprite, storSprite, sDesaltSprite, sniperSprite;
+	cannonSprite, sFarmSprite, storSprite, sDesaltSprite, sniperSprite, nutriSprite;
 
 	// Building Names
 	public string buildingName;
@@ -43,7 +43,7 @@ public class Building_UIHandler : MonoBehaviour {
 
 	// Costs of Buildings:
 	public int[] extractCost, mGunCost, seaWCost, hHallCost, cannonCost,sFarmCost, storageCost, sDesaltCost,
-		sniperCost;
+		sniperCost, nutriCost;
 
 	// Indicator that pops up just over the build panel, destroys itself
 	public GameObject indicatorFab;
@@ -85,6 +85,7 @@ public class Building_UIHandler : MonoBehaviour {
 		storageCost = resourceGrid.storageCost;
 		sDesaltCost = resourceGrid.sDesaltCost;
 		sniperCost = resourceGrid.sniperCost;
+		nutriCost = resourceGrid.nutriCost;
 	}
 
 	void CreateBuildingButtons(){
@@ -92,6 +93,9 @@ public class Building_UIHandler : MonoBehaviour {
 											// BUILD BUTTONS
 		BuildButton (buildBttnFab,extractSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (16f, 10f, 0), new Vector2 (32, 32), buildingNames[0], extractCost[0], extractCost[1]); 
+
+		BuildButton (buildBttnFab,sDesaltSprite, mainBuildPanel, corners, corners, 
+		             new Vector3 (16f, 90f, 0), new Vector2 (32, 32),buildingNames[5], sDesaltCost[0], sDesaltCost[1]);
 
 		BuildButton (buildBttnFab,machineGunSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (96f, 10f, 0), new Vector2 (32, 32), buildingNames[1], mGunCost[0], mGunCost[1]); 
@@ -108,8 +112,8 @@ public class Building_UIHandler : MonoBehaviour {
 		BuildButton (buildBttnFab,sFarmSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (256f, 10f, 0), new Vector2 (32, 32),buildingNames[4], sFarmCost[0], sFarmCost[1]);
 
-		BuildButton (buildBttnFab,sDesaltSprite, mainBuildPanel, corners, corners, 
-		             new Vector3 (256f, 90f, 0), new Vector2 (32, 32),buildingNames[5], sDesaltCost[0], sDesaltCost[1]);
+		BuildButton (buildBttnFab,nutriSprite, mainBuildPanel, corners, corners, 
+		             new Vector3 (256f, 90f, 0), new Vector2 (32, 32),buildingNames[8], nutriCost[0], nutriCost[1]);
 
 		BuildButton (buildBttnFab,storSprite, mainBuildPanel, corners, corners, 
 		             new Vector3 (336f, 10f, 0), new Vector2 (32, 32),buildingNames[6], storageCost[0], storageCost[1]);
@@ -388,7 +392,31 @@ public class Building_UIHandler : MonoBehaviour {
 					bPosHand.buildingUI = this;
 				}
 			}else{
-				int diff = sniperCost[0] - resourceManager.ore;
+				int diff = seaWCost[0] - resourceManager.ore;
+				CreateIndicator("Need " + diff + " more Ore!");
+			}
+			break;
+		case "Nutrient Generator":
+			if (resourceManager.ore >= nutriCost[0]){		// ** HAS FOOD COST
+				GameObject nutri = objPool.GetObjectForType(halfName, true);
+				if(nutri != null){
+					
+					// set the sprite
+					nutri.GetComponent<SpriteRenderer>().sprite = nutriSprite;
+					
+					// add building pos handler
+					Building_PositionHandler bPosHand = nutri.GetComponent<Building_PositionHandler>();
+					
+					bPosHand.resourceGrid = resourceGrid;
+					bPosHand.followMouse = true;
+					bPosHand.tileType = TileData.Types.nutrient;
+					bPosHand.resourceManager = resourceManager;
+					bPosHand.currOreCost = nutriCost[0];
+					bPosHand.objPool = objPool;
+					bPosHand.buildingUI = this;
+				}
+			}else{
+				int diff = nutriCost[0] - resourceManager.ore;
 				CreateIndicator("Need " + diff + " more Ore!");
 			}
 			break;

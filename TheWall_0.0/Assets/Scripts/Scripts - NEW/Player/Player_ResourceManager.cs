@@ -239,12 +239,18 @@ public class Player_ResourceManager : MonoBehaviour {
 			// check if another building had already been picked
 			if (lastBuildingPicked != null){
 				if (tile != null){
+
 					if (tile.CompareTag("Building")){
+
 						if (tile != lastBuildingPicked){
-							// turn off the building
-							currStarvedBuilding = tile;
-							StarveBuildingControl(currStarvedBuilding, true);
-							break;
+
+							if (CheckIfFoodCostBuilding((int)tile.transform.position.x, (int) tile.transform.position.y)){
+								// turn off the building
+								currStarvedBuilding = tile;
+								StarveBuildingControl(currStarvedBuilding, true);
+								break;
+
+							}
 						}
 					}
 				}
@@ -260,6 +266,24 @@ public class Player_ResourceManager : MonoBehaviour {
 			}
 		}
 	}
+
+	bool CheckIfFoodCostBuilding (int x, int y){
+
+		if (resourceGrid.GetTileType (x, y) == TileData.Types.desalt_s || 
+			resourceGrid.GetTileType (x, y) == TileData.Types.nutrient ||
+			resourceGrid.GetTileType (x, y) == TileData.Types.extractor ||
+		    resourceGrid.GetTileType(x, y) == TileData.Types.storage ||
+		    resourceGrid.GetTileType(x, y) == TileData.Types.farm_s) 
+		{
+			return false;
+		} 
+		else 
+		{
+			return true;
+		}
+	
+	}
+
 
 	void UnStarveBuildings(){
 		for (int i = 0; i < buildingsStarved.Count; i++) {

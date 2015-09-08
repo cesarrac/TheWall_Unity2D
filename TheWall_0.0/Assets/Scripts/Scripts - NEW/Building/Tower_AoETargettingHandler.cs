@@ -42,6 +42,9 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	
 	void Update(){
 
+		if (unitToPool != null)
+			PoolTarget (unitToPool);
+
 		if (canShoot && !starvedMode){
 			StartCoroutine(WaitToShoot());
 		}
@@ -50,9 +53,7 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	IEnumerator WaitToShoot(){
 		canShoot = false;
 		yield return new WaitForSeconds (stats.curRateOfAttk);
-		if (unitToPool != null) {
-			PoolTarget(unitToPool);
-		} 
+	
 		if (enemiesInRange[0] != null){
 //			VisualShooting ();
 			HandleDamageToUnits ();
@@ -98,12 +99,16 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	}
 	
 	void PoolTarget(GameObject target){
+		unitToPool = null;
+
 		objPool.PoolObject (target); // Pool the Dead Unit
+
+
 		string deathName = "dead";
 		GameObject deadE = objPool.GetObjectForType(deathName, true); // Get the dead unit object
 		deadE.GetComponent<EasyPool> ().objPool = objPool;
-		deadE.transform.position = unitToPool.transform.position;
-		unitToPool = null;
+		deadE.transform.position = target.transform.position;
+
 		// if we are pooling it means its dead so we should check for target again
 		for (int y = 0; y < enemiesInRange.Length; y++){
 			if (enemiesInRange[y] == target){

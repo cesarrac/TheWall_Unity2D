@@ -39,16 +39,19 @@ public class Camera_MoveHandler : MonoBehaviour {
 		float inputX = Input.GetAxis ("Horizontal");
 		float inputY = Input.GetAxis ("Vertical");
 
-		Vector3 move = new Vector3(inputX, inputY, 0);
+		Vector3 move = new Vector3(Mathf.Round(inputX), Mathf.Round( inputY), 0);
+
+//		Vector3.Normalize (move);
+
 
 //		if (move != Vector3.zero) {
 //			target += move * 8f;
 //		}
-		transform.position += move * 8f * Time.deltaTime;
+		transform.position += move * 4f *  Time.deltaTime;
 //
 		// clamp movement
-		transform.position = new Vector3 (Mathf.Clamp (transform.position.x, leftBound + horzExtent / 2, rightBound - horzExtent / 2),
-		                                 Mathf.Clamp(transform.position.y, 9f + vertExtent /2, topBound - vertExtent /2), 
+		transform.position = new Vector3 (Mathf.Clamp (transform.position.x, (leftBound + horzExtent / 2) - 10f, (rightBound - horzExtent / 2) + 10f),
+		                                 Mathf.Clamp(transform.position.y, vertExtent /2, topBound - vertExtent /2 + 10f), 
 		                                  -10f);
 
 

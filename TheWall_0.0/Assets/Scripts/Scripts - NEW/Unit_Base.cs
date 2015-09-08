@@ -41,21 +41,24 @@ public class Unit_Base : MonoBehaviour {
 	public bool canAttackTile;
 
 //	public Damage_PopUp dmgPopUp; 
-
 	[Header("Optional: ")]
 	[SerializeField]
-	private Unit_StatusIndicator statusIndicator;
-	
+	private Unit_StatusIndicator _statusIndi;
+
+
+	public Unit_StatusIndicator statusIndicator { get {return _statusIndi;} set{_statusIndi = value;}}
+
+
 
 	void Start(){
 
-		if (statusIndicator != null) {
-			statusIndicator.SetHealth(stats.curHP, stats.maxHP);
+		if (_statusIndi != null) {
+			_statusIndi.SetHealth(stats.curHP, stats.maxHP);
 		}
 	}
 
 	public void InitTileStats(int x, int y){
-		Debug.Log ("BASE: Tile stats initialized!");
+//		Debug.Log ("BASE: Tile stats initialized!");
 		resourceGrid.tiles [x, y].hp = stats.curHP;
 		resourceGrid.tiles [x, y].def = stats.curDefence;
 		resourceGrid.tiles [x, y].attk = stats.curAttack;
@@ -103,11 +106,11 @@ public class Unit_Base : MonoBehaviour {
 
 	public void AttackOtherUnit(Unit_Base unit){
 
-		if (unit.stats.curHP > 0) {
+		if (unit.stats.curHP >= 1f) {
 			float def = (unit.stats.curDefence + unit.stats.curShield);
 
 			if (stats.curAttack > def){
-				Debug.Log("Attacking " + unit.name + " DEF: " + def + " ATTK: " + stats.curAttack);
+//				Debug.Log("Attacking " + unit.name + " DEF: " + def + " ATTK: " + stats.curAttack);
 
 				// Apply full damage
 				TakeDamage(unit, stats.curDamage);
@@ -126,7 +129,7 @@ public class Unit_Base : MonoBehaviour {
 				// always do MINIMUM 1 pt of damage
 				float clampedDamage = Mathf.Clamp(damageCalc, 1f, stats.curDamage);
 
-				Debug.Log("Can't beat " + unit.name + "'s Defence, so I hit for " + clampedDamage);
+//				Debug.Log("Can't beat " + unit.name + "'s Defence, so I hit for " + clampedDamage);
 
 				TakeDamage (unit, clampedDamage);
 //				unit.hp = unit.hp - Mathf.Clamp(damageCalc, 1f, damage); 
@@ -141,10 +144,20 @@ public class Unit_Base : MonoBehaviour {
 	
 	}
 
+	// ONLY USED BY KAMIKAZE UNITS ATTACKING PLAYER UNITS
+	public void SpecialAttackOtherUnit(Unit_Base unit){
+		if (unit.stats.curHP >= 1) {
+			TakeDamage (unit, stats.curSPdamage);
+		} else {
+			Die (unit.gameObject);
+		}
+	}
+
 	void TakeDamage(Unit_Base unit, float damage){
 
 		unit.stats.curHP = unit.stats.curHP - damage;
-		if (unit.stats.curHP <= 0f) {
+		if (unit.stats.curHP < 1f) {
+			Debug.Log ("UNIT BASE: Killing target!");
 			Die (unit.gameObject);
 		} else {
 			if (unit.statusIndicator != null) {

@@ -22,8 +22,8 @@ public class FoodProduction_Manager : MonoBehaviour {
 		resourceManager = GameObject.FindGameObjectWithTag ("Capital").GetComponent<Player_ResourceManager> ();
 		farming = true;
 
-		// MAKE SURE THE PLAYER HAS WATER BEFORE ADDING THIS FARM'S PRODUCTION TO THE STATS
-		if (resourceManager.water > 0) {
+		// MAKE SURE THE PLAYER HAS ENOUGH WATER BEFORE ADDING THIS FARM'S PRODUCTION TO THE STATS
+		if (resourceManager.water >=  waterConsumed) {
 			// Tell the Resource Manager how much I produce per cycle
 			resourceManager.CalculateFoodProduction (foodProduced, productionRate, waterConsumed, false);
 			foodStatsInitialized = true;

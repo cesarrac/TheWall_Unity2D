@@ -36,7 +36,7 @@ public class ResourceGrid : MonoBehaviour{
 	public GameObject discoverTileFab; // fab for grey discover tile with discover tile script
 
 	public GameObject unitOnPath;
-	public List<Node>pathToCapital;
+	public List<Node>pathForEnemy;
 
 //	public Player_SpawnHandler playerSpawnHandler;
 	public GameObject playerCapital; 
@@ -49,7 +49,7 @@ public class ResourceGrid : MonoBehaviour{
 
 	// BUILDING COSTS:
 	public int[] extractorCost, machineGunCost, seaWitchCost, harpoonHCost, cannonCost, sFarmCost; // the array's [0] value is ORE Cost, [1] value is FOOD Cost
-	public int[] storageCost, sDesaltCost, sniperCost;
+	public int[] storageCost, sDesaltCost, sniperCost, nutriCost;
 
 	public Player_ResourceManager playerResources;
 
@@ -166,10 +166,16 @@ public class ResourceGrid : MonoBehaviour{
 	/// <param name="damage">Damage.</param>
 	public void DamageTile(int x, int y, float damage)
 	{
-		tiles [x, y].hp = tiles [x, y].hp - damage;
-		if (tiles [x, y].hp <= 0) 
-		{
-			SwapTileType(x, y, TileData.Types.empty);	// to KILL TILE I just swap it ;)
+		// make sure there IS a tile there
+		if (spawnedTiles [x, y] != null) {
+
+			tiles [x, y].hp = tiles [x, y].hp - damage;
+			if (tiles [x, y].hp <= 0) {
+				SwapTileType (x, y, TileData.Types.empty);	// to KILL TILE I just swap it ;)
+			}
+
+		} else {
+			Debug.Log("GRID: Could NOT find tile to damage!");
 		}
 	}
 
@@ -238,6 +244,9 @@ public class ResourceGrid : MonoBehaviour{
 			case TileData.Types.seaWitch:
 				tiles [x, y] = new TileData ("Sea-Witch Crag", newType, 0, 10000, 0, 0, 0, 0, seaWitchCost[1], seaWitchCost[0]);
 				break;
+			case TileData.Types.nutrient:
+				tiles [x, y] = new TileData ("Nutrient Generator", newType, 0, 10000, 0, 0, 0, 0, nutriCost[1], nutriCost[0]);
+				break;
 			case TileData.Types.building:
 				tiles [x, y] = new TileData (newType, 0, 10000);
 				break;
@@ -261,8 +270,7 @@ public class ResourceGrid : MonoBehaviour{
 
 			// ALSO if it's a Farm we need to subtract its FOOD production and its WATER consumed
 			if (playerResources.foodProducedPerDay > 0){
-				if (tiles[x,y].tileType == TileData.Types.farm_s || tiles[x,y].tileType == TileData.Types.farm_m 
-				    || tiles[x,y].tileType == TileData.Types.farm_l){
+				if (tiles[x,y].tileType == TileData.Types.farm_s || tiles[x,y].tileType == TileData.Types.nutrient){
 					FoodProduction_Manager foodM = spawnedTiles [x, y].GetComponent<FoodProduction_Manager>();
 					playerResources.CalculateFoodProduction(foodM.foodProduced, foodM.productionRate, foodM.waterConsumed, true);
 				}
@@ -440,7 +448,7 @@ public class ResourceGrid : MonoBehaviour{
 			unitPosX = unitX;
 			unitPosY = unitY;
 		} else {
-			pathToCapital = null;
+			pathForEnemy = null;
 			unitPosX = unitX;
 			unitPosY = unitY;
 //			unitOnPath.GetComponent<Enemy_MoveHandler> ().currentPath = null;
@@ -524,7 +532,7 @@ public class ResourceGrid : MonoBehaviour{
 		if (trueIfPlayerUnit) {
 			unitOnPath.GetComponent<SelectedUnit_MoveHandler> ().currentPath = currentPath;
 		} else {
-			pathToCapital = currentPath;
+			pathForEnemy = currentPath;
 //			unitOnPath.GetComponent<Enemy_MoveHandler> ().currentPath = currentPath;
 		}
 
