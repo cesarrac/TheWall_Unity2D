@@ -41,8 +41,9 @@ public class Gatherer : Unit {
 	public int currentTileIndex;
 
 	// current tile as GameObject
-	public GameObject currTileObj;
+//	public GameObject currTileObj;
 
+	public Mouse_Controls mouse; // to tell it to stop selecting
 
 
 	void Start () {
@@ -55,20 +56,27 @@ public class Gatherer : Unit {
 		town = GameObject.FindGameObjectWithTag ("Town_Central");
 		townResources = town.GetComponent<TownResources> ();
 		townCentral = town.GetComponent<Town_Central> ();
-		mapManager = GameObject.FindGameObjectWithTag ("Map_Manager").GetComponent<Map_Manager> ();
+		GameObject map = GameObject.FindGameObjectWithTag ("Map_Manager");
+		mapManager = map.GetComponent<Map_Manager> ();
+		mouse = map.GetComponent <Mouse_Controls> ();
+
 		gathering = true;
 	}
 	
 	void Update () {
 		if (beingMoved) {
 			FollowMouse ();
+			if (mouse != null){
+				mouse.stopSelecting = true;
+			}
 		} else {
-			if (!gathering && currTileObj != null){	// WHEN IT'S TIME TO GATHER
+			if (!gathering){	// WHEN IT'S TIME TO GATHER
 				StartCoroutine (GatherTime (currGatherTime, false, currentTile.resourceType));
 			}
 			if (salvaging){		// WHEN IT'S TIME TO SALVAGE (ON A DEPLETED TILE)
 				StartCoroutine (GatherTime (salvageTime, true));
 			}
+
 		}
 	}
 
@@ -80,8 +88,14 @@ public class Gatherer : Unit {
 		if (Input.GetMouseButtonUp (0) && !salvaging) {
 			TileCheck (); // check what type of tile this gatherer was place on
 			beingMoved = false;
+			if (mouse != null){
+				mouse.stopSelecting = !mouse.stopSelecting;
+			}
 		} else if (salvaging) {
 			beingMoved = false;
+			if (mouse != null){
+				mouse.stopSelecting = false;
+			}
 		}
 	}
 
@@ -98,7 +112,7 @@ public class Gatherer : Unit {
 	// can be performed against those tiles on the list that can be found within the camera's viewing space
 	void TileCheck(){
 		// check my position against the position in the Tile Data List
-		for (int x = 0; x < mapManager.tileDataList.Count-1; x++) {
+		for (int x = 0; x < mapManager.tileDataList.Count; x++) {
 			if (myTransform.position == mapManager.tileDataList[x].gridPosition){
 				currentTile = mapManager.tileDataList[x];
 				currentTileIndex = x;
@@ -107,6 +121,18 @@ public class Gatherer : Unit {
 				break;
 			}
 		}
+	}
+	int TileCheckTwo(){
+		// check my position against the position in the Tile Data List
+		for (int x = 0; x < mapManager.tileDataList.Count; x++) {
+			if (myTransform.position == mapManager.tileDataList[x].gridPosition){
+				currentTile = mapManager.tileDataList[x];
+				currentTileIndex = x;
+				print("Starting to gather!");
+				break;
+			}
+		}
+		return currentTileIndex;
 	}
 
 	// this finds out how long it would take this gatherer to gather this resource and starts the coroutine 
@@ -151,53 +177,56 @@ public class Gatherer : Unit {
 	}
 
 	void Gather(string tileType, int tileIndex){
-		if (currTileObj != null) { // make sure we are standing on a tile / tile has not been destroyed
+
 			// first check if the tile has resources left
-			if (mapManager.CheckResourceQuantity (currentTile)) {
-				// it does, add resources to the town
-				townResources.AddResource (tileType, gatherAmmount);
-				// substract from tile
-				int resourceQ = mapManager.tileDataList [tileIndex].maxResourceQuantity;
-				mapManager.tileDataList [tileIndex].maxResourceQuantity = resourceQ - gatherAmmount; 
-				print ("Gathering " + gatherAmmount + " " + tileType);
+		if (mapManager.CheckResourceQuantity (currentTile)) {
+			// it does, add resources to the town
+			townResources.AddResource (tileType, gatherAmmount);
+			// substract from tile
+			int resourceQ = mapManager.tileDataList [tileIndex].maxResourceQuantity;
+			mapManager.tileDataList [tileIndex].maxResourceQuantity = resourceQ - gatherAmmount; 
+			print ("Gathering " + gatherAmmount + " " + tileType);
 				// start the coroutine again
-				gathering = false;
-			} else {
-				// there are no more resources left in this tile, destroy and substract from spawnedGatherers
-				mapManager.SpawnDepletedTile(myTransform.position, tileIndex, currTileObj);
-				GathererDestroy ();
-			}
-
-
+			gathering = false;
 		} else {
+			// there are no more resources left in this tile, destroy and substract from spawnedGatherers
+			int currTileIndex = TileCheckTwo();
+			Debug.Log("Old index: " + tileIndex + " New index: " + currTileIndex);
+			mapManager.SpawnDepletedTile(myTransform.position, currTileIndex);
 			GathererDestroy ();
 		}
+
+
 	}
 
 	void GathererDestroy(){
 		Destroy (this.gameObject);
 		townCentral.spawnedGatherers--;
+		townCentral.availableGatherers++;
 	}
 
-	void OnTriggerStay2D(Collider2D coll){
-		if (coll.gameObject.CompareTag ("Tile")) {
-			currTileObj = coll.gameObject;
-		} 
-		else {
-			currTileObj = null;
-		}
-	}
-	void OnTriggerEnter2D(Collider2D coll){
-
-		if (coll.gameObject.CompareTag ("Depleted")) {
-			salvaging = true;
-		}
-	}
-	void OnTriggerExit2D(Collider2D coll){
-		if (coll.gameObject.CompareTag ("Depleted")) {
-			salvaging = false;
-		}
-	}
+//	void OnTriggerStay2D(Collider2D coll){
+//		if (coll.gameObject.CompareTag ("Tile")) {
+//			currTileObj = coll.gameObject;
+//		} 
+//		if (coll.gameObject.CompareTag ("Food Source")) {
+//			currTileObj = coll.gameObject;
+//		} 
+//		else {
+//			currTileObj = null;
+//		}
+//	}
+//	void OnTriggerEnter2D(Collider2D coll){
+//
+//		if (coll.gameObject.CompareTag ("Depleted")) {
+//			salvaging = true;
+//		}
+//	}
+//	void OnTriggerExit2D(Collider2D coll){
+//		if (coll.gameObject.CompareTag ("Depleted")) {
+//			salvaging = false;
+//		}
+//	}
 
 	// SALVAGE allows the gatherer to search a field (a Depleted tile) and get random resources
 	void Salvage(){

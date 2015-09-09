@@ -23,7 +23,7 @@ public class Gatherer_House : Building {
 //		townCentral.gatherTimeBoost = townCentral.gatherTimeBoost + timeBoost;
 
 		// add habitants to Survivor Vacancies
-		townCentral.survivorVacancies = townCentral.survivorVacancies + maxHabitants;
+//		townCentral.survivorVacancies = townCentral.survivorVacancies + maxHabitants;
 //		townCentral.maxGatherers = townCentral.maxGatherers + maxHabitants;
 
 		// decrease this town tile's HP because house's lower their defenses

@@ -75,6 +75,7 @@ public class Survivor : Unit {
 
 	// CLASS or Type of Survivor (Each Class carries unique bonuses and needs)
 	public enum SurvivorClass{
+		none,						// none is default
 		soldier,
 		farmer,
 		scientist,
@@ -93,7 +94,8 @@ public class Survivor : Unit {
 	public Button playerAnswerBttn;
 	GameObject[] answerBttns;
 	public GameObject survivorPanel; // to make it pop-up when the dialogue window is up
-	public Button mySurvivorSlot;
+	public RectTransform mySurvivorSlot;
+	public Button mySurvivorButton;
 
 	// Access to Town Central
 	public Town_Central townCentral;
@@ -107,20 +109,24 @@ public class Survivor : Unit {
 	public bool partOfTown; // turns true when Player recruits this survivor
 	public bool hasBeenToTown; // turns true when Survivor has visited Town
 
-	UI_Master uiMaster;
+	public UI_Master uiMaster;
 
 	// Building and Town Tile that im standing on when placed
-	TownTile_Properties townTile;
+	public TownTile_Properties townTile;
 	Building currBuilding;
 
-	public void ForcedStart(string sname, Sprite ssprite, float smood, SurvivorClass sClass){
+	// ID # to be able to compare a Spawned Survivor with a Survivor from data list (survivors In Town)
+	public int id;
+
+	public void ForcedStart(string sname, Sprite ssprite, float smood, SurvivorClass sClass, int myID){
 		name = sname;
 		mySprite = ssprite;
 		mood = smood;
 		mySurvivorClass = sClass;
 		partOfTown = true;
 		// add the class script to this survivor gameobject
-		AddSurvivorClass (mySurvivorClass);
+//		AddSurvivorClass (mySurvivorClass);
+		id = myID;
 	}
 
 	void Start () {
@@ -158,10 +164,18 @@ public class Survivor : Unit {
 		// check the moodtype everytime Mood changes
 		if (mood > currMood || mood < currMood){
 			moodType = GetMoodType();
+			currMood = mood;
 		}
 
 		if (beingMoved) {
 			FollowMouse();
+		}
+
+		if (townTile != null) {
+			CheckIfDead ();
+			if (mood <= traitor){	// IF MOOD IS REALLY LOW, this Survivor will act out
+				TraitorAction();			// Violently...
+			}
 		}
 	}
 
@@ -171,8 +185,13 @@ public class Survivor : Unit {
 		//		myTransform.position = new Vector3 (m.x, m.y, -2f);
 		
 		if (Input.GetMouseButtonDown (0)) {
-			ApplyBasicBonus(); // give tile basic bonuses
-			beingMoved = false;
+			if (townTile != null){
+				if (!townTile.hasASurvivor){ // cant place more than one in a building
+					ApplyBasicBonus(townTile); // give tile basic bonuses
+					beingMoved = false;
+				}
+			}
+
 		}
 	}
 	// for testing im making this survivor talk when clicked on
@@ -183,32 +202,76 @@ public class Survivor : Unit {
 	}
 
 	// checks what Building this survivor has been placed on
-	void ApplyBasicBonus(){
-		if (townTile != null) {
-			townTile.tileHitPoints = townTile.tileHitPoints + basicHPBoost;
-			if (townTile.tileHasTier1 || townTile.tileHasTier2 || townTile.tileHasTier3) {
-				currBuilding = townTile.GetComponentInChildren<Building> ();
-				CheckBuilding (currBuilding);
-			}
-		} else {
-			Debug.Log("No Town Tile found by " + name);
+	void ApplyBasicBonus(TownTile_Properties townTile){
+			// BASIC TILE HP BOOST: All survivors give a slight HP boost when placed
+		// tell the town tile that it has a Survivor on it
+		townTile.hasASurvivor = true;
+		townTile.tileHitPoints = townTile.tileHitPoints + basicHPBoost;
+	
+		// ** CHECK BUILDING FROM EACH OF THE SURVIVOR CLASSES SCRIPT SINCE EACH PROVIDE UNIQUE BONUSES
+	//Check Building and Add Class
+		if (townTile.tileHasTier1 || townTile.tileHasTier2 || townTile.tileHasTier3) {
+			currBuilding = townTile.GetComponentInChildren<Building> ();
+			CheckBuilding (currBuilding);
 		}
+
 	}
 
-	void CheckBuilding(Building building){
+	void CheckIfDead(){
+		float tileHP = townTile.tileHitPoints;
+		if (tileHP <= 0) {
+			KillSurvivor();
+		}
+
+	}
+
+	void KillSurvivor(){
+		// identify & remove this survivor in Town Central's survivors in town list & survivorsSpawned List
+		townCentral.ClearDeadSurvivor (id);
+		// remove it from Survivor slots
+		townCentral.RemoveSurvivorSlot (mySurvivorSlot.position.y, mySurvivorSlot.gameObject);
+		// add the name to the Book of Dead
+		uiMaster.AddDeadSurvivor (name);
+		if (townTile != null) {
+			townTile.hasASurvivor = false;
+		}
+		// then destroy this gameObject
+		Destroy (gameObject);
+
+	}
+						// GO HOME: spawned survivor goes back to its slot
+	public void GoHome(){
+		// identify and remove from Town Central's spawned survivors
+		townCentral.ClearForGoHome (id);
+		// activate this survivor's button so it can be spawned again
+		mySurvivorButton.enabled = true;
+		// tell the tile I was on it no longer has a survivor
+		if (townTile != null) {
+			townTile.hasASurvivor = false;
+		}
+		// then destroy this object
+		Destroy (gameObject);
+	}
+
+
+	public void CheckBuilding(Building building){
 		Building.BuildingType bType = building.myBuildingType;
 		switch (bType) {
 		case Building.BuildingType.house:
 			// apply Special House bonuses
+
 			break;
 		case Building.BuildingType.defense:
-			// apply Special defense bonuses
+			// add Soldier class
+			AddSurvivorClass(SurvivorClass.soldier);
 			break;
 		case Building.BuildingType.food:
-			// apply Special food bonuses
+
+			AddSurvivorClass(SurvivorClass.farmer);
 			break;
 		case Building.BuildingType.workshop:
-			// apply Special workshop bonuses
+
+			AddSurvivorClass(SurvivorClass.scientist);
 			break;
 		default:
 			print("Building of this type NOT FOUND!");
@@ -221,13 +284,14 @@ public class Survivor : Unit {
 		// Depending on the type of Talk interaction/type different responses and player options will be available
 		switch (type) {
 		case "Welcome":
+			Debug.Log("WELCOME dialogue is on");
 			if (!partOfTown && !hasBeenToTown){
 				uiMaster.CreateAnswers(type);
 				uiMaster.currentSurvivor = GetComponent<Survivor>();
 				uiMaster.currSurvivor = gameObject;
 				uiMaster.charName.text = name;
 //				// first activate the dialogue panel
-//				dialoguePanel.SetActive (!dialoguePanel.activeSelf);
+				dialoguePanel.SetActive (true);
 				survivorPanel.SetActive(true);
 				// then display response and portrait
 				dialogueText.text = GetResponse (type);
@@ -238,11 +302,26 @@ public class Survivor : Unit {
 			}
 
 			break;
+		case "Salute":
+			Debug.Log(type  + " dialogue is on");
+			uiMaster.CreateAnswers(type, partOfTown);
+
+			uiMaster.currentSurvivor = GetComponent<Survivor>();
+			uiMaster.currSurvivor = gameObject;
+			uiMaster.charName.text = name;
+
+			// then display response and portrait
+			dialogueText.text = GetResponse (type);
+			charPortrait.sprite = mySprite;
+			hasBeenToTown = true;
+			break;
 		default:
-			uiMaster.CreateAnswers(type);
+			Debug.Log(type  + " dialogue is on");
+
+			uiMaster.CreateAnswers(type, partOfTown);
 			uiMaster.charName.text = name;
 //			// first activate the dialogue panel
-//			dialoguePanel.SetActive (!dialoguePanel.activeSelf);
+
 //			survivorPanel.SetActive(true);
 //			// then display response and portrait
 			dialogueText.text = GetResponse (type);
@@ -264,13 +343,37 @@ public class Survivor : Unit {
 		switch (survivorClass) {
 		case SurvivorClass.farmer:
 			gameObject.AddComponent<Farmer>();
+			mySurvivorClass = SurvivorClass.farmer;
+			// change name
+			name = name + " the " + mySurvivorClass;
+			gameObject.name = name;
 			break;
 		case SurvivorClass.soldier:
 			gameObject.AddComponent<Soldier>();
+			mySurvivorClass = SurvivorClass.soldier;
+			// change name
+			name = name + " the " + mySurvivorClass;
+			gameObject.name = name;
+			break;
+		case SurvivorClass.scientist:
+			gameObject.AddComponent<Scientist>();
+			mySurvivorClass = SurvivorClass.scientist;
+			// change name
+			name = name + " the " + mySurvivorClass;
+			gameObject.name = name;
 			break;
 		default:
 			print ("This surivor ain't got no class!");
 			break;
 		}
+	}
+
+	void TraitorAction(){
+		print (name + " has become a TRAITOR!!!");
+	
+		townTile.TakeDamage(townTile.tileHitPoints);
+		Debug.Log("Destroying " + townTile.name);
+		KillSurvivor ();
+
 	}
 }

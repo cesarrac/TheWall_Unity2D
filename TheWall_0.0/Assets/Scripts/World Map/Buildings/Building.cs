@@ -12,6 +12,9 @@ public class Building : MonoBehaviour {
 	public int intPenalty1;
 	public float floatPenalty1;
 
+	// store here any object that is on the building or part of it, that needs to be destroyed
+	public GameObject attachedObject;
+
 	// The variables affected by these bonuses are in either TownTileProperties or Town Central scripts
 	public Town_Central townCentral;
 	public TownTile_Properties townTProps;
@@ -45,13 +48,19 @@ public class Building : MonoBehaviour {
 //		}
 //	}
 
-	public void SubtractBonuses(BuildingType myType){
+	public void SubtractBonuses(BuildingType myType, GameObject buildingObj){
 		switch (myType) {
 		case BuildingType.defense:
 			townTProps.tileHitPoints = townTProps.tileHitPoints - floatBonus1;
+			townTProps.defenseRating = townTProps.defenseRating - intBonus1;
+			break;
+		case BuildingType.weapon:
+			townTProps.baseDamage = townTProps.baseDamage - floatBonus1;
+			townTProps.attackRating = townTProps.attackRating - intBonus1;
+			if (attachedObject != null) Destroy(attachedObject);
 			break;
 		case BuildingType.house:
-			townCentral.survivorVacancies = townCentral.survivorVacancies - intBonus1;
+//			townCentral.survivorVacancies = townCentral.survivorVacancies - intBonus1;
 			townTProps.tileHitPoints = townTProps.tileHitPoints + floatPenalty1;
 			break;
 		case BuildingType.workshop:
@@ -64,6 +73,14 @@ public class Building : MonoBehaviour {
 			townCentral.gatherAmntGen = townCentral.gatherAmntGen - intBonus2;
 
 			townCentral.maxGatherers = townCentral.maxGatherers - intBonus1;
+			break;
+		case BuildingType.food:
+			Farm myFarm = buildingObj.GetComponent<Farm>();
+			for (int x =0; x< townCentral.farms.Count; x++){
+				if (townCentral.farms[x].farmListID == myFarm.farmListID){
+					townCentral.farms.RemoveAt(x);
+				}
+			}
 			break;
 		default:
 			print ("Building has no bonus!");

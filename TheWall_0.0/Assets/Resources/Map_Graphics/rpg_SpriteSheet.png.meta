@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 862ea6b92ca90444a96298f8ddeee7e8
-timeCreated: 1437959731
+timeCreated: 1439587826
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -81,7 +81,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: .5, y: .5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 32
   alphaIsTransparency: 1
   textureType: 8
   buildTargetSettings: []
@@ -104,8 +104,8 @@ TextureImporter:
         y: 96
         width: 16
         height: 16
-      alignment: 0
-      pivot: {x: .5, y: .5}
+      alignment: 9
+      pivot: {x: .5, y: .84287262}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: rpg_SpriteSheet_2
       rect:

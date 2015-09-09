@@ -17,8 +17,8 @@ public class Town_HordeDetect : MonoBehaviour {
 		if (coll.CompareTag ("Badge")) {
 			horde = coll.GetComponent<Horde> ();
 		
-			if (!horde.nextToTownTile) {
-				horde.nextToTownTile = true;
+			if (!horde.nextToEnemy) {
+				horde.nextToEnemy = true;
 				horde.townTile = townTile; // gives the horde the proper tile to do damage to.
 				townTile.beingAttacked = true;
 			}
@@ -37,17 +37,23 @@ public class Town_HordeDetect : MonoBehaviour {
 		if (coll.CompareTag ("Badge")) {
 			horde = coll.GetComponent<Horde> ();
 			
-			if (!horde.nextToTownTile) {
-				horde.nextToTownTile = true;
+			if (!horde.nextToEnemy) {
+				horde.nextToEnemy = true;
 				horde.townTile = townTile; // gives the horde the proper tile to do damage to.
 				townTile.beingAttacked = true;
 			}
 		}
+//		if (coll.CompareTag("Survivor")){
+//			Survivor survivor = coll.gameObject.GetComponent<Survivor>();
+//			if (survivor.partOfTown){
+//				townTile.hasASurvivor = true;
+//			}
+//		}
 	}
 	void OnTriggerExit2D (Collider2D coll){
 		if (coll.CompareTag ("Badge")) {
 			horde = coll.GetComponent<Horde>();
-			horde.nextToTownTile = false;
+			horde.nextToEnemy = false;
 			townTile.beingAttacked = false;
 		}
 

@@ -41,6 +41,9 @@ public class Mouse_Controls : MonoBehaviour {
 
 	public LayerMask maskForTiles, maskForUnits;
 
+	// a bool that other scripts can use to stop the mouse from selecting tiles
+	public bool stopSelecting;
+
 	void Start () {
 		gmScript = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster> ();
 		if (Application.loadedLevel == 0) {
@@ -53,14 +56,16 @@ public class Mouse_Controls : MonoBehaviour {
 		// FOR NOW im going to spawn a selection box here to be able to see what town tile i have selected
 		GameObject tileSelectBox = Instantiate (selectionBox, myTransform.position, Quaternion.identity) as GameObject;
 		tileSelectBox.transform.parent = myTransform;
+		stopSelecting = false;
 	}
 	
 	void Update () {
 		if (Input.GetKey (KeyCode.LeftShift)) {
 			AttackRay ();
-		} else {
+		} else if (!stopSelecting){
 			Select ();
 		}
+
 
 //		if (selectedUnit != null) {
 //			Captain cpn = selectedUnit.GetComponent<Captain> ();
@@ -95,30 +100,30 @@ public class Mouse_Controls : MonoBehaviour {
 					}
 				}
 			
-			} else if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Destroyed Town") || hit.collider.CompareTag ("Depleted")  ) {
+			} else if (hit.collider.CompareTag ("Tile") || hit.collider.CompareTag ("Destroyed Town") || hit.collider.CompareTag ("Depleted")|| hit.collider.CompareTag ("Food Source")  ) {
 				// if you click on a town tile, watch where the mouse position is when player lets it go to move there
 					// mouse is not busy, meaning not currently shooting or placing units
-//				mouseIsBusy = false;
+				mouseIsBusy = false;
 			
 				if (Input.GetMouseButtonUp(0) && !mouseIsBusy) {
 				
 					print ("You clicked on a tile");
 					Vector2 mouseRounded = new Vector2 (Mathf.Round (m.x), Mathf.Round (m.y));
 					Vector2 myPosRounded = new Vector2 (Mathf.Round (myTransform.position.x), Mathf.Round (myTransform.position.y));
-				
-					if (mouseRounded.x == myPosRounded.x - 1 && mouseRounded.y == myPosRounded.y) { // left
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					} else if (mouseRounded.x == myPosRounded.x + 1 && mouseRounded.y == myPosRounded.y) { // right
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					} else if (mouseRounded.y == myPosRounded.y + 1 && mouseRounded.x == myPosRounded.x) { // up
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					} else if (mouseRounded.y == myPosRounded.y - 1 && mouseRounded.x == myPosRounded.x) { // down
-						//ADD & clear the resource tile under new town tile
-						mapScript.SpawnTilesByExpanding(mouseRounded);
-					}
+//				
+//					if (mouseRounded.x == myPosRounded.x - 1 && mouseRounded.y == myPosRounded.y) { // left
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					} else if (mouseRounded.x == myPosRounded.x + 1 && mouseRounded.y == myPosRounded.y) { // right
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					} else if (mouseRounded.y == myPosRounded.y + 1 && mouseRounded.x == myPosRounded.x) { // up
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					} else if (mouseRounded.y == myPosRounded.y - 1 && mouseRounded.x == myPosRounded.x) { // down
+//						//ADD & clear the resource tile under new town tile
+//						mapScript.SpawnTilesByExpanding(mouseRounded);
+//					}
 
 					// vvvvvv THIS CODE BELOW ACTUALLY MOVES THE GAMEOBJECT WITH THIS SCRIPT WHEN EXPANDING vvvv
 
@@ -134,11 +139,13 @@ public class Mouse_Controls : MonoBehaviour {
 //					}
 
 				}
-			} else if (hit.collider.gameObject.tag == "Gatherer"){
+			} else if (hit.collider.CompareTag("Gatherer")){
+				mouseIsBusy = true;
+			}else if (hit.collider.CompareTag("UI")){
 				mouseIsBusy = true;
 			}
 
-		} else { // hit.collider is null so mouse is definitely NOT busy
+		} else { // hit.collider is null so mouse is definitely busy
 			mouseIsBusy = false;
 		} 
 
@@ -174,7 +181,7 @@ public class Mouse_Controls : MonoBehaviour {
 				mouseIsBusy = true;
 				print ("Hit the Horde!!");
 				Horde horde = hit.collider.gameObject.GetComponent<Horde>();
-				if (horde.nextToTownTile && Input.GetMouseButtonDown(0)){
+				if (horde.nextToEnemy && Input.GetMouseButtonDown(0)){
 					// spawn a spark over the horde for the player to see their hit
 					float randomZ =(float) Random.Range (0, 180);
 					GameObject spark = Instantiate (hitSparkFab, mouseRounded, Quaternion.Euler(new Vector3(0, 0, randomZ))) as GameObject;
