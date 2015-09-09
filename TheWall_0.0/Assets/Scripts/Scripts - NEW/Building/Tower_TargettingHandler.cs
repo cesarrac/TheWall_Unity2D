@@ -12,7 +12,7 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	public ObjectPool objPool;
 
-	bool canShoot, enemyInRange = false;
+	bool enemyInRange = false;
 
 	public GameObject targetUnit;
 
@@ -22,10 +22,21 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	SpriteRenderer sr;
 
-	bool continueTimer;
+	enum State 
+	{
+		SEEKING,
+		SHOOTING,
+		STARVED
+	}
 
+	State state = State.SEEKING;
 
-	void Start () {
+	public float shootCountDown;
+
+	void Start ()
+	{
+
+		// In case Resource Grid is null
 		if (resourceGrid == null)
 			resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
 
@@ -33,31 +44,39 @@ public class Tower_TargettingHandler : Unit_Base {
 		stats.Init ();
 		InitTileStats((int)transform.position.x, (int)transform.position.y);
 
-		if (objPool == null) {
+		// In case Object Pool is null
+		if (objPool == null)
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
-		}
 
+		// Get our Sprite Renderer from Parent ( this is how the prefab is set-up )
 		if (GetComponentInParent<SpriteRenderer> () != null) {
+
 			sr = GetComponentInParent<SpriteRenderer> ();
-			
+
+			// Get the Line Renderer Component from Child object sightStart
 			lineR = sightStart.GetComponent<LineRenderer> ();
 			lineR.sortingLayerName = sr.sortingLayerName;
 			lineR.sortingOrder = sr.sortingOrder;
+
 		}
 
-		continueTimer = true;
-
+		// set the count down to Shoot to this Tower's fire rate
+		shootCountDown = stats.startRate;
 
 	}
 
+	// NOTE: Using Fixed Update becuase SeekEnemies() is controlling a Physics 2D Linecast
+	void FixedUpdate () 
+	{
 
-	void FixedUpdate () {
 		if (enemyInRange && !starvedMode){
 			SeekEnemies ();
 		}
+
 	}
 
-	void SeekEnemies(){
+	void SeekEnemies()
+	{
 		RaycastHit2D hit = Physics2D.Linecast (sightStart.position, sightEnd.position, mask.value);
 		if (hit.collider != null) {
 			if (hit.collider.CompareTag("Enemy")){
@@ -66,12 +85,18 @@ public class Tower_TargettingHandler : Unit_Base {
 				// shoot one shot quickly then start coroutine
 					VisualShooting ();
 					HandleDamageToUnit ();
+
+					// After shooting once begin change state to begin countdown
+					// Can't Shoot if I'm in a Starved State!
+					if (state != State.STARVED)
+						state = State.SHOOTING;
 				}
 			}
 		}
 	}
 
-	void Update(){
+	void Update()
+	{
 
 		// Check that my line renderer's sorting layer is the same as mine
 		if (lineR.sortingLayerName != sr.sortingLayerName) {
@@ -79,32 +104,54 @@ public class Tower_TargettingHandler : Unit_Base {
 			lineR.sortingOrder = sr.sortingOrder + 1;
 		}
 
-
-		// continue shooting
-		if (canShoot && continueTimer){
-			StartCoroutine(WaitToShoot());
-		}
-
 		if (unitToPool != null)
 			PoolTarget (unitToPool);
 
 //		Debug.DrawLine (sightStart.position, sightEnd.position, Color.magenta);
-		if (!enemyInRange && !starvedMode) 
-			sightStart.Rotate (Vector3.forward * 90 * Time.deltaTime);
+
+		MyStateManager (state);
 	}
 
-	IEnumerator WaitToShoot(){
-//		continueTimer = false;
-		canShoot = false;
-		yield return new WaitForSeconds (stats.curRateOfAttk);
-		if (targetUnit != null){
-			VisualShooting ();
-			HandleDamageToUnit ();
-			Debug.Log("MACHINE GUN: Shooting!");
+	void MyStateManager(State curState)
+	{
+		switch (curState) {
+		case State.SEEKING:
+			sightStart.Rotate (Vector3.forward * 90 * Time.deltaTime);
+			break;
+		case State.SHOOTING:
+			CountDownToShoot();
+			break;
+		default:
+			Debug.Log("Starved!");
+			break;
+		}
+		
+	}
+
+	void CountDownToShoot()
+	{
+
+		if (shootCountDown <= 0) {
+
+			// SHOOT
+			if (targetUnit != null){
+				VisualShooting ();
+				HandleDamageToUnit ();
+				Debug.Log("MACHINE GUN: Shooting!");
+			}else{
+				// Target is null so we can go back to seeking
+				state = State.SEEKING;
+			}
+
+			shootCountDown = stats.curRateOfAttk;
+
+		} else {
+			shootCountDown -= Time.deltaTime;
 		}
 
 	}
-	//TODO: Don't need to spawn a bullet at all!! Just create a shooting animation that starts up when it shoots!!!
+	
+
 	/// <summary>
 	/// Gets a bullet from the pool of bullets and shoots it.
 	/// The bullet itself is just for visual reference and will just Pool itself when it hits.
@@ -124,6 +171,8 @@ public class Tower_TargettingHandler : Unit_Base {
 		}
 	}
 
+
+
 	/// <summary>
 	/// Handles the damage to unit by using
 	/// method from Unit_Base class.
@@ -132,9 +181,9 @@ public class Tower_TargettingHandler : Unit_Base {
 		if (targetUnit != null) {
 			Unit_Base unitToHit = targetUnit.GetComponent<Unit_Base> ();
 			AttackOtherUnit (unitToHit);
-			canShoot = true;
 		} else {
-			canShoot = false;
+			// Target is null, go back to Seeking
+			state = State.SEEKING;
 		}
 
 	}
@@ -170,9 +219,11 @@ public class Tower_TargettingHandler : Unit_Base {
 	void OnTriggerExit2D(Collider2D coll){
 		if (coll.gameObject.CompareTag ("Enemy") && targetUnit != null) {
 
-				targetUnit = null;
-				enemyInRange = false;
+			targetUnit = null;
+			enemyInRange = false;
 
+			// Change state back to seeking
+			state = State.SEEKING;
 		}
 	}
 

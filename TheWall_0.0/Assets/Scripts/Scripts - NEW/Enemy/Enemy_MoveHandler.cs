@@ -57,7 +57,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 	private Vector2 _capitalPosition;
 
 	public bool isKamikaze;
-
+	
 	void Start () {
 
 		mStats.InitMoveStats ();
@@ -81,7 +81,12 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		_capitalPosition = new Vector2 (resourceGrid.capitalSpawnX, resourceGrid.capitalSpawnY);
 	}
 
+
 	void GetFirstPath(bool isKamikaze){
+
+		if (currentPath != null)
+			currentPath.Clear ();
+
 		if (spwnPtHandler != null) {
 			if (!isKamikaze){
 				currentPath = new List<Node>();
@@ -108,6 +113,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		}
 	}
 
+	// To find path after moving away from it
 	public void GetPath(){
 		posX = (int)transform.position.x;
 		posY = (int)transform.position.y;
@@ -144,8 +150,19 @@ public class Enemy_MoveHandler : MonoBehaviour {
 //		}
 //	}
 
+	// Called by scripts spawning this unit to make sure it gets the right path
+	public void InitPath(){
+		
+		if (!isKamikaze) {
+			GetFirstPath (false);
+		} else {
+			GetFirstPath(true);
+		}
+	}
 
 	void Update () {
+
+		// Debug Draw line for visual reference
 		if (currentPath != null) {
 			int currNode = 0;
 			while (currNode < currentPath.Count -1) {
@@ -158,9 +175,10 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		
 		} 
 
+		// Movement:
 		if (moving && !isAttacking){
 			// Have we moved close enough to the target tile that we can move to next tile in current path?
-			if (Vector2.Distance (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY)) < (0.1)) {
+			if (Vector2.Distance (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY)) < (0.1f)) {
 				MoveToNextTile ();
 			}
 			transform.position = Vector2.MoveTowards(transform.position, 
@@ -182,6 +200,9 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			BuddySystem();
 		}
 	}
+
+
+	// Move through Path:
 	public void MoveToNextTile(){
 		if (currentPath == null) {
 			return;
@@ -191,8 +212,11 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		
 		// Check if the next tile is a UNWAKABLE tile OR if it is clear path
 		if (resourceGrid.UnitCanEnterTile (currentPath [1].x, currentPath [1].y) == false) {
+
 			moving = false;
+
 			Debug.Log ("Path is blocked! at x" + currentPath [1].x + ", y" + currentPath [1].y);
+
 			if (CheckForTileAttack (currentPath [1].x, currentPath [1].y)) {
 				Debug.Log("Attacking Tile!");
 				// here I would tell the Attack script to start its attack on the tile

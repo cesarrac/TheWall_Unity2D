@@ -22,11 +22,10 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 		
 		public string name;
 
+		[Header("MAXIMUM 3 MEMBERS PER WAVE")]
 		public EnemyUnit[] members;
-
-
 		public int spawnPosIndex;
-		public Sprite enemySprite;
+	
 	}
 
 
@@ -34,6 +33,16 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 	public Wave[] waves;
 	private int nextWave = 0;
 
+	[Header("Total # of Waves in a Group")]
+	[SerializeField]
+	private int wavesInGroup;
+	
+	private int groupCount;
+	
+	private int nextGroup = 1;
+	
+	private int nextWaveInGroup = 0; // gets reset everytime a group is done spawning
+	
 	public float timeBetweenWaves = 5f;
 	public float peaceTime = 60f;
 	public float startingPeaceTime = 120f;
@@ -59,8 +68,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 	public ResourceGrid resourceGrid;
 
 	public SpawnPoint_Handler spwnPtHandler;
-
-	[SerializeField]
+	
 	private int maxWaves;
 
 	private Enemy_MoveHandler lastEnemy;
@@ -69,19 +77,9 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 	public List< Enemy_MoveHandler> spawnedEnemies = new List<Enemy_MoveHandler>();
 
-	[SerializeField]
-	private int wavesInGroup;
-
-	[SerializeField]
-	private int groupCount;
-
-	private int nextGroup = 1;
-
 	GameObject[] indicators;
-
+	
 	private bool indicatorsCreated = false;
-
-	private int nextWaveInGroup = 0; // gets reset everytime a group is done spawning
 
 	void Start()
 	{
@@ -98,6 +96,11 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 		// create initial indicators
 		CreateSpawnPointIndicators ();
+
+		maxWaves = waves.Length;
+
+		groupCount = maxWaves / wavesInGroup;
+		Debug.Log ("WAVE SPAWNER: Group count = " + groupCount);
 
 	}
 
@@ -163,36 +166,67 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 		// create spawn point indicators for each wave in a group
 		for (int i =0; i < wavesInGroup; i++) {
+
 			// find the wave to get its info
 			Wave thisWave = waves[nextWave + i];
-			// get a new spawn indicator
-			GameObject spwnIndicator = objPool.GetObjectForType("Spawn Indicator", true);
+			
+
+			// get the indicator from pool
+			GameObject spwnIndicator = objPool.GetObjectForType("Spawn Indicator 2", true);
+
+			// store how many members there are in this wave
+			int memberCount = thisWave.members.Length;
+
+			// tell the spawn indicator to indicate X number of enemy types ( X = memberCount )
 
 			if (spwnIndicator != null){
 
-				// add this indicator to our array
+				// add this indicator to our array so we can eliminate it when it's done
 				indicators[i] = spwnIndicator;
 
 				// place it on the right location
 				spwnIndicator.transform.position = spawnPositions[thisWave.spawnPosIndex];
 
-				// then fill its information
-				Enemy_ForceSpawn indicator = spwnIndicator.GetComponent<Enemy_ForceSpawn>();
-				indicator.spwnIndicator.Init(thisWave.name, thisWave.members.Length, thisWave.enemySprite);
+				// get the Spawn Indicator Component from it
+				Enemy_SpawnIndicator indicator = spwnIndicator.GetComponent<Enemy_SpawnIndicator>();
 
-				// now that its info has been initialized, we can set the info
-				indicator.SetIndicator();
+				// now Initialize & Set the indicator according to the number of members in this wave 
+										// NOTE: Maximum allowed members is 3!
+				if (memberCount == 1)
+				{
+					indicator.InitOneTypeIndicator(thisWave.members[0].enemySprite, thisWave.members[0].enemyCount);
+					indicator.SetIndicator1();
+				}
+				else if (memberCount == 2)
+				{
+					Debug.Log ("WAVE SPAWNER: Created indicator for " + thisWave.members[0].enemyName 
+					           + " and " + thisWave.members[1].enemyName);
+
+					indicator.InitTwoTypeIndicator(thisWave.members[0].enemySprite, thisWave.members[0].enemyCount,
+					                               thisWave.members[1].enemySprite, thisWave.members[1].enemyCount);
+					indicator.SetIndicator2();
+				}
+				else if (memberCount == 3)
+				{
+					indicator.InitThreeTypeIndicator(thisWave.members[0].enemySprite, thisWave.members[0].enemyCount,
+					                               thisWave.members[1].enemySprite, thisWave.members[1].enemyCount,
+					                               thisWave.members[2].enemySprite, thisWave.members[2].enemyCount);
+					indicator.SetIndicator3();
+				}
 
 				// and give it access to the functions on this script
 				indicator.enemyWaveSpawner = this;
-
 			}else{
 				Debug.Log("WAVE SPAWNER: Pool can't find Spawn Indicator!");
 			}
+
 		}
 
+		// bool that stops this method from being called after indicator has been created
 		indicatorsCreated = true;
 	}
+
+
 
 	IEnumerator SpawnWave (Wave _wave)
 	{
@@ -213,7 +247,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 		}
 
 		nextWave ++;
-
+		Debug.Log ("WAVE SPAWNER: Next Wave = " + nextWave);
 		if (groupCount > 0) 
 		{		// CHECK IF THERE ARE ANY GROUPS
 			if (nextWaveInGroup < wavesInGroup - 1) // this needs to say if it there has been at least wavesIngroup spawned
@@ -229,7 +263,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			} 
 			else
 			{
-				Debug.Log ("WAVE: spawning from NEW group!");
+			
 				// reset next wave in group
 				nextWaveInGroup = 0;
 
@@ -238,6 +272,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 				if (nextGroup <= groupCount)
 				{
+					Debug.Log ("WAVE SPAWNER: spawning from NEW group!");
 					// start peace time and keep nextwave with its current value
 					peaceCountDown = peaceTime;
 					waveCountDown = timeBetweenWaves;
@@ -245,10 +280,27 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 				}
 				else
 				{
-					// No more groups, so STOP spawning
-					state = SpawnState.STOP;
 
-					displayTime.gameObject.SetActive(false);
+					// Check that there are no more waves left, in case there's any left that are not in group
+					if (nextWave <= maxWaves - 1){
+						Debug.Log ("WAVE SPAWNER: NO more Groups, but there's STILL a wave left!");
+
+						// if there are we spawn
+						peaceCountDown = peaceTime;
+						waveCountDown = timeBetweenWaves;
+						state = SpawnState.COUNTING;
+
+						// we need to tell the spawner we won't be doing groups anymore
+						wavesInGroup = 1;
+						groupCount = 0;
+
+					}else{
+						// No more groups/waves left, so STOP spawning
+						state = SpawnState.STOP;
+						
+						displayTime.gameObject.SetActive(false);
+					}
+
 				}
 
 			}
@@ -305,7 +357,14 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			_moveHandler.spwnPtIndex = _spawnIndex;
 			_moveHandler.spwnPtHandler = spwnPtHandler; 
 
-			// reset the current move speed in case this unit was affected by a DeBuffer
+			// reset its starting path position to this new spawn point
+			_moveHandler.posX = (int)_enemy.transform.position.x;
+			_moveHandler.posY = (int)_enemy.transform.position.y;
+
+			// Initialize their path
+			_moveHandler.InitPath();
+
+			// reset the current move speed in case this unit was affected by a Speed DeBuffer
 			_moveHandler.mStats.curMoveSpeed = _moveHandler.mStats.startMoveSpeed;
 
 			// feed it the move handler from the enemy spawned before this one so it has a buddy
@@ -337,7 +396,24 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 		return spawnedEnemies[count];
 	}
 
+	// FOR TESTING, This resets the wave spawner
+	public void Reset(){
+		nextWave = 0;
+		nextWaveInGroup = 0;
+		nextGroup = 1;
 
+		peaceCountDown = peaceTime;
+		waveCountDown = timeBetweenWaves;
+		
+		displayTime.text = "Next Wave in: ";
+		
+		indicators = new GameObject[wavesInGroup];
+		
+		// create initial indicators
+		CreateSpawnPointIndicators ();
+
+		state = SpawnState.COUNTING;
+	}
 }
 
 

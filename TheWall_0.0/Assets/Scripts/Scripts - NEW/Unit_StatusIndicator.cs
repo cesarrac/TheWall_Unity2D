@@ -51,7 +51,7 @@ public class Unit_StatusIndicator : MonoBehaviour {
 
 	public void CreateDamageText(float _damage, string damageTypeID = "Damage")
 	{
-		Debug.Log ("Creating Damage text for " + _damage + " " + damageTypeID);
+//		Debug.Log ("Creating Damage text for " + _damage + " " + damageTypeID);
 		Vector2 min = new Vector2 (0.5f, 0.5f);
 		Vector2 max = new Vector2 (0.5f, 0.5f);
 		Vector2 size = new Vector2 (113, 137);

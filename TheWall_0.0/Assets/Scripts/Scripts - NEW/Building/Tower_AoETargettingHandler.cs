@@ -12,10 +12,7 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	
 	public ObjectPool objPool;
 	
-	bool canShoot, enemyInRange = false;
-	
-	private GameObject targetUnit;
-
+	bool enemyInRange = false;
 
 	public GameObject[] enemiesInRange;
 
@@ -24,7 +21,20 @@ public class Tower_AoETargettingHandler : Unit_Base {
 
 	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
-	void Start () {
+	enum State 
+	{
+		SEEKING,
+		SHOOTING,
+		STARVED
+	}
+
+	State state = State.SEEKING;
+
+	private float shootCountDown;
+
+	void Start () 
+	{
+		// In case Resource Grid is null
 		if (resourceGrid == null)
 			resourceGrid = GameObject.FindGameObjectWithTag ("Map").GetComponent<ResourceGrid> ();
 
@@ -32,11 +42,16 @@ public class Tower_AoETargettingHandler : Unit_Base {
 		stats.Init ();
 		InitTileStats((int)transform.position.x, (int)transform.position.y);
 
+		// In case Object Pool is null
 		if (objPool == null) {
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
 		}
 
+		// Set Length of enemies in range array to Maximum Targets
 		enemiesInRange = new GameObject[maxTargets];
+
+		// set the count down to Shoot to this Tower's fire rate
+		shootCountDown = stats.startRate;
 	}
 
 	
@@ -45,21 +60,50 @@ public class Tower_AoETargettingHandler : Unit_Base {
 		if (unitToPool != null)
 			PoolTarget (unitToPool);
 
-		if (canShoot && !starvedMode){
-			StartCoroutine(WaitToShoot());
-		}
+		MyStateManager (state);
 	}
-	
-	IEnumerator WaitToShoot(){
-		canShoot = false;
-		yield return new WaitForSeconds (stats.curRateOfAttk);
-	
-		if (enemiesInRange[0] != null){
-//			VisualShooting ();
-			HandleDamageToUnits ();
+
+	void MyStateManager(State curState)
+	{
+		switch (curState) {
+		case State.SEEKING:
+			if (enemiesInRange[0] !=null)
+				state = State.SHOOTING;
+			break;
+		case State.SHOOTING:
+			CountDownToShoot();
+			break;
+		default:
+			Debug.Log("Starved!");
+			break;
 		}
 		
 	}
+	
+	void CountDownToShoot()
+	{
+		
+		if (shootCountDown <= 0) {
+			
+			// SHOOT
+			if (enemiesInRange[0] != null){ // If we don't have at least ONE Target, don't shoot
+
+				HandleDamageToUnits ();
+
+			}else{
+				// Target is null so we can go back to seeking
+				state = State.SEEKING;
+			}
+			
+			shootCountDown = stats.curRateOfAttk;
+			
+		} else {
+			shootCountDown -= Time.deltaTime;
+		}
+		
+	}
+
+
 
 	void VisualShooting(Vector3 position){
 		GameObject explosion = objPool.GetObjectForType ("Explosion Particles", true);
@@ -81,24 +125,33 @@ public class Tower_AoETargettingHandler : Unit_Base {
 	/// Handles the damage each unit detected by using
 	/// method from Unit_Base class.
 	/// </summary>
-	void HandleDamageToUnits(){
-		if (enemiesInRange [0] != null) { // only loop if there's at least the first guy detected
+	void HandleDamageToUnits()
+	{
+		if (enemiesInRange [0] != null) { 
+
 			for (int x =0; x < enemiesInRange.Length; x++) {
+
 				if (enemiesInRange [x] != null) { // target hasn't already been killed
 					AttackOtherUnit (enemiesInRange [x].GetComponent<Unit_Base> ());
 					VisualShooting(enemiesInRange[x].transform.position);
 				}
+
 			}
-			canShoot = true;
+
 		}else {
-			canShoot = false;
+
+			// No target in range so go back to Seeking
+			state = State.SEEKING;
+
+			// Reset all enemy vars
 			enemiesCount = 0;
 			enemyInRange = false;
 		}
 		
 	}
 	
-	void PoolTarget(GameObject target){
+	void PoolTarget(GameObject target)
+	{
 		unitToPool = null;
 
 		objPool.PoolObject (target); // Pool the Dead Unit
@@ -119,15 +172,9 @@ public class Tower_AoETargettingHandler : Unit_Base {
 		enemyInRange = false;
 	}
 	
-//	void OnTriggerStay2D(Collider2D coll){
-//		if (coll.gameObject.CompareTag("Enemy")){
-//			float z = Mathf.Atan2((coll.transform.position.y - sightStart.position.y), (coll.transform.position.x - sightStart.position.x)) * Mathf.Rad2Deg - 90;		
-//			//		myTransform.eulerAngles = new Vector3 (0,0,z);
-//			sightStart.rotation = Quaternion.AngleAxis(z, Vector3.forward);
-//			enemyInRange = true;
-//		}
-//	}
-	void OnTriggerEnter2D(Collider2D coll){
+
+	void OnTriggerEnter2D(Collider2D coll)
+	{
 		// Everytime one enters they get added to the array
 		if (coll.gameObject.CompareTag ("Enemy")) {
 			Debug.Log ("target in range!");
@@ -138,7 +185,6 @@ public class Tower_AoETargettingHandler : Unit_Base {
 			if (!enemyInRange){
 				enemyInRange = true;
 				HandleDamageToUnits();
-//				VisualShooting();
 			}
 		}
 

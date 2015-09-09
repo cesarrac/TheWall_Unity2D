@@ -157,7 +157,6 @@ public class Unit_Base : MonoBehaviour {
 
 		unit.stats.curHP = unit.stats.curHP - damage;
 		if (unit.stats.curHP < 1f) {
-			Debug.Log ("UNIT BASE: Killing target!");
 			Die (unit.gameObject);
 		} else {
 			if (unit.statusIndicator != null) {
