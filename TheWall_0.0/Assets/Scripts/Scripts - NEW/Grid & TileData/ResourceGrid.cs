@@ -57,36 +57,44 @@ public class ResourceGrid : MonoBehaviour{
 	// PATHFINDING VARS:
 	Node[,] graph;
 
-	void Awake(){
-		// Initialize the position of the capital
-//		capitalSpawnX = playerCapital.capitalPosX;
-//		capitalSpawnY = playerCapital.capitalPosY;
-	
-//		if (level == 0) {
-//			mapSizeX = 10;
-//			mapSizeY = 10;
-//		}
-	
-	}
-	void Start () {
 
+
+
+	void Start () 
+	{
+
+		// In case Player Resource Manager is null
+		if (playerResources == null)
+			playerResources = GameObject.FindGameObjectWithTag ("Capital").GetComponent<Player_ResourceManager> ();
+
+		// Initialize Tile Data array with this map size
 		tiles = new TileData[mapSizeX, mapSizeY];
+
+		// Initialize spawned Tiles array, all values will be set to null until tiles are spawned
 		spawnedTiles = new GameObject[mapSizeX, mapSizeY];
+
+		// Initialize the Grid, filling tiles positions with Capital, Rocks, and Water
 		InitGrid ();
+
+		// This spawns the Initial Capital tile at the start of the level
 		InitVisualGrid ();
+
+		// This creates the Initial Pathfinding graph taking into account unwakable tiles already spawned (ex. Rock, Water, Capital)
 		InitPathFindingGraph ();
 	}
 
-	void Update(){
-		if (Input.GetMouseButtonDown (1)) {
-			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-			int mX = Mathf.RoundToInt(m.x);
-			int mY = Mathf.RoundToInt(m.y);
-			Debug.Log("Coords: x: " + mX + " y: " + mY);
-			if (mX <= mapSizeX && mY <= mapSizeY)
-				Debug.Log("Tile type: " + tiles[mX, mY].tileType);
-		}
-	}
+	// DEBUG NOTE: using this Update method to find map coordinates to match them with map graphics
+//	void Update()
+//	{
+//		if (Input.GetMouseButtonDown (1)) {
+//			Vector3 m = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+//			int mX = Mathf.RoundToInt(m.x);
+//			int mY = Mathf.RoundToInt(m.y);
+//			Debug.Log("Coords: x: " + mX + " y: " + mY);
+//			if (mX <= mapSizeX && mY <= mapSizeY)
+//				Debug.Log("Tile type: " + tiles[mX, mY].tileType);
+//		}
+//	}
 	
 	void InitGrid(){
 		for (int x = 0; x < mapSizeX; x++) {
@@ -129,20 +137,6 @@ public class ResourceGrid : MonoBehaviour{
 
 	}
 
-//	int SimpleTileSelection(int lastValue){
-//		int randomT = Random.Range (0, 5);
-//		int randomRepeat = Random.Range (0, 2);
-//		if (randomT == lastValue) {
-//			if (randomRepeat >= 1) {
-//				return lastValue;
-//			} else {
-//				return SimpleTileSelection (lastValue);
-//			}
-//		} else {
-//			return randomT;
-//		}
-//	}
-
 	void InitVisualGrid(){
 		for (int x = 0; x < mapSizeX; x++) {
 			for (int y = 0; y < mapSizeY; y++) {
@@ -150,9 +144,6 @@ public class ResourceGrid : MonoBehaviour{
 				if (tiles [x, y].tileType==TileData.Types.capital){
 					SpawnDiscoverTile(tiles [x, y].tileName, new Vector3(x, y, 0.0f),tiles [x, y].tileType); 
 				}
-//				else if (tiles [x, y].tileType==TileData.Types.rock){
-//					SpawnDiscoverTile(tiles [x, y].tileName, new Vector3(x, y, 0.0f),tiles [x, y].tileType); 
-//				}
 				
 			}
 		}
@@ -196,7 +187,8 @@ public class ResourceGrid : MonoBehaviour{
 	/// <returns>The tile game object.</returns>
 	/// <param name="x">The x coordinate.</param>
 	/// <param name="y">The y coordinate.</param>
-	public GameObject GetTileGameObj(int x, int y){
+	public GameObject GetTileGameObj(int x, int y)
+	{
 		if (spawnedTiles [x, y] != null)
 			return spawnedTiles [x, y];
 		else
@@ -210,12 +202,13 @@ public class ResourceGrid : MonoBehaviour{
 	/// <param name="x">The x coordinate.</param>
 	/// <param name="y">The y coordinate.</param>
 	/// <param name="newType">New type.</param>
-	public void SwapTileType(int x, int y, TileData.Types newType){
+	public void SwapTileType(int x, int y, TileData.Types newType)
+	{
 
 		// MAKE SURE THIS IS NOT A SPAWNED TILE ALREADY!!! 
 		// So we don't change the grid tile data where we don't want to!
 		if (spawnedTiles [x, y] == null) {
-			// swap the old type to new type
+			// Swap the old type to new type
 			switch (newType) {
 			case TileData.Types.extractor:
 				tiles [x, y] = new TileData ("Extractor",newType, 0, 10000, 5, 5, 0, 0, extractorCost[1], extractorCost[0]);
@@ -254,9 +247,11 @@ public class ResourceGrid : MonoBehaviour{
 				print ("No tile changed.");
 				break;
 			}
+
 			// Discover the tile to display it
 			DiscoverTile (x, y, true);
-			// if tile is a Building with a FOOD COST, apply it to resources
+
+			// IF tile is a Building with a FOOD COST, apply it to resources
 			if (tiles[x,y].foodCost > 0)
 				playerResources.totalFoodCost = playerResources.totalFoodCost + tiles[x,y].foodCost;
 
@@ -270,33 +265,38 @@ public class ResourceGrid : MonoBehaviour{
 
 			// ALSO if it's a Farm we need to subtract its FOOD production and its WATER consumed
 			if (playerResources.foodProducedPerDay > 0){
+
 				if (tiles[x,y].tileType == TileData.Types.farm_s || tiles[x,y].tileType == TileData.Types.nutrient){
+
 					FoodProduction_Manager foodM = spawnedTiles [x, y].GetComponent<FoodProduction_Manager>();
 					playerResources.CalculateFoodProduction(foodM.foodProduced, foodM.productionRate, foodM.waterConsumed, true);
+
 				}
 			}
 
 			// AND if it's a STORAGE we need to subtract all the ORE and WATER from the resources
 			if (tiles[x,y].tileType == TileData.Types.storage){
+
 				Storage storage = spawnedTiles[x,y].GetComponent<Storage>();
-//				if (storage.oreStored > 0 || storage.waterStored > 0){
-//					playerResources.ChangeResource("Ore", - storage.oreStored);
-//					playerResources.ChangeResource("Water", -storage.waterStored);
-//				}
+//				
 				// remove the storage building from the list
 				playerResources.RemoveStorageBuilding(storage);
 			}
 
 			// If it's an EXTRACTOR also need to subtract from Ore Produced
 			if (tiles[x,y].tileType == TileData.Types.extractor){
+
 				Extractor extra = spawnedTiles [x, y].GetComponent<Extractor>();
+
 				playerResources.CalculateOreProduction(extra.extractAmmnt, extra.extractRate, true);
 			}
 
 			// Same thing for a WATER PUMP
 			if (tiles[x,y].tileType == TileData.Types.desalt_s || tiles[x,y].tileType == TileData.Types.desalt_m 
 			    || tiles[x,y].tileType == TileData.Types.desalt_l){
+
 				DeSalt_Plant pump = spawnedTiles [x, y].GetComponent<DeSalt_Plant>();
+
 				playerResources.CalculateWaterProduction(pump.waterPumped, pump.pumpRate, true);
 			}
 
@@ -304,12 +304,14 @@ public class ResourceGrid : MonoBehaviour{
 			float calc = (float)tiles[x,y].oreCost * 0.3f;
 			playerResources.ore = playerResources.ore + (int)calc;
 
+			// Destroy the spawned tile and tell the tiles array what this new tile is
 			Destroy(spawnedTiles[x,y].gameObject);
 			tiles[x,y] = new TileData(newType, 0,1);
 		}
 	}
 
-	public void DiscoverTile(int x, int y, bool trueIfSwapping){
+	public void DiscoverTile(int x, int y, bool trueIfSwapping)
+	{
 		if (spawnedTiles [x, y] == null) { // if it's null it means it hasn't been spawned
 			//Dont Spawn a tile if the type is Empty
 			// the space will still be walkable because it will still be mapped on the Node Graph
@@ -341,6 +343,18 @@ public class ResourceGrid : MonoBehaviour{
 			dTile.TileToDiscover(newTileName: tileName, mapPosX: (int) position.x , mapPosY: (int)position.y, tileHolder: tileHolder, grid: this,  tileType: type, playerCapital: playerCapital);
 		}
 
+	}
+
+	/// <summary>
+	/// Adds the credits for kill to Resources
+	/// according to the value of that unit stats' credit value.
+	/// </summary>
+	/// <param name="creditValue">Credit value.</param>
+	public void AddCreditsForKill(int creditValue)
+	{
+		// Add the credit value for the unit killed to Player Resources
+		playerResources.ChangeResource ("Credits", creditValue);
+		Debug.Log ("GRID: Collected bounty of " + creditValue);
 	}
 
 

@@ -10,28 +10,47 @@ public class FoodProduction_Manager : MonoBehaviour {
 	public float productionRate;
 	public int foodProduced;
 	public int waterConsumed; // water Consumed every farming cycle in order to produce a harvest
-	bool farming;
+//	bool farming;
 
 	public Player_ResourceManager resourceManager;
 
-	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
-
 	bool foodStatsInitialized = false;
 
-	void Start () {
-		resourceManager = GameObject.FindGameObjectWithTag ("Capital").GetComponent<Player_ResourceManager> ();
-		farming = true;
+	public enum State { HARVESTING, NOWATER }
+	
+	private State _state = State.HARVESTING;
 
+	[HideInInspector]
+	public State state { get { return _state; } set { _state = value; } }
+
+
+
+	private float harvestCountDown;
+
+	void Start () 
+	{
+
+		// Get Resource managaer from Capital gameObject
+		resourceManager = GameObject.FindGameObjectWithTag ("Capital").GetComponent<Player_ResourceManager> ();
+		
 		// MAKE SURE THE PLAYER HAS ENOUGH WATER BEFORE ADDING THIS FARM'S PRODUCTION TO THE STATS
 		if (resourceManager.water >=  waterConsumed) {
+
 			// Tell the Resource Manager how much I produce per cycle
 			resourceManager.CalculateFoodProduction (foodProduced, productionRate, waterConsumed, false);
 			foodStatsInitialized = true;
+
 		}
+
+		// Set harvest countdown to the starting production rate
+		harvestCountDown = productionRate;
+
 	}
 	
 
-	void Update () {
+	void Update () 
+	{
+
 		if (!foodStatsInitialized) {
 			if (resourceManager.water > 0){
 				resourceManager.CalculateFoodProduction (foodProduced, productionRate, waterConsumed, false);
@@ -39,33 +58,55 @@ public class FoodProduction_Manager : MonoBehaviour {
 			}
 		}
 
-		if (farming && !starvedMode) {
-			StartCoroutine(WaitToFarm());
+		MyStateManager (_state);
+	}
+
+	void MyStateManager(State curState)
+	{
+		switch (curState) {
+		case State.HARVESTING:
+
+			// Farms NEED WATER! Here we have to check with Resources to see if Player has enough water
+			if (resourceManager.water >= waterConsumed) {
+				CountDownToHarvest();
+			} else {
+				_state = State.NOWATER;
+			}
+
+			break;
+		case State.NOWATER:
+
+			if (resourceManager.water >= waterConsumed)
+				_state = State.HARVESTING;
+
+			break;
+
+		default:
+			Debug.Log("Starving");
+			break;
 		}
 	}
 
-	IEnumerator WaitToFarm(){
-		farming = false;
-		yield return new WaitForSeconds (productionRate);
-		// Farms NEED WATER! Here we have to check with Resources to see if Player has enough water
-		if (resourceManager.water >= waterConsumed) {
+	void CountDownToHarvest()
+	{
+		if (harvestCountDown <= 0) {
+		
 			Farm ();
+			harvestCountDown = productionRate;
+
 		} else {
-			// NOT enough water to farm!
-			Debug.Log ("FOOD PRODUCTION: Not enough Water!");
-			farming = true;
+			harvestCountDown -= Time.deltaTime;
 		}
 	}
 
 	void Farm(){
-		Debug.Log ("FOOD PRODUCTION: Farming!");
-		resourceManager.ChangeResource ("Water", -waterConsumed);
-//		resourceManager.ChargeOreorWater ("Water", -waterConsumed);
 
-		// then add the food
+		// Take the water needed from Resources
+		resourceManager.ChangeResource ("Water", -waterConsumed);
+
+		// Then add the food to Resources
 		resourceManager.ChangeResource("Food", foodProduced);
 
-		farming = true;
 	}
 
 }

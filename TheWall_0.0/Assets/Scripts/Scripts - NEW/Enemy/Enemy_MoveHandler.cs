@@ -57,57 +57,103 @@ public class Enemy_MoveHandler : MonoBehaviour {
 	private Vector2 _capitalPosition;
 
 	public bool isKamikaze;
-	
-	void Start () {
 
+	public bool unitInitialized { get; private set;} 
+
+	public enum State { IDLING, MOVING, ATTACKING };
+
+	private State _state = State.IDLING;
+
+	[HideInInspector]
+	public State state { get { return _state; } set { _state = value; }}
+	
+	void Start () 
+	{
+
+		// Initialize Movement Speed stat
 		mStats.InitMoveStats ();
 
+		// Get the Animator
 		if (anim == null) {
 			anim = GetComponentInChildren<Animator>();
 		}
 
+		// Store initial position for Grid as an int
 		posX = (int)transform.position.x;
 		posY = (int)transform.position.y;
-		enemyAttkHandler = GetComponentInChildren<Enemy_AttackHandler> ();
 
+		// Store the Attack Handler to interact with its state
+		enemyAttkHandler = GetComponent<Enemy_AttackHandler> ();
+
+		// Get First Path, pass in True argument only if this is a Kamikaze unit
 		if (!isKamikaze) {
+
 			GetFirstPath (false);
+
 		} else {
+
 			GetFirstPath(true);
 		}
 
+		// Store the Capital position from the resource grid
+		if (resourceGrid != null)
+			_capitalPosition = new Vector2 (resourceGrid.capitalSpawnX, resourceGrid.capitalSpawnY);
 
-
-		_capitalPosition = new Vector2 (resourceGrid.capitalSpawnX, resourceGrid.capitalSpawnY);
+		// This unit has been initialized (meaning it's already been spawned once)
+		// In order to know which units already spawned from pool and need to reset stats
+		unitInitialized = true;
 	}
 
 
-	void GetFirstPath(bool isKamikaze){
-
+	void GetFirstPath(bool isKamikaze)
+	{
+		// Just in case this unit had a path already (it's a recycled unit) make it null
 		if (currentPath != null)
 			currentPath.Clear ();
 
+		// Get the path from Spawn Point Handler
 		if (spwnPtHandler != null) {
+
+			// Regular Units path:
 			if (!isKamikaze){
+
+				// Initialize Current Path
 				currentPath = new List<Node>();
+
+				// Loop through each Node of the corresponding path and Add Node to Current Path
 				for (int x = 0; x < spwnPtHandler.path[spwnPtIndex].Count; x++){
 					currentPath.Add(spwnPtHandler.path[spwnPtIndex][x]);
 
+					// When the Loop reaches the last Node store the value as a Vector3 destination
 					if (x == spwnPtHandler.path[spwnPtIndex].Count - 1){
+
 						destination = new Vector3( currentPath[x].x, currentPath[x].y, 0.0f);
 					}
 				}
+
+				// Now that all Nodes in Current Path have been set, start moving
 				moving = true;
-			}else{
+				_state = State.MOVING;
+
+			}else{// Kamikaze Path:
+
+				// Init Current Path
 				currentPath = new List<Node>();
+
+				// Loop through each Node in Kamikaze path and add Nodes to Current Path
 				for (int x = 0; x < spwnPtHandler.kamikazePath[spwnPtIndex].Count; x++){
 					currentPath.Add(spwnPtHandler.kamikazePath[spwnPtIndex][x]);
 
+					// As above, last Node is stored in Vector3 destination
 					if (x == spwnPtHandler.kamikazePath[spwnPtIndex].Count - 1){
 						destination = new Vector3( currentPath[x].x, currentPath[x].y, 0.0f);
 					}
 				}
-				moving = true;
+
+				// All Nodes in Current Path are set, start moving
+//				moving = true;
+				// Change state:
+				_state = State.MOVING;
 			}
 		
 		}
@@ -132,7 +178,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 				for (int i = myPosIndexInPath; i < spwnPtHandler.path[spwnPtIndex].Count; i++){
 					currentPath.Add(spwnPtHandler.path[spwnPtIndex][i]);
 				}
-				moving = true;
+				_state = State.MOVING;
 			}else{
 				Debug.Log("Couldn't find my node :(");
 			}
@@ -162,6 +208,46 @@ public class Enemy_MoveHandler : MonoBehaviour {
 
 	void Update () {
 
+		DrawLine ();
+	
+		MyStateMachine (_state);
+	
+
+		// NOTE: Turning ON the buddy system forces the entire wave to stop when the "leader" is blocked by a building. This makes
+		// it look quite static and robotic. The other alternative is NOT activating it, which causes all the units to move up to
+		// the building. This makes them all pile together and when they destroy the building they move in a jumbled mess.
+		// TODO: Have the wave NOT stop together but also DISPERSE once they destroy the building blocking them
+
+//		if (myBuddy != null) {
+//			// NOTE: Buddy System is only called by units who were not the first to spawn in their Wave
+//			// Buddy System links units of the same wave to allow them to attack a Tile or Unit in unison
+//			BuddySystem();
+//		}
+	}
+
+	void MyStateMachine(State _curState)
+	{
+		switch (_curState) {
+		case State.IDLING:
+			// just spawned, not moving & not attacking
+			break;
+		case State.MOVING:
+			// Move
+			ActualMove();
+			break;
+		case State.ATTACKING:
+			// Attack
+			break;
+		default:
+			state = State.IDLING;
+			break;
+		}
+
+	}
+
+	// DEBUG NOTE: Using this to draw line to show path. Only works in Preview mode
+	void DrawLine()
+	{
 		// Debug Draw line for visual reference
 		if (currentPath != null) {
 			int currNode = 0;
@@ -172,35 +258,31 @@ public class Enemy_MoveHandler : MonoBehaviour {
 				Debug.DrawLine (start, end, Color.blue);
 				currNode++;
 			}
-		
 		} 
-
-		// Movement:
-		if (moving && !isAttacking){
-			// Have we moved close enough to the target tile that we can move to next tile in current path?
-			if (Vector2.Distance (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY)) < (0.1f)) {
-				MoveToNextTile ();
-			}
-			transform.position = Vector2.MoveTowards(transform.position, 
-			                                         resourceGrid.TileCoordToWorldCoord (posX, posY), 
-			                                         mStats.curMoveSpeed * Time.deltaTime);
-			// ANIMATION CONTROLS:
-			if (posX > transform.position.x){
-				anim.SetTrigger ("movingRight");
-				anim.ResetTrigger("movingLeft");
-			}else if (posX < transform.position.x){
-				anim.SetTrigger ("movingLeft");
-				anim.ResetTrigger("movingRight");
-			}
-		}
-
-
-		// BUDDY SYSTEM CALLED ONLY IF MY BUDDY IS NOT NULL
-		if (myBuddy != null) {
-			BuddySystem();
-		}
 	}
 
+	// Physically moves the unit through world space
+	void ActualMove()
+	{
+		// Movement:
+
+		// Have we moved close enough to the target tile that we can move to next tile in current path?
+		if (Vector2.Distance (transform.position, resourceGrid.TileCoordToWorldCoord (posX, posY)) < (0.1f)) {
+			MoveToNextTile ();
+		}
+		transform.position = Vector2.MoveTowards(transform.position, 
+		                                         resourceGrid.TileCoordToWorldCoord (posX, posY), 
+		                                         mStats.curMoveSpeed * Time.deltaTime);
+		// ANIMATION CONTROLS:
+		if (posX > transform.position.x){
+			anim.SetTrigger ("movingRight");
+			anim.ResetTrigger("movingLeft");
+		}else if (posX < transform.position.x){
+			anim.SetTrigger ("movingLeft");
+			anim.ResetTrigger("movingRight");
+		}
+		
+	}
 
 	// Move through Path:
 	public void MoveToNextTile(){
@@ -213,7 +295,9 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		// Check if the next tile is a UNWAKABLE tile OR if it is clear path
 		if (resourceGrid.UnitCanEnterTile (currentPath [1].x, currentPath [1].y) == false) {
 
-			moving = false;
+//			moving = false;
+			// Since Path is blocked set the state to Idling until this unit knows if it must attack
+			_state = State.IDLING;
 
 			Debug.Log ("Path is blocked! at x" + currentPath [1].x + ", y" + currentPath [1].y);
 
@@ -234,16 +318,22 @@ public class Enemy_MoveHandler : MonoBehaviour {
 					enemyAttkHandler.targetTilePosX = currentPath [1].x;
 					enemyAttkHandler.targetTilePosY = currentPath [1].y;
 					enemyAttkHandler.resourceGrid = resourceGrid;
-					enemyAttkHandler.canAttackTile = true;
-					isAttacking = true;
+
+					// Change attack handler state to Attacking Tile
+					enemyAttkHandler.state = Enemy_AttackHandler.State.ATTACK_TILE;
+
+					// Change my state to Attack to stop movement
+					_state = State.ATTACKING;
+
+//					isAttacking = true;
 				}
 			
 			} 
 
 		} else {
-			if (isAttacking){ // at this point if this is true it means this unit is engaging a Player Unit
+			if (_state == State.ATTACKING){ // at this point if this is true it means this unit is engaging a Player Unit
 				currentPath = null;
-				moving = false;
+//				moving = false;
 				return;
 			}
 
@@ -289,17 +379,24 @@ public class Enemy_MoveHandler : MonoBehaviour {
 //				//TODO: Instead of stopping here, when they reach their destination, I want them to surround the building
 //			}
 //		}
-		if (!isAttacking) {
-			if (myBuddy.isAttacking == true){
+		if (_state != State.ATTACKING) {
+			if (myBuddy.state == State.ATTACKING){
 				if (CheckForTileAttack(myBuddy.targetPosX, myBuddy.targetPosY)){
-					isAttacking = true;
-					moving = false;
+
+					// We found a tile to attack, change state to attacking to stop movement
+					_state = State.ATTACKING;
+
+//					isAttacking = true;
+//					moving = false;
+
 					targetPosX = myBuddy.targetPosX;
 					targetPosY = myBuddy.targetPosY;
 					enemyAttkHandler.targetTilePosX = myBuddy.targetPosX;
 					enemyAttkHandler.targetTilePosY = myBuddy.targetPosY;
 					enemyAttkHandler.resourceGrid = resourceGrid;
-					enemyAttkHandler.canAttackTile = true;
+
+					// Change attack handler state to Attacking Tile
+					enemyAttkHandler.state = Enemy_AttackHandler.State.ATTACK_TILE;
 					Debug.Log ("Also attacking tile!");
 				}
 			}

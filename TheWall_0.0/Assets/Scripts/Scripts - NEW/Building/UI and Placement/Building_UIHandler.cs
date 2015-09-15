@@ -173,6 +173,7 @@ public class Building_UIHandler : MonoBehaviour {
 		// Mouse position so I can instantiate on the mouse!
 		Vector3 m = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 		Vector3 spawnPos = new Vector3 (Mathf.Round (m.x), Mathf.Round (m.y), 0.0f);
+
 		// To build we are just using the function SwapTileType to change this tile's type to that of the building
 			// we need the name of the Half Tile that gets called here
 		string halfName = "half_Built";
@@ -184,13 +185,16 @@ public class Building_UIHandler : MonoBehaviour {
 				// Add Building Position Handler and fill its vars
 				GameObject sExtractor = objPool.GetObjectForType(halfName, true);
 				if (sExtractor != null){
-
-					// set the sprite
+			
 					sExtractor.GetComponent<SpriteRenderer>().sprite = extractSprite;
+					
+
+				
 
 //					// add building pos handler
 					Building_PositionHandler bPosHand = sExtractor.GetComponent<Building_PositionHandler>(); 
 
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.extractor;
@@ -215,6 +219,7 @@ public class Building_UIHandler : MonoBehaviour {
 //					// add building pos handler
 					Building_PositionHandler bPosHand = mGun.GetComponent<Building_PositionHandler>();
 
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.machine_gun;
@@ -239,6 +244,7 @@ public class Building_UIHandler : MonoBehaviour {
 //					// add building pos handler
 					Building_PositionHandler bPosHand = can.GetComponent<Building_PositionHandler>();
 
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.cannons;
@@ -263,6 +269,7 @@ public class Building_UIHandler : MonoBehaviour {
 					// add building pos handler
 					Building_PositionHandler bPosHand = hHall.GetComponent<Building_PositionHandler>();
 
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.harpoonHall;
@@ -287,6 +294,7 @@ public class Building_UIHandler : MonoBehaviour {
 				// add building pos handler
 					Building_PositionHandler bPosHand = sWeed.GetComponent<Building_PositionHandler>();
 
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.farm_s;
@@ -310,7 +318,8 @@ public class Building_UIHandler : MonoBehaviour {
 
 					//add building pos handler
 					Building_PositionHandler bPosHand = storage.GetComponent<Building_PositionHandler>();
-					
+
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.storage;
@@ -334,7 +343,8 @@ public class Building_UIHandler : MonoBehaviour {
 
 				// add building pos handler
 					Building_PositionHandler bPosHand = dSalt.GetComponent<Building_PositionHandler>();
-					
+
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.desalt_s;
@@ -358,7 +368,8 @@ public class Building_UIHandler : MonoBehaviour {
 
 					// add building pos handler
 					Building_PositionHandler bPosHand = sniper.GetComponent<Building_PositionHandler>();
-					
+
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.sniper;
@@ -382,7 +393,8 @@ public class Building_UIHandler : MonoBehaviour {
 					
 					// add building pos handler
 					Building_PositionHandler bPosHand = seaW.GetComponent<Building_PositionHandler>();
-					
+
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.seaWitch;
@@ -406,7 +418,8 @@ public class Building_UIHandler : MonoBehaviour {
 					
 					// add building pos handler
 					Building_PositionHandler bPosHand = nutri.GetComponent<Building_PositionHandler>();
-					
+
+					bPosHand.spawnPos = spawnPos;
 					bPosHand.resourceGrid = resourceGrid;
 					bPosHand.followMouse = true;
 					bPosHand.tileType = TileData.Types.nutrient;

@@ -18,9 +18,13 @@ public class Unit_StatusIndicator : MonoBehaviour {
 	void Start(){
 
 		if (GetComponentInParent<Enemy_AttackHandler> () != null) {
+
 			objPool = GetComponentInParent<Enemy_AttackHandler> ().objPool;
+
 		} else {
+
 			objPool = GameObject.FindGameObjectWithTag("Pool").GetComponent<ObjectPool>();
+
 		}
 
 		if (healthBarRect == null) {

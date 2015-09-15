@@ -22,7 +22,8 @@ public class Building_PositionHandler : MonoBehaviour {
 	public TileData.Types tileType;
 
 	SpriteRenderer sr; // to handle the alpha change
-	Color halfColor, trueColor;
+	Color halfColor = new Color (255, 34, 34, 135);
+	Color trueColor;
 
 	Vector3 m, lastM;
 	int mX;
@@ -37,11 +38,19 @@ public class Building_PositionHandler : MonoBehaviour {
 
 	public Building_UIHandler buildingUI;
 
-	void Start () {
+	public Vector3 spawnPos;
+
+
+	void Awake()
+	{
 		sr = GetComponent<SpriteRenderer> ();
-		halfColor = sr.color;
+//		halfColor = sr.color;
 		trueColor = Color.green;
+
+		sr.color = Color.clear;
+		transform.position = spawnPos;
 	}
+
 	
 
 	void Update () {
@@ -69,6 +78,7 @@ public class Building_PositionHandler : MonoBehaviour {
 		}
 		// Move building with the mouse
 		Vector3 followPos = new Vector3 (mX, mY);
+
 		transform.position = followPos;
 
 

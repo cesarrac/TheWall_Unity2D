@@ -100,7 +100,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 		maxWaves = waves.Length;
 
 		groupCount = maxWaves / wavesInGroup;
-		Debug.Log ("WAVE SPAWNER: Group count = " + groupCount);
+//		Debug.Log ("WAVE SPAWNER: Group count = " + groupCount);
 
 	}
 
@@ -177,7 +177,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			// store how many members there are in this wave
 			int memberCount = thisWave.members.Length;
 
-			// tell the spawn indicator to indicate X number of enemy types ( X = memberCount )
+//			Debug.Log("WAVE SPAWNER: Member count for wave " + nextWave + " is = " +  memberCount);
 
 			if (spwnIndicator != null){
 
@@ -199,8 +199,8 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 				}
 				else if (memberCount == 2)
 				{
-					Debug.Log ("WAVE SPAWNER: Created indicator for " + thisWave.members[0].enemyName 
-					           + " and " + thisWave.members[1].enemyName);
+//					Debug.Log ("WAVE SPAWNER: Created indicator for " + thisWave.members[0].enemyName 
+//					           + " and " + thisWave.members[1].enemyName);
 
 					indicator.InitTwoTypeIndicator(thisWave.members[0].enemySprite, thisWave.members[0].enemyCount,
 					                               thisWave.members[1].enemySprite, thisWave.members[1].enemyCount);
@@ -208,6 +208,9 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 				}
 				else if (memberCount == 3)
 				{
+//					Debug.Log ("WAVE SPAWNER: Created indicator for " + thisWave.members[0].enemyName 
+//					           + " and " + thisWave.members[1].enemyName + " and " + thisWave.members[2].enemyName);
+
 					indicator.InitThreeTypeIndicator(thisWave.members[0].enemySprite, thisWave.members[0].enemyCount,
 					                               thisWave.members[1].enemySprite, thisWave.members[1].enemyCount,
 					                               thisWave.members[2].enemySprite, thisWave.members[2].enemyCount);
@@ -230,7 +233,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 	IEnumerator SpawnWave (Wave _wave)
 	{
-		Debug.Log ("WAVE: Spawning wave " + nextWave + ", group member: " + nextWaveInGroup);
+//		Debug.Log ("WAVE: Spawning wave " + nextWave + ", group member: " + nextWaveInGroup);
 
 		state = SpawnState.SPAWNING;
 
@@ -247,12 +250,12 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 		}
 
 		nextWave ++;
-		Debug.Log ("WAVE SPAWNER: Next Wave = " + nextWave);
+//		Debug.Log ("WAVE SPAWNER: Next Wave = " + nextWave);
 		if (groupCount > 0) 
 		{		// CHECK IF THERE ARE ANY GROUPS
 			if (nextWaveInGroup < wavesInGroup - 1) // this needs to say if it there has been at least wavesIngroup spawned
 			{
-				Debug.Log ("WAVE: still spawning from same group!");
+//				Debug.Log ("WAVE: still spawning from same group!");
 				nextWaveInGroup ++;
 
 				// keep spawning
@@ -272,7 +275,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 				if (nextGroup <= groupCount)
 				{
-					Debug.Log ("WAVE SPAWNER: spawning from NEW group!");
+//					Debug.Log ("WAVE SPAWNER: spawning from NEW group!");
 					// start peace time and keep nextwave with its current value
 					peaceCountDown = peaceTime;
 					waveCountDown = timeBetweenWaves;
@@ -283,7 +286,7 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 
 					// Check that there are no more waves left, in case there's any left that are not in group
 					if (nextWave <= maxWaves - 1){
-						Debug.Log ("WAVE SPAWNER: NO more Groups, but there's STILL a wave left!");
+//						Debug.Log ("WAVE SPAWNER: NO more Groups, but there's STILL a wave left!");
 
 						// if there are we spawn
 						peaceCountDown = peaceTime;
@@ -337,37 +340,24 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 			// Give it its starting position
 			_enemy.transform.position = spawnPositions[_spawnIndex];
 
-			// reset its Stats in case it just got brought back from the Pool
+			// Get the Attack Handler
 			Enemy_AttackHandler _attkHandler = _enemy.GetComponentInChildren<Enemy_AttackHandler>();
-			_attkHandler.stats.Init();
 
-			// also reset their Health Bar 
-			_attkHandler.statusIndicator.SetHealth(_attkHandler.stats.curHP, _attkHandler.stats.maxHP);
-			Debug.Log ("WAVESPAWNER: spawning unit with curHP: " + _attkHandler.stats.curHP + " and maxHP: " + _attkHandler.stats.maxHP);
-
-			// and give it the Object Pool
-			_attkHandler.objPool = objPool;
-
-			// store its position for its neighbors
-			neighborEnemyPosition = _enemy.transform.position;
-
-			// pathfinding variables
+			// Get the Move Handler
 			Enemy_MoveHandler _moveHandler = _enemy.GetComponent<Enemy_MoveHandler>();
+
+			// Pathfinding variables
 			_moveHandler.resourceGrid = resourceGrid;
 			_moveHandler.spwnPtIndex = _spawnIndex;
 			_moveHandler.spwnPtHandler = spwnPtHandler; 
 
-			// reset its starting path position to this new spawn point
-			_moveHandler.posX = (int)_enemy.transform.position.x;
-			_moveHandler.posY = (int)_enemy.transform.position.y;
+			// Give it the Object Pool
+			_attkHandler.objPool = objPool;
 
-			// Initialize their path
-			_moveHandler.InitPath();
+			// Don't Activate GameObject until all components are set
+			_enemy.SetActive(false);
 
-			// reset the current move speed in case this unit was affected by a Speed DeBuffer
-			_moveHandler.mStats.curMoveSpeed = _moveHandler.mStats.startMoveSpeed;
-
-			// feed it the move handler from the enemy spawned before this one so it has a buddy
+			// Feed it the move handler from the enemy spawned before this one so it has a buddy
 			if (lastEnemy != null){
 				// make sure they belong to the same wave
 				if (lastEnemy.gameObject.name == _enemyName){
@@ -376,13 +366,47 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 					// not the same name so this must be the first spawn of a new wave
 					lastEnemy = null;
 				}
-
+				
 			}
 
+			// Store this unit as Last Enemy spawned
 			lastEnemy = _moveHandler;
-
+			
 			// Add this newly Spawned enemy to the list of spawned enemies
 			spawnedEnemies.Add(_moveHandler);
+
+			// Store its position for its neighbors
+			neighborEnemyPosition = _enemy.transform.position;
+
+
+			// IN CASE THIS UNIT WAS ALREADY SPAWNED FROM POOL:
+			if (_moveHandler.unitInitialized){
+
+				// Reset their Health Bar 
+				_attkHandler.statusIndicator.SetHealth(_attkHandler.stats.curHP, _attkHandler.stats.maxHP);
+
+//				 Reset its starting path position to this new spawn point
+				_moveHandler.posX = (int)_enemy.transform.position.x;
+				_moveHandler.posY = (int)_enemy.transform.position.y;
+
+				// Reset the current move speed in case this unit was affected by a Speed DeBuffer
+				_moveHandler.mStats.curMoveSpeed = _moveHandler.mStats.startMoveSpeed;
+
+//				Debug.Log ("WAVE: Recycled " + _enemyName + " with " + _attkHandler.stats.curHP + 
+//				           "HP. At position: (x)" + _moveHandler.posX + " (y)" + _moveHandler.posY); 
+			}
+
+			// Object Ready to be Activated
+			_enemy.SetActive(true);
+
+			// Initialize its Stats
+			_attkHandler.stats.Init();
+
+			// Initialize their path to Start moving to their destination
+			_moveHandler.InitPath();
+
+//			Debug.Log ("WAVE: Spawned " + _enemyName + " with " + _attkHandler.stats.curHP + 
+//			           "HP. At position: (x)" + _enemy.transform.position.x + " (y)" + _enemy.transform.position.y); 
 		}
 	}
 

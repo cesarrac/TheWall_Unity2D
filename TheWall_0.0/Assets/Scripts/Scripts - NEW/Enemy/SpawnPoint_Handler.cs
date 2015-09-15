@@ -12,10 +12,30 @@ public class SpawnPoint_Handler : MonoBehaviour {
 
 	public Vector2[] kamikazeDestinations;
 
+	[Header("Kamikaze Min. and Max. X/Y positions")]
+	public float minKamiX, maxKamiX, minKamiY, maxKamiY;
+
+	private float randomKamikazeX;
+	private float randomKamikazeY;
+
 	void Awake(){
 		path = new List<Node>[spawnPositions.Length];
 		kamikazePath = new List<Node>[spawnPositions.Length]; 
+
+		// Create some random Kamikaze positions
+		RandomKamikaze ();
 	}
+
+	void RandomKamikaze()
+	{
+		// Loop through the Kamikaze Destinations array and fill each with a random X and Y
+		for (int x = 0; x < kamikazeDestinations.Length; x++) {
+			randomKamikazeX = Random.Range(minKamiX, maxKamiX);
+			randomKamikazeY = Random.Range(minKamiY, maxKamiY);
+			kamikazeDestinations[x] = new Vector2(Mathf.Round(randomKamikazeX), Mathf.Round(randomKamikazeY));
+		}
+	}
+
 	void Start () {
 
 		if (resourceGrid == null)

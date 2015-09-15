@@ -71,7 +71,15 @@ public class Player_ResourceManager : MonoBehaviour {
 
 	public ObjectPool objPool;
 
+	private int _booster;
+	public int booster {get {return _booster;} set{_booster = Mathf.Clamp(value, 0, 4 );}}
+
+	private int _boostCalc = 0;
+
 	void Start(){
+
+		booster = 0;
+
 		buildingUI = GetComponentInChildren<Building_UIHandler> ();
 		
 		feeding = true;
@@ -107,6 +115,7 @@ public class Player_ResourceManager : MonoBehaviour {
 			_curHero = Instantiate(chosenHero, spawnPosition, Quaternion.identity) as GameObject;
 			_curHero.GetComponent<SelectedUnit_MoveHandler> ().resourceGrid = resourceGrid;
 			_curHero.GetComponentInChildren<Player_AttackHandler> ().objPool = objPool;
+			_curHero.GetComponentInChildren<Player_AttackHandler> ().resourceGrid = resourceGrid;
 		}else{
 			// get its hp
 			if (_curHero.GetComponentInChildren<Player_AttackHandler>() != null){
@@ -297,105 +306,160 @@ public class Player_ResourceManager : MonoBehaviour {
 
 	/// <summary>
 	/// Starves the building by using the object's name in a switch.
-	/// It will make the starvedMode bool false in each component, depending on building type,
-	/// unless starving is set to false or building name is not found.
+	/// Using the building's own state machine it will set its State to starved or not, accordingly.
+	/// *NOTE: This used to work using starvedMode bool
 	/// </summary>
 	/// <param name="building">Building.</param>
 	/// <param name="starving">If set to <c>true</c> turns starving mode true.</param>
-	void StarveBuildingControl (GameObject building, bool starving){
-		// first starve the building by finding what kind of building it is by name
-		string buildingName = building.name;
-		// add the current building to the list
-		buildingsStarved.Add (building);
-		// store it as the last building picked
-		lastBuildingPicked = building;
+	void StarveBuildingControl (GameObject building, bool starving)
+	{
+		// Make sure building is not null
+		if (building != null) {
+			// first starve the building by finding what kind of building it is by name
+			string buildingName = building.name;
+			// add the current building to the list
+			buildingsStarved.Add (building);
+			// store it as the last building picked
+			lastBuildingPicked = building;
 
-		switch (buildingName) {						//** WARNING! ALL ATTACKING BUILDINGS HAVE THE COMPONENT IN CHILDREN!!!
-		case "Extractor":	// extractor
-			if (starving){
-				building.GetComponent<Extractor>().starvedMode = true;
-				//change building status image to RED
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
+			switch (buildingName) {						//** WARNING! ALL ATTACKING BUILDINGS HAVE THE COMPONENT IN CHILDREN!!!
+			case "Extractor":	// extractor
+				if (starving) {
 
-				buildingUI.CreateIndicator("An " + buildingName + " stopped working.");
-			}else{
-				building.GetComponent<Extractor>().starvedMode = false;
+					// Change the State to stop extraction
+					building.GetComponent<Extractor> ().state = Extractor.State.STARVED;
 
-				//change building status image to GREEN
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
+					//change building status image to RED
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Starve");
 
-				buildingUI.CreateIndicator(buildingName + " back online!");
+					//Create an INDICATOR for the user, warning them the building stopped working
+					buildingUI.CreateIndicator ("An " + buildingName + " stopped working.");
+				} else {
+
+					// Change the state back to extraction
+					building.GetComponent<Extractor> ().state = Extractor.State.EXTRACTING;
+
+					//change building status image to GREEN
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Unstarve");
+
+					// Indicate to the Player that the building is back on
+					buildingUI.CreateIndicator (buildingName + " back online!");
+				}
+				break;
+
+			case "Machine Gun": // machine gun
+				if (starving) {
+
+					building.GetComponentInChildren<Tower_TargettingHandler> ().state = Tower_TargettingHandler.State.STARVED;
+
+					//change building status image to RED
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Starve");
+
+					buildingUI.CreateIndicator ("A " + buildingName + " stopped working.");
+
+				} else {
+
+					building.GetComponentInChildren<Tower_TargettingHandler> ().state = Tower_TargettingHandler.State.SEEKING;
+
+					//change building status image to GREEN
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Unstarve");
+
+					buildingUI.CreateIndicator (buildingName + " back online!");
+				}
+				break;
+
+			case "Cannons": // cannons
+				if (starving) {
+
+					building.GetComponentInChildren<Tower_AoETargettingHandler> ().state = Tower_AoETargettingHandler.State.STARVED;
+
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Starve");
+
+					buildingUI.CreateIndicator (buildingName + " stopped working.");
+
+				} else {
+					building.GetComponentInChildren<Tower_AoETargettingHandler> ().state = Tower_AoETargettingHandler.State.SEEKING;
+
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Unstarve");
+
+					buildingUI.CreateIndicator (buildingName + " back online!");
+				}
+				break;
+
+			case "Sniper Gun": 
+				if (starving) {
+				
+					building.GetComponentInChildren<Tower_TargettingHandler> ().state = Tower_TargettingHandler.State.STARVED;
+				
+					//change building status image to RED
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Starve");
+
+					buildingUI.CreateIndicator ("A " + buildingName + " stopped working.");
+				
+				} else {
+				
+					building.GetComponentInChildren<Tower_TargettingHandler> ().state = Tower_TargettingHandler.State.SEEKING;
+				
+					//change building status image to GREEN
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Unstarve");
+
+					buildingUI.CreateIndicator (buildingName + " back online!");
+				}
+				break;
+
+			case "Sea-Witch Crag": 
+				if (starving) {
+				
+					building.GetComponentInChildren<Tower_DeBuffer> ().state = Tower_DeBuffer.State.STARVED;
+				
+					//change building status image to RED
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Starve");
+
+					buildingUI.CreateIndicator ("A " + buildingName + " stopped working.");
+				
+				} else {
+				
+					building.GetComponentInChildren<Tower_DeBuffer> ().state = Tower_DeBuffer.State.SEEKING;
+				
+					//change building status image to GREEN
+					building.GetComponent<Building_ClickHandler> ().ChangeBuildingStatus ("Unstarve");
+				
+					buildingUI.CreateIndicator (buildingName + " back online!");
+				}
+				break;
+
+			default:
+				Debug.Log ("couldn't starve " + buildingName + " building!");
+				break;
 			}
-			break;
-		case "Machine Gun": // machine gun
-			if (starving){
-				building.GetComponentInChildren<Tower_TargettingHandler>().starvedMode = true;
-
-				//change building status image to RED
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
-
-				buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
-			}else{
-				building.GetComponentInChildren<Tower_TargettingHandler>().starvedMode = false;
-
-				//change building status image to GREEN
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
-
-				buildingUI.CreateIndicator(buildingName + " back online!");
-			}
-			break;
-		case "Cannons": // cannons
-			if (starving){
-				building.GetComponentInChildren<Tower_AoETargettingHandler>().starvedMode = true;
-
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
-
-				buildingUI.CreateIndicator(buildingName + " stopped working.");
-			}else{
-				building.GetComponentInChildren<Tower_AoETargettingHandler>().starvedMode = false;
-
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
-
-				buildingUI.CreateIndicator(buildingName + " back online!");
-			}
-			break;
-		case "Harpooner's Hall": // harpooners hall
-			if (starving){
-				building.GetComponentInChildren<Barracks_SpawnHandler>().starvedMode = true;
-
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
-
-				buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
-			}else{
-				building.GetComponentInChildren<Barracks_SpawnHandler>().starvedMode = false;
-
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
-
-				buildingUI.CreateIndicator(buildingName + " back online!");
-			}
-			break;
-		case "Seaweed Farm": // seaweed farm
-			if (starving){
-				building.GetComponent<FoodProduction_Manager>().starvedMode = true;
-
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(0);
-
-				buildingUI.CreateIndicator("A " + buildingName + " stopped working.");
-			}else{
-				building.GetComponent<FoodProduction_Manager>().starvedMode = true;
-
-				building.GetComponent<Building_ClickHandler>().ChangeBuildingStatus(1);
-
-				buildingUI.CreateIndicator(buildingName + " back online!");
-			}
-			break;
-		default:
-			Debug.Log("couldn't starve " + buildingName + " building!");
-			break;
+		} else {
+			// building is null so remove it from list
+			buildingsStarved.Remove(building);
 		}
 	}
 
+	public void SetBooster()
+	{
+		if (booster == 0) { // default starting value is 0
 
+			// Boosting 1/4th of ammount
+			booster = 4;
+
+		} else if (booster == 4) {
+
+			// Boosting 1/2 of ammount
+			booster = 2;
+
+		} else if (booster == 2) {
+
+			// Doubling the ammount
+			booster = 1;
+		} else {
+
+			booster = 1;
+		}
+		Debug.Log ("R MANAGER: booster at " + booster);
+	}
 
 
 	/// <summary>
@@ -417,9 +481,12 @@ public class Player_ResourceManager : MonoBehaviour {
 
 			break;
 		case "Credits":
+			// Credit reward get BOOSTED if Player calls enemies to spawn early by clicking on a spawn indicator
+			if (booster > 0)
+				_boostCalc = quantity / booster;
 
-			credits = credits + quantity;
-
+			credits = credits + (quantity + _boostCalc);
+			Debug.Log("R MANAGER: Received " + quantity + " boosted by " + _boostCalc);
 			break;
 		case "Water":
 			water  = water + quantity;

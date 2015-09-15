@@ -24,10 +24,11 @@ public class EasyPool : MonoBehaviour {
 		if (state == State.POOLED)
 			poolCountdown = timeBeforePool;
 
+
 		if (poolCountdown <= 0 && state == State.COUNTING) {
 
 			// Pool object
-			objPool.PoolObject(this.gameObject);
+			objPool.PoolObject (this.gameObject);
 			state = State.POOLED;
 
 
@@ -35,5 +36,6 @@ public class EasyPool : MonoBehaviour {
 			state = State.COUNTING;
 			poolCountdown -= Time.deltaTime;
 		}
+		
 	}
 }

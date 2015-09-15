@@ -46,8 +46,12 @@ public class Enemy_SpawnIndicator : MonoBehaviour {
 	[HideInInspector]
 	public Enemy_WaveSpawner enemyWaveSpawner;
 
+	// Accessing Player Resources to change Credits booster when Force Spawn is called
+	public Player_ResourceManager playerResources;
 
-
+	void Start(){
+		playerResources = GameObject.FindGameObjectWithTag ("Capital").GetComponent<Player_ResourceManager> ();
+	}
 
 	public void InitOneTypeIndicator(Sprite sprite, int count)
 	{
@@ -67,9 +71,16 @@ public class Enemy_SpawnIndicator : MonoBehaviour {
 
 	public void SetIndicator1()
 	{
+		// Activate first slot
+		x1.gameObject.SetActive (true);
+		imgOne.gameObject.SetActive (true);
+		textOne.gameObject.SetActive (true);
+
+		// Fill first slot
 		imgOne.sprite = indicator1.enemySprite;
 		textOne.text = indicator1.enemyTypeCount.ToString();
 
+		// De-Activate slots 2 & 3
 		x2.gameObject.SetActive (false);
 		imgTwo.gameObject.SetActive (false);
 		textTwo.gameObject.SetActive (false);
@@ -82,10 +93,20 @@ public class Enemy_SpawnIndicator : MonoBehaviour {
 	{
 		// using slots 2 and 3 to keep a balanced composition
 
+		// De-Activate slot 1
 		x1.gameObject.SetActive (false);
 		imgOne.gameObject.SetActive (false);
 		textOne.gameObject.SetActive (false);
 
+		// Activate slots 2 & 3
+		x2.gameObject.SetActive (true);
+		imgTwo.gameObject.SetActive (true);
+		textTwo.gameObject.SetActive (true);
+		x3.gameObject.SetActive (true);
+		imgThree.gameObject.SetActive (true);
+		textThree.gameObject.SetActive (true);
+
+		// Fill slots 2 & 3
 		imgTwo.sprite = indicator2.enemySprite;
 		textTwo.text = indicator2.enemyTypeCount.ToString();
 
@@ -96,7 +117,18 @@ public class Enemy_SpawnIndicator : MonoBehaviour {
 
 	public void SetIndicator3()
 	{
-		
+		// Activate ALL slots
+		x1.gameObject.SetActive (true);
+		imgOne.gameObject.SetActive (true);
+		textOne.gameObject.SetActive (true);
+		x2.gameObject.SetActive (true);
+		imgTwo.gameObject.SetActive (true);
+		textTwo.gameObject.SetActive (true);
+		x3.gameObject.SetActive (true);
+		imgThree.gameObject.SetActive (true);
+		textThree.gameObject.SetActive (true);
+
+		// Fill ALL slots
 		imgOne.sprite = indicator1.enemySprite;
 		textOne.text = indicator1.enemyTypeCount.ToString();
 		
@@ -110,5 +142,8 @@ public class Enemy_SpawnIndicator : MonoBehaviour {
 
 	public void ForceSpawn(){
 		enemyWaveSpawner.ForceStartAttack ();
+
+		// Boost credit rewards for calling enemies early
+		playerResources.SetBooster ();
 	}
 }

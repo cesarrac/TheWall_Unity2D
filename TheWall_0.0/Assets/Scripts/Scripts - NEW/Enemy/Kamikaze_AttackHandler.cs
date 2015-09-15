@@ -5,7 +5,7 @@ public class Kamikaze_AttackHandler : Unit_Base {
 
 	public Enemy_MoveHandler moveHandler;
 
-	public ObjectPool objPool;
+//	public ObjectPool objPool;
 
 	private float countDownToPool = 1f;
 
@@ -14,15 +14,20 @@ public class Kamikaze_AttackHandler : Unit_Base {
 		// Initialize Unit stats
 		stats.Init ();
 
-		resourceGrid = GetComponentInParent<Enemy_MoveHandler> ().resourceGrid;
+		if (resourceGrid == null)
+			resourceGrid = GetComponent<Enemy_MoveHandler> ().resourceGrid;
+
+		// This receives the Object Pool from the Wave Spawner, but just in case...
+		if (objPool == null)
+			objPool = GameObject.FindGameObjectWithTag ("Pool").GetComponent<ObjectPool> ();
 	}
 	
 
 	void Update () {
 		// once per second we can check if we need to pool any player units we hit before pooling ourselves
-		if (unitToPool != null) {
+		if (this.unitToPool != null) {
 			if (countDownToPool <= 0) {
-				KillTarget ();
+				KillTarget (this.unitToPool.transform.position);
 			} else {
 				countDownToPool -= Time.deltaTime;
 			}
@@ -84,7 +89,7 @@ public class Kamikaze_AttackHandler : Unit_Base {
 		}
 	}
 
-	void KillTarget(){
+	void KillTarget(Vector3 deathPos){
 		// Currently NOT pooling Player units
 //		objPool.PoolObject(unitToPool);
 		Destroy (unitToPool.GetComponent<Player_AttackHandler>().unitParent);
@@ -92,8 +97,11 @@ public class Kamikaze_AttackHandler : Unit_Base {
 		GameObject deadE = objPool.GetObjectForType("dead", false);
 		if (deadE != null) {
 			deadE.GetComponent<EasyPool> ().objPool = objPool;
-			deadE.transform.position = unitToPool.transform.position;
+			deadE.transform.position = deathPos;
 		}
+
+		this.unitToPool = null;
+
 		// then pool myself
 		objPool.PoolObject (this.gameObject);
 

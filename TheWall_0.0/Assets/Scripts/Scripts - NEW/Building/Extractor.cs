@@ -4,7 +4,7 @@ using System.Collections;
 public class Extractor : MonoBehaviour {
 	public int mapPosX, mapPosY;
 	public ResourceGrid resourceGrid;
-	bool rockFound, canExtract = false;
+	bool rockFound;
 	// Storing the rock tiles that this building can find (EXTRACTOR ONLY!)
 	public Vector2[] rocksDetected;
 
@@ -15,8 +15,6 @@ public class Extractor : MonoBehaviour {
 	public int extractAmmnt;
 
 	public Player_ResourceManager playerResources;
-
-	public bool starvedMode; // MANIPULATED BY THE RESOURCE MANAGER
 
 	LineRenderer lineR;
 	public bool selecting;
@@ -30,62 +28,129 @@ public class Extractor : MonoBehaviour {
 
 	SpriteRenderer sr;
 
+	public enum State 
+	{
+		EXTRACTING,
+		SEARCHING,
+		NOSTORAGE,
+		STARVED
+	}
+	
+	private State _state = State.NOSTORAGE;
+
+	[HideInInspector]
+	public State state { get { return _state; } set { _state = value; } }
+
+	private float extractCountDown;
+
+
+
+
 	void Awake(){
+
+		// Store the Line Renderer
 		lineR = GetComponent<LineRenderer> ();
+
 	}
 
-	void Start(){
+	void Start()
+	{
+
 		// INIT rocksdetected array
 		// This assumes that we are only checking tiles ONE TILE OVER in all directions
 		rocksDetected = new Vector2[8]; 
 
-//		if (SearchForRock ()) {
-//			CycleRocksArray();
-//		}
+		// In Case Grid is null
 		if (resourceGrid == null) {
 			resourceGrid = GameObject.FindGameObjectWithTag("Map").GetComponent<ResourceGrid>();
 		}
 
+		// In case Building UI is null
 		if (buildingUI == null) {
 			buildingUI = GameObject.FindGameObjectWithTag ("UI").GetComponent<Building_UIHandler> ();
 		}
 
+		// Store the Sprite Renderer for layer management
 		sr = GetComponent<SpriteRenderer> ();
+
+		// Line Renderer's layer is set to be UNDER my sprite
 		lineR.sortingLayerName = sr.sortingLayerName;
 		lineR.sortingOrder = sr.sortingOrder - 1;
 		lineR.SetPosition (0, transform.position);
-		selecting = true;
+
+		// Set selecting is true so Line follows Mouse from Start
+//		selecting = true;
+
+		// set Extract Countdown to extraction rate
+		extractCountDown = extractRate;
+
 	}
 	
 
 	void Update () {
-		if (selecting)
-		{
-			lineR.enabled = true;
-			myStorage = null;
-			LineFollowMouse();
-			buildingUI.currentlyBuilding = true;
-			if (Input.GetMouseButtonUp (0)) 
-			{
-				SetStorageAndExtract();
-			}
-		}
-
-
-
-		if (canExtract && !starvedMode) {
-			StartCoroutine (WaitToExtract ());
-		}
 
 		if (!selecting && myStorage == null) {
+
 			lineR.enabled = false;
-			canExtract = false;
-			Debug.Log ("Need STORAGE!");
+
+			// This means that either the Storage we were using was destroyed OR is full, so change state to stop extraction
+			_state = State.NOSTORAGE;
+
 		} else if (!selecting && myStorage != null) {
+
+			// Give the Player Resource Manager our stats to show on Food Production panel
 			if (!statsInitialized){
 				playerResources.CalculateOreProduction(extractAmmnt, extractRate, false);
 				statsInitialized = true;
 			}
+		}
+
+		MyStateMachine (_state);
+	}
+
+	void MyStateMachine(State curState)
+	{
+		switch (curState) {
+
+		case State.EXTRACTING:
+			CountDownToExtract();
+			break;
+
+		case State.NOSTORAGE:
+			if (selecting)
+			{
+				lineR.enabled = true;
+				myStorage = null;
+				LineFollowMouse();
+				buildingUI.currentlyBuilding = true;
+				if (Input.GetMouseButtonUp (0)) 
+				{
+					SetStorageAndExtract();
+				}
+			}
+			break;
+
+		case State.SEARCHING:
+			Debug.Log ("EXTRACTOR: Searching for rock...");
+			break;
+
+		default:
+			// starved
+			break;
+		}
+	}
+
+	void CountDownToExtract()
+	{
+		if (extractCountDown <= 0) {
+
+			Extract();
+			extractCountDown = extractRate;
+
+		} else {
+
+			extractCountDown -= Time.deltaTime;
+
 		}
 	}
 
@@ -111,21 +176,31 @@ public class Extractor : MonoBehaviour {
 		int mX = Mathf.RoundToInt(mouseEnd.x);
 		int mY = Mathf.RoundToInt(mouseEnd.y);
 		if (mX > 2 && mX < resourceGrid.mapSizeX - 2 && mY > 2 && mY < resourceGrid.mapSizeY - 2) {
+
+			// Make sure that where we clicked on the Grid is a storage tile
 			if (resourceGrid.GetTileType (mX, mY) == TileData.Types.storage) {
 				Debug.Log("Storage found for ore!");
+
+				// Selecting is now false to deactivate the Line Renderer gameobject
 				selecting = false;
 			
+				// Give Building UI ability to access to building menus by clicking again
 				buildingUI.currentlyBuilding = false;
-				//			lineR.enabled = false;
-				// set my storage
+
+				// Set my storage
 				myStorage = resourceGrid.GetTileGameObj (mX, mY).GetComponent<Storage> ();
 
-				// start extracting by finding which direction our rock is
+				// Start extracting by finding which direction rock was found
 				if (SearchForRock ()) {
+
+					// Cycle through the rocks found array to make sure we don't extract from a NULL (represented by Vector2.zero)
 					CycleRocksArray ();
 				}
+
+
 			} else {
 				Debug.Log ("Need a place to store the ore!");
+				// state will stay on NO STORAGE
 			}
 		}
 	}
@@ -193,37 +268,16 @@ public class Extractor : MonoBehaviour {
 				rockPosX = (int) rocksDetected[x].x;
 				rockPosY = (int) rocksDetected[x].y;
 				currRockIndex = x;
-				canExtract = true;
+
+				// Rock has been detected so we can change state
+				_state = State.EXTRACTING;
+
 			}else{
 				Debug.Log("No rock found at: " + rocksDetected[x]);
 			}
 		}
 	}
 
-	IEnumerator WaitToExtract(){
-		canExtract = false;
-		yield return new WaitForSeconds(extractRate);
-		if (myStorage != null) {
-			Extract ();
-		} 
-	}
-
-//	void Extract(){
-//		int q = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
-//		int calc = q - extractAmmnt;
-//		// subtract it from the tile
-//		resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity = calc;
-//		// add it to Player resources
-//		playerResources.ChangeResource ("Ore", extractAmmnt);
-//		// check if tile is depleted
-//		int newQ = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
-//		Debug.Log ("Extracting!");
-//		if (newQ <= 0) {
-//			DepleteRock (rockPosX, rockPosY);
-//		} else {
-//			canExtract = true;
-//		}
-//	}
 
 	void Extract(){
 		int q = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
@@ -244,35 +298,43 @@ public class Extractor : MonoBehaviour {
 				int newQ = resourceGrid.tiles [rockPosX, rockPosY].maxResourceQuantity;
 
 				if (newQ <= 0) {
-					// it is Depleted
+
+					// This rock is Depleted, so change state to stop extraction while we Search for more rock
+					_state = State.SEARCHING;
+
+					// Deplete the rock and check for more
 					DepleteRock (rockPosX, rockPosY);
-				} else {
-					// it's not Depleted so continue extracting
-					canExtract = true;
-				}
+				} 
 
 			} else {
 
-				// storage is full and extractor stops until it gets a new storage
+				// Storage is full and extractor stops until it gets a new storage
 				myStorage = null;
 
-//				// keep extracting
-//				if (SearchForRock ()) {
-//					CycleRocksArray();
-//				}
+				// Change state to stop extraction while we get a new Storage
+				_state = State.NOSTORAGE;
 			}
 
 
-		} else { // tile is depleted
-			DepleteRock(rockPosX, rockPosY);
+		} else { 
+
+			// This rock is Depleted, so change state to stop extraction while we Search for more rock
+			_state = State.SEARCHING;
+
+			// Deplete the rock and check for more
+			DepleteRock (rockPosX, rockPosY);
 		}
 	}
 
 	void DepleteRock(int x, int y){
-		Debug.Log ("Rock depleted at: " + x + ", " + y);
+
+		// To Deplete a rock, swap tile to empty
 		resourceGrid.SwapTileType (x, y, TileData.Types.empty);
-		// change value of this rock in the array
+
+		// change value of this rock in the array so we don't try extracting from it anymore
 		rocksDetected [currRockIndex] = Vector3.zero;
+
+		// Cycle the array to see if there is any more rock around us
 		CycleRocksArray ();
 	}
 }

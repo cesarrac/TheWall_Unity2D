@@ -23,8 +23,13 @@ public class Building_ClickHandler : MonoBehaviour {
 	private GameObject buildingPanel;
 
 	[SerializeField]
-	private Image buildingStatus;
+	private Building_StatusIndicator buildingStatusIndicator;
 
+	[Header ("For Gun Towers Only:")]
+	public Tower_TargettingHandler tower;
+
+	// Adding this object Pool here so we can feed it to the buildings as they are built
+	public ObjectPool objPool;
 
 	void Start () {
 
@@ -35,8 +40,8 @@ public class Building_ClickHandler : MonoBehaviour {
 			Debug.Log("CLICK HANDLER: Building Panel not set!");
 		}
 
-		if (buildingStatus == null) {
-			Debug.Log("CLICK HANDLER: Building Status Image not set!");
+		if (buildingStatusIndicator == null) {
+			Debug.Log("CLICK HANDLER: Building Status Indicator not set!");
 		}
 
 		if (buildingCanvas != null) {
@@ -54,7 +59,9 @@ public class Building_ClickHandler : MonoBehaviour {
 
 	void OnMouseUpAsButton(){
 		Debug.Log("You clicked on " + gameObject.name);
-		ActivateBuildingUI ();
+
+		if (!buildingUIhandler.currentlyBuilding)
+			ActivateBuildingUI ();
 	}
 
 	public void ActivateBuildingUI(){
@@ -85,14 +92,89 @@ public class Building_ClickHandler : MonoBehaviour {
 		return type;
 	}
 
-	public void ChangeBuildingStatus(int change){
-		if (change == 0) {
+	public void ChangeBuildingStatus(string change){
 
-			buildingStatus.color = Color.red;
+		switch (change) {
+		case "Starve":
 
-		} else if (change == 1) {
-		
-			buildingStatus.color = Color.green;
+			// starve
+			buildingStatusIndicator.CreateStatusMessage("Starving!");
+
+			break;
+		case "Unstarve":
+
+			// unstarve
+			buildingStatusIndicator.CreateStatusMessage("Eating...");
+
+			break;
+		case "Reload":
+			// show reloading message
+			buildingStatusIndicator.CreateStatusMessage("Reloading...");
+			break;
+		case "Acquired":
+			// show target acquired
+			buildingStatusIndicator.CreateStatusMessage("Target acquired!");
+			break;
+		case "Siege":
+			// under siege
+			buildingStatusIndicator.CreateStatusMessage("Under Attack!");
+			break;
+		default:
+			// building name initialized
+			break;
 		}
+
 	}
+
+//	void OnMouseOver()
+//	{
+//
+//		// Turn ON Manual Control for Gun Towers:
+//		if (tower != null) {
+//			if (tower.state != Tower_TargettingHandler.State.MANUAL_CONTROL && 
+//			    tower.state != Tower_TargettingHandler.State.MANUAL_SHOOTING && 
+//			    tower.state != Tower_TargettingHandler.State.STARVED){
+//
+//				if (Input.GetMouseButtonDown(1)){
+//
+//					tower.state = Tower_TargettingHandler.State.MANUAL_CONTROL;
+//
+//					// Also turn off the Building Menus so they don't get in the way
+//					buildingUIhandler.currentlyBuilding = true;
+//
+//				}
+//
+//			}else if (tower.state == Tower_TargettingHandler.State.MANUAL_CONTROL || 
+//			          tower.state == Tower_TargettingHandler.State.MANUAL_SHOOTING){
+//				
+//				if (Input.GetMouseButtonDown(1)){
+//					
+//					tower.state = Tower_TargettingHandler.State.SEEKING;
+//					
+//					// Turn Building Menus back on
+//					buildingUIhandler.currentlyBuilding = false;
+//					
+//				}
+//			}
+//
+//		}
+//
+//	}
+	
+//	void OnMouseExit()
+//	{
+//		// Turn OFF Manual Control
+//		if (tower.state == Tower_TargettingHandler.State.MANUAL_CONTROL || 
+//		    tower.state == Tower_TargettingHandler.State.MANUAL_SHOOTING){
+//			
+//			if (Input.GetMouseButtonDown(1)){
+//				
+//				tower.state = Tower_TargettingHandler.State.SEEKING;
+//				
+//				// Turn Building Menus back on
+//				buildingUIhandler.currentlyBuilding = false;
+//				
+//			}
+//		}
+//	}
 }

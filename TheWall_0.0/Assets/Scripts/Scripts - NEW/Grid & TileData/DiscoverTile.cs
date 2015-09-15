@@ -75,17 +75,20 @@ public class DiscoverTile : MonoBehaviour {
 //		// IF TILE IS NOT A ROCK OR EMPTY, IT'S A BUILDING,
 			// so it will have a Building Click Handler that needs its pos X and pos Y
 			if (tileType != TileData.Types.rock && tileType != TileData.Types.empty) {
-				tileToSpawn.GetComponent<Building_ClickHandler> ().mapPosX = mapPosX;
-				tileToSpawn.GetComponent<Building_ClickHandler> ().mapPosY = mapPosY;
-				tileToSpawn.GetComponent<Building_ClickHandler> ().resourceGrid = grid;
+				Building_ClickHandler bClickHandler = tileToSpawn.GetComponent<Building_ClickHandler> ();
+				bClickHandler.mapPosX = mapPosX;
+				bClickHandler.mapPosY = mapPosY;
+				bClickHandler.resourceGrid = grid;
+				bClickHandler.objPool = objPool;
 
 			} 
 			if (tileType == TileData.Types.extractor) {
 				// IF IT'S AN EXTRACTOR it will ALSO need the extractor variables
-				tileToSpawn.GetComponent<Extractor> ().mapPosX = mapPosX;
-				tileToSpawn.GetComponent<Extractor> ().mapPosY = mapPosY;
-				tileToSpawn.GetComponent<Extractor> ().resourceGrid = grid;
-				tileToSpawn.GetComponent<Extractor> ().playerResources = playerCapital.GetComponent<Player_ResourceManager> ();
+				Extractor extra = tileToSpawn.GetComponent<Extractor> ();
+				extra.mapPosX = mapPosX;
+				extra.mapPosY = mapPosY;
+				extra.resourceGrid = grid;
+				extra.playerResources = playerCapital.GetComponent<Player_ResourceManager> ();
 			} 
 
 	
