@@ -50,17 +50,9 @@ public class Enemy_AttackHandler : Unit_Base {
 	// Update is called once per frame
 	void Update () {
 
-//		// Check if we need to Pool a Unit
-//		if (unitToPool != null) {
-//			if (countDownToPool <= 0) {
-//
-//				_state = State.POOLING_TARGET;
-//
-//				countDownToPool = 1f;
-//			} else {
-//				countDownToPool -= Time.deltaTime;
-//			}
-//		}
+		// If I don't have any HP left, Pool myself
+		if (stats.curHP <= 0)
+			Suicide ();
 
 		MyStateMachine (_state);
 	}
@@ -121,12 +113,12 @@ public class Enemy_AttackHandler : Unit_Base {
 			if(AttackTile(targetTilePosX, targetTilePosY, moveHandler)){
 
 				// Change Move Handler state to stop movement
-				moveHandler.state = Enemy_MoveHandler.State.ATTACKING;
+//				moveHandler.state = Enemy_MoveHandler.State.ATTACKING;
 
 			}else{
 
 				// Tile has been destroyed, start Moving again
-				moveHandler.state = Enemy_MoveHandler.State.MOVING;
+				moveHandler.state = Enemy_MoveHandler.State.MOVING_BACK;
 
 				// Set state back to moving to stop attacking
 				_state = State.MOVING;
@@ -159,7 +151,19 @@ public class Enemy_AttackHandler : Unit_Base {
 		}
 		
 	}
-	
+
+	void Suicide()
+	{
+		// get a Dead sprite to mark my death spot
+		GameObject deadE = objPool.GetObjectForType("dead", false); // Get the dead unit object
+		if (deadE != null) {
+			deadE.GetComponent<EasyPool> ().objPool = objPool;
+			deadE.transform.position = transform.position;
+		}
+
+		// and Pool myself
+		objPool.PoolObject (this.gameObject);
+	}
 
 //	void PoolTarget(GameObject target)
 //	{

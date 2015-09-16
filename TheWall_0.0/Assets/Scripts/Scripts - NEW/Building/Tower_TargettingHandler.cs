@@ -148,8 +148,6 @@ public class Tower_TargettingHandler : Unit_Base {
 							statusIndicated = false;
 						}
 
-
-
 					}
 
 				}
@@ -186,7 +184,8 @@ public class Tower_TargettingHandler : Unit_Base {
 		switch (curState) {
 		case State.SEEKING:
 
-			if (targetUnit == null){
+			if (targetUnit == null || !targetUnit.activeSelf){
+				targetUnit = null;
 				sightStart.Rotate (Vector3.forward * 90 * Time.deltaTime);
 			}else{
 				_state = State.SHOOTING;
@@ -205,15 +204,8 @@ public class Tower_TargettingHandler : Unit_Base {
 
 			break;
 		case State.SHOOTING:
-			if (this.unitToPool == null){
-				CountDownToShoot();
-			}else{
-				PoolTarget (this.unitToPool, this.unitToPool.transform.position);
-			}
 
-//			// indicate
-//			if (!statusIndicated)
-//				IndicateStatus("Acquiring target!");
+			CountDownToShoot();
 
 			break;
 		case State.RELOADING:
@@ -273,16 +265,8 @@ public class Tower_TargettingHandler : Unit_Base {
 			shootCountDown = stats.curRateOfAttk;
 
 			// SHOOT
-			if (targetUnit != null && this.unitToPool == null){
+			if (targetUnit != null && targetUnit.activeSelf){
 
-				// IF target Unit has 0 HP left and hasn't been nulled, let's null it
-				if (targetUnit.GetComponent<Unit_Base>().stats.curHP <= 0){
-
-					// Pool the target & make target unit null
-					unitToPool = targetUnit;
-					// The Pool Target method sends STATE back to Seeking or Manual control 
-
-				}else{
 					// Check gun has bullets
 					if (ammoCount >= 1){
 
@@ -327,12 +311,8 @@ public class Tower_TargettingHandler : Unit_Base {
 
 						
 					}
-				}
 
 			}else{
-
-				// Pool target
-				PoolTarget (this.unitToPool, this.unitToPool.transform.position);
 
 				Debug.Log("MACHINE GUN: Target is NULL!");
 				// Target is null so we can go back to seeking if NOT starved
@@ -443,13 +423,10 @@ public class Tower_TargettingHandler : Unit_Base {
 
 		} else {
 
-//			// Pool my target
-//			PoolTarget (this.unitToPool, this.unitToPool.transform.position);
-
 			// Target is null, go back to Seeking IF NOT in Manual Control or Starved
 			if (_state != State.MANUAL_SHOOTING && _state != State.STARVED){
+
 				// if we have Enemies in range we need to acquire target (just stops rotation so Trigger can rotate)
-			
 					_state = State.SEEKING;
 				
 			}else if (_state == State.MANUAL_SHOOTING){
@@ -460,37 +437,37 @@ public class Tower_TargettingHandler : Unit_Base {
 
 	}
 
-	void PoolTarget(GameObject target, Vector3 deathPos)
-	{
-		// Pool the unit
-		objPool.PoolObject (target);
-
-		this.unitToPool = null;
-
-		// Instantiate a Dead sprite at its location
-		GameObject deadE = objPool.GetObjectForType("dead", true); // Get the dead unit object
-		if (deadE != null) {
-			deadE.GetComponent<EasyPool> ().objPool = objPool;
-			deadE.transform.position = deathPos;
-		}
-
-		// make target Unit null so we can acquire a New Target
-		targetUnit = null;
-
-		// Return state back to Seeking or Manual Control
-
-		if (_state == State.MANUAL_SHOOTING) {
-
-			// Send back to Manual Control
-			_state = State.MANUAL_CONTROL;
-
-			// Go back to seeking if not starved
-		} else if (_state != State.STARVED) {
-
-			_state = State.SEEKING;
-
-		}
-	}
+//	void PoolTarget(GameObject target, Vector3 deathPos)
+//	{
+//		// Pool the unit
+//		objPool.PoolObject (target);
+//
+//		this.unitToPool = null;
+//
+//		// Instantiate a Dead sprite at its location
+//		GameObject deadE = objPool.GetObjectForType("dead", true); // Get the dead unit object
+//		if (deadE != null) {
+//			deadE.GetComponent<EasyPool> ().objPool = objPool;
+//			deadE.transform.position = deathPos;
+//		}
+//
+//		// make target Unit null so we can acquire a New Target
+//		targetUnit = null;
+//
+//		// Return state back to Seeking or Manual Control
+//
+//		if (_state == State.MANUAL_SHOOTING) {
+//
+//			// Send back to Manual Control
+//			_state = State.MANUAL_CONTROL;
+//
+//			// Go back to seeking if not starved
+//		} else if (_state != State.STARVED) {
+//
+//			_state = State.SEEKING;
+//
+//		}
+//	}
 
 	void OnTriggerStay2D(Collider2D coll){
 

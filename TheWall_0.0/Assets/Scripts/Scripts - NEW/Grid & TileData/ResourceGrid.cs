@@ -161,6 +161,8 @@ public class ResourceGrid : MonoBehaviour{
 		if (spawnedTiles [x, y] != null) {
 
 			tiles [x, y].hp = tiles [x, y].hp - damage;
+
+			// If it has 0 or less HP left, kill tile
 			if (tiles [x, y].hp <= 0) {
 				SwapTileType (x, y, TileData.Types.empty);	// to KILL TILE I just swap it ;)
 			}
@@ -304,8 +306,14 @@ public class ResourceGrid : MonoBehaviour{
 			float calc = (float)tiles[x,y].oreCost * 0.3f;
 			playerResources.ore = playerResources.ore + (int)calc;
 
-			// Destroy the spawned tile and tell the tiles array what this new tile is
-			Destroy(spawnedTiles[x,y].gameObject);
+			// Pool the spawned tile
+//			Destroy(spawnedTiles[x,y].gameObject);
+			objPool.PoolObject(spawnedTiles[x,y].gameObject);
+
+			// Make it null as a spawnedTiles
+			spawnedTiles[x,y] = null;
+
+			// Tell the tiles array what this new tile is
 			tiles[x,y] = new TileData(newType, 0,1);
 		}
 	}

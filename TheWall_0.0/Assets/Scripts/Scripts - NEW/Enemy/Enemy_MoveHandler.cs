@@ -60,12 +60,17 @@ public class Enemy_MoveHandler : MonoBehaviour {
 
 	public bool unitInitialized { get; private set;} 
 
-	public enum State { IDLING, MOVING, ATTACKING };
+	public enum State { IDLING, MOVING, MOVING_BACK, AVOIDING, ATTACKING };
 
 	private State _state = State.IDLING;
 
 	[HideInInspector]
 	public State state { get { return _state; } set { _state = value; }}
+
+	private Vector2 lastKnownNode, disperseDirection = Vector2.zero;
+
+	[SerializeField]
+	private bool isAvoider; // if unit is an Avoider, they won't attack tiles, just go around them
 	
 	void Start () 
 	{
@@ -102,6 +107,17 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		// This unit has been initialized (meaning it's already been spawned once)
 		// In order to know which units already spawned from pool and need to reset stats
 		unitInitialized = true;
+	}
+
+
+	// Called by scripts spawning this unit to make sure it gets the right path
+	public void InitPath()
+	{
+		if (!isKamikaze) {
+			GetFirstPath (false);
+		} else {
+			GetFirstPath(true);
+		}
 	}
 
 
@@ -159,12 +175,93 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		}
 	}
 
+	Vector2 Disperse(Vector2 obstaclePos)
+	{
+		Vector2 disperseDirection = Vector2.zero;
+
+		if (obstaclePos.y == transform.position.y) {
+		
+			// Move to tile above or below it
+			int decision = Random.Range(0, 3);
+
+			if (decision == 1){
+				// move above
+				disperseDirection = new Vector2 (obstaclePos.x, obstaclePos.y + 1);
+			}else{
+				// move below
+				disperseDirection = new Vector2 (obstaclePos.x, obstaclePos.y - 1);
+			}
+		} else if (obstaclePos.x == transform.position.x) {
+			// Move to tile above or below it
+			int decision2 = Random.Range(0, 3);
+
+			if (decision2 == 1){
+				// move left
+				disperseDirection = new Vector2 (obstaclePos.x + 1, obstaclePos.y);
+			}else{
+				// move right
+				disperseDirection = new Vector2 (obstaclePos.x - 1, obstaclePos.y);
+			}
+		}
+
+		return disperseDirection;
+	}
+
+//	Vector2 Avoid(Vector2 lastNode)
+//	{
+//		Vector2 avoidDirection = Vector2.zero;
+//		
+//		if (lastNode.y == transform.position.y) {
+//
+//			// is it left or right 
+//			if (lastNode.x < transform.position.x){
+//				// im moving left
+//			}else{
+//				// im moving right
+//			}
+//			avoidDirection = new Vector2 (obstaclePos.x, obstaclePos.y - 1);
+//		
+//		} else if (lastNode.x == transform.position.x) {
+//			// Move to tile above or below it
+//			int decision2 = Random.Range(0, 3);
+//			
+//			if (decision2 == 1){
+//				// move left
+//				avoidDirection = new Vector2 (obstaclePos.x + 1, obstaclePos.y);
+//			}else{
+//				// move right
+//				avoidDirection = new Vector2 (obstaclePos.x - 1, obstaclePos.y);
+//			}
+//		}
+//		
+//		return avoidDirection;
+//	}
+
+	// Move Back to Path after dispersing
+	void MoveBackToPath(Vector2 _nodePos)
+	{
+		// Alter the speed slightly as they move back to keep them from bunching up
+		float randomSpeed = Random.Range (0.1f, mStats.startMoveSpeed);
+		mStats.curMoveSpeed = randomSpeed;
+
+		if (Vector2.Distance (transform.position, _nodePos) == 0) {
+			GetPath ();
+		} else {
+			
+			transform.position = Vector2.MoveTowards(transform.position, _nodePos ,mStats.curMoveSpeed * Time.deltaTime);
+		}
+	}
+
 	// To find path after moving away from it
-	public void GetPath(){
+	public void GetPath()
+	{
 		posX = (int)transform.position.x;
 		posY = (int)transform.position.y;
+
 		int myPosIndexInPath = 0;
+
 		if (spwnPtHandler != null) {
+
 			currentPath = new List<Node>();
 			for (int x = 0; x < spwnPtHandler.path[spwnPtIndex].Count; x++){
 				// find my position on the path
@@ -178,33 +275,25 @@ public class Enemy_MoveHandler : MonoBehaviour {
 				for (int i = myPosIndexInPath; i < spwnPtHandler.path[spwnPtIndex].Count; i++){
 					currentPath.Add(spwnPtHandler.path[spwnPtIndex][i]);
 				}
+
+				// Change speed back to original speed
+				mStats.curMoveSpeed = mStats.startMoveSpeed;
+
+				// Start moving on path
 				_state = State.MOVING;
+
+
+
 			}else{
+				_state = State.IDLING;
 				Debug.Log("Couldn't find my node :(");
 			}
 
 
 		}
 	}
-//	void MoveBackToPath(Vector2 _nodePos){
-//		if (Vector2.Distance (transform.position, _nodePos) == 0) {
-//			GetPath ();
-//			movingBackToPath = false;
-//		} else {
-//
-//			transform.position = Vector2.MoveTowards(transform.position, _nodePos ,movementSpeed * Time.deltaTime);
-//		}
-//	}
+	
 
-	// Called by scripts spawning this unit to make sure it gets the right path
-	public void InitPath(){
-		
-		if (!isKamikaze) {
-			GetFirstPath (false);
-		} else {
-			GetFirstPath(true);
-		}
-	}
 
 	void Update () {
 
@@ -216,7 +305,9 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		// NOTE: Turning ON the buddy system forces the entire wave to stop when the "leader" is blocked by a building. This makes
 		// it look quite static and robotic. The other alternative is NOT activating it, which causes all the units to move up to
 		// the building. This makes them all pile together and when they destroy the building they move in a jumbled mess.
-		// TODO: Have the wave NOT stop together but also DISPERSE once they destroy the building blocking them
+
+		// NOTE: Disperse works! Now they pile together when they go back to their path though
+		// TODO: Consider altering their speed slightly while they are moving back to path, that should cause them to NOT look like a mess
 
 //		if (myBuddy != null) {
 //			// NOTE: Buddy System is only called by units who were not the first to spawn in their Wave
@@ -237,6 +328,25 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			break;
 		case State.ATTACKING:
 			// Attack
+			// While they are attacking, units disperse around the tile under attack
+			if (disperseDirection != Vector2.zero)
+				transform.position = Vector2.MoveTowards(transform.position, disperseDirection, mStats.curMoveSpeed * Time.deltaTime);
+
+			break;
+		case State.MOVING_BACK:
+			// Move Back to Path, once found this will call Moving state again
+			MoveBackToPath(lastKnownNode);
+			break;
+
+		case State.AVOIDING:
+			// Disperse, then once on the disperse tile Move Back to Path
+			if (disperseDirection != Vector2.zero){
+				if (Vector2.Distance(transform.position, disperseDirection) > 0){
+					transform.position = Vector2.MoveTowards(transform.position, disperseDirection, mStats.curMoveSpeed * Time.deltaTime);
+				}else{
+					_state = State.MOVING_BACK;
+				}
+			}
 			break;
 		default:
 			state = State.IDLING;
@@ -295,16 +405,14 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		// Check if the next tile is a UNWAKABLE tile OR if it is clear path
 		if (resourceGrid.UnitCanEnterTile (currentPath [1].x, currentPath [1].y) == false) {
 
-//			moving = false;
 			// Since Path is blocked set the state to Idling until this unit knows if it must attack
 			_state = State.IDLING;
 
-			Debug.Log ("Path is blocked! at x" + currentPath [1].x + ", y" + currentPath [1].y);
-
 			if (CheckForTileAttack (currentPath [1].x, currentPath [1].y)) {
-				Debug.Log("Attacking Tile!");
-				// here I would tell the Attack script to start its attack on the tile
-				// But if it's the Destination tile, not just any tile, then it needs to do a special attack
+
+				// Start its attack on the tile:
+
+				// If it's the Destination tile, not just any tile, then it needs to do a special attack
 				if (currentPath[1].x == destination.x && currentPath[1].y == destination.y)
 				{
 					// we are at the destination! Do special!
@@ -312,20 +420,41 @@ public class Enemy_MoveHandler : MonoBehaviour {
 				}
 				else
 				{
-					// it's a tile but NOT the destination, so just do normal attack
-					targetPosX = currentPath [1].x;
-					targetPosY = currentPath [1].y;
-					enemyAttkHandler.targetTilePosX = currentPath [1].x;
-					enemyAttkHandler.targetTilePosY = currentPath [1].y;
-					enemyAttkHandler.resourceGrid = resourceGrid;
+					// Check if this unit is NOT an Avoider 
+					if (!isAvoider){
 
-					// Change attack handler state to Attacking Tile
-					enemyAttkHandler.state = Enemy_AttackHandler.State.ATTACK_TILE;
+						// the Target Tile is not our destination, so do Normal Attack
+						targetPosX = currentPath [1].x;
+						targetPosY = currentPath [1].y;
+						enemyAttkHandler.targetTilePosX = currentPath [1].x;
+						enemyAttkHandler.targetTilePosY = currentPath [1].y;
+						enemyAttkHandler.resourceGrid = resourceGrid;
 
-					// Change my state to Attack to stop movement
-					_state = State.ATTACKING;
+						// Change attack handler state to Attacking Tile
+						enemyAttkHandler.state = Enemy_AttackHandler.State.ATTACK_TILE;
 
-//					isAttacking = true;
+						// Change my state to Attack to stop movement
+						_state = State.ATTACKING;
+
+						// Record the Node location that contains the obstacle
+						lastKnownNode = new Vector2(currentPath[1].x, currentPath[1].y);
+
+						// Record the direction Units must use to disperse
+						disperseDirection = Disperse(lastKnownNode);
+					}else{
+						// This IS an Avoider, instead of attacking they move around the tile
+
+						// Record the Node location that contains the obstacle
+						lastKnownNode = new Vector2(currentPath[1].x, currentPath[1].y);
+						
+						// Record the direction Units must use to disperse
+						disperseDirection = Disperse(lastKnownNode);
+
+						// Change state to Avoiding
+						_state = State.AVOIDING;
+
+					}
+
 				}
 			
 			} 
@@ -333,7 +462,6 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		} else {
 			if (_state == State.ATTACKING){ // at this point if this is true it means this unit is engaging a Player Unit
 				currentPath = null;
-//				moving = false;
 				return;
 			}
 

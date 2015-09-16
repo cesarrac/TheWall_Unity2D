@@ -178,14 +178,14 @@ public class Unit_Base : MonoBehaviour {
 		}
 
 		// Check if Unit needs to Die
-		if (unit.stats.curHP <= 0) {
-
-			Die (unit.gameObject);
-
-		} else {
-
-
-		}
+//		if (unit.stats.curHP <= 0) {
+//
+//			Die (unit.gameObject);
+//
+//		} else {
+//
+//
+//		}
 
 		// pop up the damage
 //		unit.dmgPopUp.PopUpDamage (damage);
