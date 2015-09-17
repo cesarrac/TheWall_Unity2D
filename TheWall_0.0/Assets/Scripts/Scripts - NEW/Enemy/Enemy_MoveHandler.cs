@@ -60,17 +60,19 @@ public class Enemy_MoveHandler : MonoBehaviour {
 
 	public bool unitInitialized { get; private set;} 
 
-	public enum State { IDLING, MOVING, MOVING_BACK, AVOIDING, ATTACKING };
+	public enum State { IDLING, MOVING, MOVING_BACK, DISPERSING, AVOIDING, ATTACKING };
 
 	private State _state = State.IDLING;
 
 	[HideInInspector]
 	public State state { get { return _state; } set { _state = value; }}
 
-	private Vector2 lastKnownNode, disperseDirection = Vector2.zero;
+	private Vector2 lastKnownNode, myLastPosition, disperseDirection = Vector2.zero, avoidDirection = Vector2.zero;
 
 	[SerializeField]
 	private bool isAvoider; // if unit is an Avoider, they won't attack tiles, just go around them
+
+	public State debugState;
 	
 	void Start () 
 	{
@@ -179,20 +181,24 @@ public class Enemy_MoveHandler : MonoBehaviour {
 	{
 		Vector2 disperseDirection = Vector2.zero;
 
+		// If Obstacle is on the same Y coord as this unit, disperse to above or below
 		if (obstaclePos.y == transform.position.y) {
 		
-			// Move to tile above or below it
+			// Randomly decide wether to move to tile above or below it
 			int decision = Random.Range(0, 3);
 
 			if (decision == 1){
+
 				// move above
 				disperseDirection = new Vector2 (obstaclePos.x, obstaclePos.y + 1);
+
 			}else{
 				// move below
 				disperseDirection = new Vector2 (obstaclePos.x, obstaclePos.y - 1);
 			}
 		} else if (obstaclePos.x == transform.position.x) {
-			// Move to tile above or below it
+
+			// Decide to move to tile above or below it
 			int decision2 = Random.Range(0, 3);
 
 			if (decision2 == 1){
@@ -207,35 +213,46 @@ public class Enemy_MoveHandler : MonoBehaviour {
 		return disperseDirection;
 	}
 
-//	Vector2 Avoid(Vector2 lastNode)
-//	{
-//		Vector2 avoidDirection = Vector2.zero;
-//		
-//		if (lastNode.y == transform.position.y) {
-//
-//			// is it left or right 
-//			if (lastNode.x < transform.position.x){
-//				// im moving left
-//			}else{
-//				// im moving right
-//			}
-//			avoidDirection = new Vector2 (obstaclePos.x, obstaclePos.y - 1);
-//		
-//		} else if (lastNode.x == transform.position.x) {
-//			// Move to tile above or below it
-//			int decision2 = Random.Range(0, 3);
-//			
-//			if (decision2 == 1){
-//				// move left
-//				avoidDirection = new Vector2 (obstaclePos.x + 1, obstaclePos.y);
-//			}else{
-//				// move right
-//				avoidDirection = new Vector2 (obstaclePos.x - 1, obstaclePos.y);
-//			}
-//		}
-//		
-//		return avoidDirection;
-//	}
+	Vector2 Avoid(Vector2 myLasPos, Vector2 obstaclePos)
+	{
+		Vector2 avoidDirection = Vector2.zero;
+
+		// Was the obstacle on same Y coordinate as this unit's last position?
+		if (obstaclePos.y == myLasPos.y) {
+
+			// Was it to this unit's LEFT or RIGHT?
+			if (obstaclePos.x > myLasPos.x){
+
+				// Record the avoid tile direction as two tiles to the RIGHT of last Position
+				avoidDirection = new Vector2(myLasPos.x + 2, myLasPos.y);
+
+			}
+			else if (obstaclePos.x < myLasPos.x){
+
+				// Record the avoid tile direction as two tiles to the LEFT of last Position
+				avoidDirection = new Vector2(myLasPos.x - 2, myLasPos.y);
+			}
+		} 
+		// Was it on the same X coordinate?
+		else if (obstaclePos.x == myLasPos.x) {
+
+			// Was it ABOVE or BELOW this unit?
+			if (obstaclePos.y > myLasPos.y){
+
+				// Record the avoid tile direction as two tiles ABOVE last Position
+				avoidDirection = new Vector2(myLasPos.x, myLasPos.y + 2);
+			}
+			else if (obstaclePos.y < myLasPos.y){
+
+				// Record the avoid tile direction as two tiles BELOW last Position
+				avoidDirection = new Vector2(myLasPos.x, myLasPos.y - 2);
+			}
+		}
+		
+		
+		return avoidDirection;
+	}
+
 
 	// Move Back to Path after dispersing
 	void MoveBackToPath(Vector2 _nodePos)
@@ -301,6 +318,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 	
 		MyStateMachine (_state);
 	
+		debugState = _state;
 
 		// NOTE: Turning ON the buddy system forces the entire wave to stop when the "leader" is blocked by a building. This makes
 		// it look quite static and robotic. The other alternative is NOT activating it, which causes all the units to move up to
@@ -326,6 +344,7 @@ public class Enemy_MoveHandler : MonoBehaviour {
 			// Move
 			ActualMove();
 			break;
+
 		case State.ATTACKING:
 			// Attack
 			// While they are attacking, units disperse around the tile under attack
@@ -333,18 +352,35 @@ public class Enemy_MoveHandler : MonoBehaviour {
 				transform.position = Vector2.MoveTowards(transform.position, disperseDirection, mStats.curMoveSpeed * Time.deltaTime);
 
 			break;
+
 		case State.MOVING_BACK:
 			// Move Back to Path, once found this will call Moving state again
+
 			MoveBackToPath(lastKnownNode);
+			
+
 			break;
 
-		case State.AVOIDING:
-			// Disperse, then once on the disperse tile Move Back to Path
+		case State.DISPERSING:
+			// Disperse, then once on the disperse tile move to avoid direction
 			if (disperseDirection != Vector2.zero){
 				if (Vector2.Distance(transform.position, disperseDirection) > 0){
 					transform.position = Vector2.MoveTowards(transform.position, disperseDirection, mStats.curMoveSpeed * Time.deltaTime);
 				}else{
-					_state = State.MOVING_BACK;
+					// Once on the disperse tile, state is avoiding
+					_state = State.AVOIDING;
+				}
+			}
+			break;
+		case State.AVOIDING:
+			// Once on the avoid tile, Move Back to Path
+			if (avoidDirection != Vector2.zero){
+				if (Vector2.Distance(transform.position, avoidDirection) > 0){
+					transform.position = Vector2.MoveTowards(transform.position, avoidDirection, mStats.curMoveSpeed * Time.deltaTime);
+				}else{
+					posX = (int)transform.position.x;
+					posY = (int)transform.position.y;
+					_state = State.MOVING;
 				}
 			}
 			break;
@@ -450,8 +486,14 @@ public class Enemy_MoveHandler : MonoBehaviour {
 						// Record the direction Units must use to disperse
 						disperseDirection = Disperse(lastKnownNode);
 
-						// Change state to Avoiding
-						_state = State.AVOIDING;
+						// Avoiders need to record the position they are currently on to decide which direction to continue on
+						myLastPosition = new Vector2(transform.position.x, transform.position.y);
+
+						// Record the avoid direction
+						avoidDirection = Avoid(myLastPosition, lastKnownNode);
+
+						// Change state to Disperse first, that in turn will change to Avoiding
+						_state = State.DISPERSING;
 
 					}
 

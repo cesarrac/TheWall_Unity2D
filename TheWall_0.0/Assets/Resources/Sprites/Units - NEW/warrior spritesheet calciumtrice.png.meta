@@ -1,6 +1,8 @@
 fileFormatVersion: 2
 guid: b245bd3d7a20ea741bc0263da9916970
-timeCreated: 1440197156
+labels:
+- Character
+timeCreated: 1442519299
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -157,7 +159,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_1
       rect:
@@ -167,7 +169,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_2
       rect:
@@ -177,7 +179,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_3
       rect:
@@ -187,7 +189,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_4
       rect:
@@ -197,7 +199,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_5
       rect:
@@ -207,7 +209,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_6
       rect:
@@ -217,7 +219,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_7
       rect:
@@ -227,7 +229,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_8
       rect:
@@ -237,7 +239,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_9
       rect:
@@ -247,7 +249,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_10
       rect:
@@ -257,7 +259,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_11
       rect:
@@ -267,7 +269,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_12
       rect:
@@ -277,7 +279,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_13
       rect:
@@ -287,7 +289,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_14
       rect:
@@ -297,7 +299,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_15
       rect:
@@ -307,7 +309,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_16
       rect:
@@ -317,7 +319,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_17
       rect:
@@ -327,7 +329,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_18
       rect:
@@ -337,7 +339,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_19
       rect:
@@ -347,7 +349,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 9
-      pivot: {x: .5, y: .699999988}
+      pivot: {x: .5, y: .200000003}
       border: {x: 0, y: 0, z: 0, w: 0}
     - name: warrior spritesheet calciumtrice_20
       rect:
@@ -1151,5 +1153,5 @@ TextureImporter:
       border: {x: 0, y: 0, z: 0, w: 0}
   spritePackingTag: 
   userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  assetBundleName: warrior
+  assetBundleVariant: warrior

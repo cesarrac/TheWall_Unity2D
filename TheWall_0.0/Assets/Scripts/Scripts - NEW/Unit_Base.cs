@@ -165,16 +165,20 @@ public class Unit_Base : MonoBehaviour {
 		unit.stats.curHP = unit.stats.curHP - damage;
 
 		// Indicate damage using Unit / Building's canvas
-		if (unit.gameObject.tag == "Building"){
+		if (unit.gameObject.activeSelf) {
+
+			if (unit.gameObject.tag == "Building") {
 			
-			// indicate damage on building
-			if (unit.buildingStatusIndicator != null)
-				unit.buildingStatusIndicator.SetHealth(unit.stats.curHP, unit.stats.maxHP, damage);
+				// indicate damage on building
+				if (unit.buildingStatusIndicator != null)
+					unit.buildingStatusIndicator.SetHealth (unit.stats.curHP, unit.stats.maxHP, damage);
 			
-		}else{
-			// indicate damage on unit
-			if (unit.statusIndicator != null)
-				unit.statusIndicator.SetHealth(unit.stats.curHP, unit.stats.maxHP, damage);
+			} else {
+				// indicate damage on unit
+				if (unit.statusIndicator != null)
+					unit.statusIndicator.SetHealth (unit.stats.curHP, unit.stats.maxHP, damage);
+			}
+
 		}
 
 		// Check if Unit needs to Die

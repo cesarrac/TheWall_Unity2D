@@ -187,9 +187,6 @@ public class Building_UIHandler : MonoBehaviour {
 				if (sExtractor != null){
 			
 					sExtractor.GetComponent<SpriteRenderer>().sprite = extractSprite;
-					
-
-				
 
 //					// add building pos handler
 					Building_PositionHandler bPosHand = sExtractor.GetComponent<Building_PositionHandler>(); 

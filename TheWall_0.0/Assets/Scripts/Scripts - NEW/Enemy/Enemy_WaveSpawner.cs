@@ -392,12 +392,20 @@ public class Enemy_WaveSpawner : MonoBehaviour {
 				// Reset the current move speed in case this unit was affected by a Speed DeBuffer
 				_moveHandler.mStats.curMoveSpeed = _moveHandler.mStats.startMoveSpeed;
 
-//				Debug.Log ("WAVE: Recycled " + _enemyName + " with " + _attkHandler.stats.curHP + 
-//				           "HP. At position: (x)" + _moveHandler.posX + " (y)" + _moveHandler.posY); 
+				if (_enemy.GetComponentInChildren<Text>() != null){
+					Text dmgTxt = _enemy.GetComponentInChildren<Text>();
+					objPool.PoolObject(dmgTxt.gameObject);
+				}
 			}
 
 			// Object Ready to be Activated
 			_enemy.SetActive(true);
+
+
+			if (_enemy.GetComponentInChildren<Text>() != null){
+				Text dmgTxt = _enemy.GetComponentInChildren<Text>();
+				objPool.PoolObject(dmgTxt.gameObject);
+			}
 
 			// Initialize its Stats
 			_attkHandler.stats.Init();

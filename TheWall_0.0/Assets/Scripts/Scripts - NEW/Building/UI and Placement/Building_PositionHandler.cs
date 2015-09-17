@@ -22,7 +22,7 @@ public class Building_PositionHandler : MonoBehaviour {
 	public TileData.Types tileType;
 
 	SpriteRenderer sr; // to handle the alpha change
-	Color halfColor = new Color (255, 34, 34, 135);
+	Color halfColor;
 	Color trueColor;
 
 	Vector3 m, lastM;
@@ -30,6 +30,8 @@ public class Building_PositionHandler : MonoBehaviour {
 	int mY;
 
 	bool canBuild, canAfford; // turns true when building is in proper position
+
+	bool onEnemy = false; // can't build on top or near enemies
 
 	public Player_ResourceManager resourceManager;
 	public int currOreCost; // this will charge the resources manager with the cost sent from UI handler
@@ -44,7 +46,7 @@ public class Building_PositionHandler : MonoBehaviour {
 	void Awake()
 	{
 		sr = GetComponent<SpriteRenderer> ();
-//		halfColor = sr.color;
+		halfColor = Color.red;
 		trueColor = Color.green;
 
 		sr.color = Color.clear;
@@ -82,7 +84,7 @@ public class Building_PositionHandler : MonoBehaviour {
 		transform.position = followPos;
 
 
-		if (CheckEmptyBeneath (mX, mY)) {
+		if (CheckEmptyBeneath (mX, mY) && !onEnemy) {
 			
 			if (tileType == TileData.Types.extractor) {
 				if (CheckForResource (mX, mY + 1, true)) { // top
@@ -162,8 +164,8 @@ public class Building_PositionHandler : MonoBehaviour {
 		if (resourceManager.ore >= currOreCost ) {
 			canAfford = true;
 		}
-		// At this point we KNOW the mouse is NOT over a building or a rock, AND we have found rocks if extractor,
-		if (Input.GetMouseButtonDown (0) && canBuild && canAfford) {			// So LEFT CLICK to BUILD!!
+		// At this point we KNOW the mouse is NOT over a building or a rock, we have found rocks if extractor AND we are not on enemy
+		if (Input.GetMouseButtonDown (0) && canBuild && canAfford && !onEnemy) {			// So LEFT CLICK to BUILD!! 
 
 			// Subtract the cost
 //			resourceManager.ChargeOreorWater("Ore", -currOreCost);
@@ -246,4 +248,18 @@ public class Building_PositionHandler : MonoBehaviour {
 			return false;
 		}
 	}
+
+	// Avoid building right near where an enemy unit is walking
+	void OnTriggerEnter2D(Collider2D coll){
+		if (coll.gameObject.CompareTag ("Enemy")) {
+			onEnemy = true;
+		}
+	}
+
+	void OnTriggerExit2D (Collider2D coll){
+		if (coll.gameObject.CompareTag ("Enemy")) {
+			onEnemy = false;
+		}
+	}
+
 }

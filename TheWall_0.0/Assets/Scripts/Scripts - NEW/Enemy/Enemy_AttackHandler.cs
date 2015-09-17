@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class Enemy_AttackHandler : Unit_Base {
 
@@ -159,6 +160,12 @@ public class Enemy_AttackHandler : Unit_Base {
 		if (deadE != null) {
 			deadE.GetComponent<EasyPool> ().objPool = objPool;
 			deadE.transform.position = transform.position;
+		}
+
+		// make sure we Pool any Damage Text that might be on this gameObject
+		if (GetComponentInChildren<Text>() != null){
+			Text dmgTxt = GetComponentInChildren<Text>();
+			objPool.PoolObject(dmgTxt.gameObject);
 		}
 
 		// and Pool myself
